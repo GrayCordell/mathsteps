@@ -723,6 +723,23 @@ describe('kemu extensions', function() {
     // Remove nested fractions.
     ['1/(2/3 c)'   , '3 / (2c)'],
     ['a/(b/c * d)' , 'a * c / (b * d)'],
+
+    // -------------------------------------------------------------------------
+    // Logarithms.
+    ['logXY(x,y)', 'logXY(x, y)'],
+    ['logXY(x,x)', '1'],
+    ['logXY(x,1)', '0'],
+
+    ['logXY(x, x^a)', 'a'],
+    ['logXY(x, x^2)', '2'],
+    ['logXY(x, x^-3)', '-3'],
+
+    ['logXY(x, sqrt(x))', '1/2'],
+    ['logXY(x, nthRoot(x,4))', '1/4'],
+
+    ['logXY(a, b^c)', 'c * logXY(a, b)'],
+    ['logXY(a, sqrt(b))', '1/2 * logXY(a, b)'],
+    ['logXY(a, nthRoot(b,c))', 'logXY(a, b) / c'],
   ]
 
   // Create fake symbolic context to handle domain for PI.
