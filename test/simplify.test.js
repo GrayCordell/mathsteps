@@ -725,7 +725,7 @@ describe('kemu extensions', function() {
     ['a/(b/c * d)' , 'a * c / (b * d)'],
 
     // -------------------------------------------------------------------------
-    // Logarithms.
+    // Logarithms - general.
     ['logXY(x,y)', 'logXY(x, y)'],
     ['logXY(x,x)', '1'],
     ['logXY(x,1)', '0'],
@@ -740,6 +740,38 @@ describe('kemu extensions', function() {
     ['logXY(a, b^c)', 'c * logXY(a, b)'],
     ['logXY(a, sqrt(b))', '1/2 * logXY(a, b)'],
     ['logXY(a, nthRoot(b,c))', 'logXY(a, b) / c'],
+
+    // Logarithms - base 10.
+    ['log10(x)', 'logXY(10, x)'],
+    ['log10(10)', '1'],
+    ['log10(1)', '0'],
+
+    ['log10(10^a)', 'a'],
+    ['log10(10^2)', '2'],
+    ['log10(10^-3)', '-3'],
+
+    ['log10(sqrt(10))', '1/2'],
+    ['log10(nthRoot(10,4))', '1/4'],
+
+    ['log10(b^c)', 'c * logXY(10, b)'],
+    ['log10(sqrt(b))', '1/2 * logXY(10, b)'],
+    ['log10(nthRoot(b,c))', 'logXY(10, b) / c'],
+
+    // Logarithms - base e.
+    ['logE(x)', 'logXY(const.e, x)'],
+    ['logE(const.e)', '1'],
+    ['logE(1)', '0'],
+
+    ['logE(const.e^a)', 'a'],
+    ['logE(const.e^2)', '2'],
+    ['logE(const.e^-3)', '-3'],
+
+    ['logE(sqrt(const.e))', '1/2'],
+    ['logE(nthRoot(const.e,4))', '1/4'],
+
+    ['logE(b^c)', 'c * logXY(const.e, b)'],
+    ['logE(sqrt(b))', '1/2 * logXY(const.e, b)'],
+    ['logE(nthRoot(b,c))', 'logXY(const.e, b) / c'],
   ]
 
   // Create fake symbolic context to handle domain for PI.
