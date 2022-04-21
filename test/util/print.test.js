@@ -39,6 +39,9 @@ describe('print latex', function() {
     ['2/3 x^2', '\\frac{2}{3}~x^{2}'],
     ['-2/3', '\\frac{-2}{3}'],
     ['2*x+4y', '2~x+4~y'],
+    // Built-in constant (const.e) vs ordinary user-defined symbol (e).
+    ['const.pi + pi', '\\boxed{\\pi}+\\pi'],
+    ['const.e + e', '\\boxed{e}+e'],
   ]
   tests.forEach(t => testLatexPrintStr(t[0],t[1]))
 })
