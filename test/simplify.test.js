@@ -784,14 +784,10 @@ describe('kemu extensions', function() {
     isNodeNonNegative: function(node) {
       let rv = false
 
-      if (node.name === 'pi') {
-        // We know that pi constant is non-negative.
-        rv = true
-
-      } else if ((node.type === 'AccessorNode') &&
-                 (node.object.name === 'const') &&
-                 (node.index.dimensions.length === 1) &&
-                 (node.index.dimensions[0].value === 'pi')) {
+      if ((node.type === 'AccessorNode') &&
+          (node.object.name === 'const') &&
+          (node.index.dimensions.length === 1) &&
+          (node.index.dimensions[0].value === 'pi')) {
         // We know that pi constant is non-negative.
         rv = true
       }
