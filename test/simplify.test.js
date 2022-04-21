@@ -527,36 +527,36 @@ describe('nthRoot', function() {
 describe('kemu extensions', function() {
   const tests = [
     // Basic.
-    ['((2 pi)^2)/(4*pi)', 'pi'],
-    ['sqrt((2 pi) ^ 2 / (4 pi ^ 2))' , '1'],
+    ['((2 const.pi)^2)/(4*const.pi)', 'const.pi'],
+    ['sqrt((2 const.pi) ^ 2 / (4 const.pi ^ 2))' , '1'],
     ['(a*b*c*d)^2', 'a^2 * b^2 * c^2 * d^2'],
-    ['(4 pi^2)/(4*pi)', 'pi'],
+    ['(4 const.pi^2)/(4*const.pi)', 'const.pi'],
     ['sqrt(a)*sqrt(a)', 'a'],
-    ['(2 * sqrt(pi))*(sqrt(((2 pi)^2)/(4*pi)))', '2pi'],
+    ['(2 * sqrt(const.pi))*(sqrt(((2 const.pi)^2)/(4*const.pi)))', '2const.pi'],
     ['a*b*c*d', 'a * b * c * d'],
-    ['pi*((1/pi)^2)', '1 / pi'],
-    ['pi*1/pi^2', '1 / pi'],
+    ['const.pi*((1/const.pi)^2)', '1 / const.pi'],
+    ['const.pi*1/const.pi^2', '1 / const.pi'],
     ['x*a/x^2', 'a / x'],
-    ['(pi^2)^3', 'pi^6'],
+    ['(const.pi^2)^3', 'const.pi^6'],
     ['x*(1/x)', '1'],
     ['x*(a/x)', 'a'],
     ['(a*x)*(b/x)', 'a * b'],
-    ['pi*((sqrt(2))^2)', '2pi'],
+    ['const.pi*((sqrt(2))^2)', '2const.pi'],
     ['sqrt(x)^3', 'x^(3/2)'],
-    ['(2*pi)*sqrt(2)', '2pi * sqrt(2)'],
-    ['2 * pi * 1 / pi', '2'],
-    ['2 pi * 1 / x', '2pi / x'],
-    ['4 / (4pi)', '1 / pi'],
+    ['(2*const.pi)*sqrt(2)', '2const.pi * sqrt(2)'],
+    ['2 * const.pi * 1 / const.pi', '2'],
+    ['2 const.pi * 1 / x', '2const.pi / x'],
+    ['4 / (4const.pi)', '1 / const.pi'],
     ['(x/a) * (b/x)', 'b / a'],
-    ['x*sqrt(pi) * sqrt(a)*3', '3x * sqrt(a * pi)'],
-    ['pi ^ -1', '1 / pi'],
+    ['x*sqrt(const.pi) * sqrt(a)*3', '3x * sqrt(a * const.pi)'],
+    ['const.pi ^ -1', '1 / const.pi'],
     ['x/(d*x*e)', '1 / (d * e)'],
-    ['pi * (1 / pi) ^ 2', '1 / pi'],
-    ['sqrt(1/pi)', '1 / sqrt(pi)'],
+    ['const.pi * (1 / const.pi) ^ 2', '1 / const.pi'],
+    ['sqrt(1/const.pi)', '1 / sqrt(const.pi)'],
     ['sqrt(x^2)', 'x'],
     ['sqrt(x^6)', 'x^3'],
-    ['sqrt(pi^2)', 'pi'],
-    ['sqrt(pi^6)', 'pi^3'],
+    ['sqrt(const.pi^2)', 'const.pi'],
+    ['sqrt(const.pi^6)', 'const.pi^3'],
     ['2*5x^2 + sqrt(5)', '10x^2 + sqrt(5)'],
     ['5^2-4*sqrt(2)*(-8)', '25 + 32 * sqrt(2)'], // TODO: 25 + 32 sqrt(2)
     ['2-3*sqrt(5)*(-4)', '2 + 12 * sqrt(5)'],    // TODO: 2 + 12 sqrt(5)
@@ -626,35 +626,35 @@ describe('kemu extensions', function() {
 
     // Trigonometric functions.
     ['-sin(0)'       , '0'],
-    ['sin(pi/6)'     , '1/2'],
-    ['sin(pi/4)'     , 'sqrt(2) / 2'],
-    ['sin(pi/3)'     , 'sqrt(3) / 2'],
-    ['sin(pi/2)'     , '1'],
-    ['sin(pi)'       , '0'],
+    ['sin(const.pi/6)'     , '1/2'],
+    ['sin(const.pi/4)'     , 'sqrt(2) / 2'],
+    ['sin(const.pi/3)'     , 'sqrt(3) / 2'],
+    ['sin(const.pi/2)'     , '1'],
+    ['sin(const.pi)'       , '0'],
     ['-sin(0*x)'     , '0'],
-    ['sin(-4 pi/24)' , '-1/2'],
+    ['sin(-4 const.pi/24)' , '-1/2'],
 
     ['cos(0)'    , '1'],
-    ['cos(pi/6)' , 'sqrt(3) / 2'],
-    ['cos(pi/4)' , 'sqrt(2) / 2'],
-    ['cos(pi/3)' , '1/2'],
-    ['cos(pi/2)' , '0'],
-    ['cos(pi)'   , '-1'],
+    ['cos(const.pi/6)' , 'sqrt(3) / 2'],
+    ['cos(const.pi/4)' , 'sqrt(2) / 2'],
+    ['cos(const.pi/3)' , '1/2'],
+    ['cos(const.pi/2)' , '0'],
+    ['cos(const.pi)'   , '-1'],
 
     ['tg(0)'     , '0'],
-    ['tg(pi/6)'  , 'sqrt(3) / 3'],
-    ['tg(pi/4)'  , '1'],
-    ['tg(pi/3)'  , 'sqrt(3)'],
+    ['tg(const.pi/6)'  , 'sqrt(3) / 3'],
+    ['tg(const.pi/4)'  , '1'],
+    ['tg(const.pi/3)'  , 'sqrt(3)'],
 
-    ['ctg(pi/6)' , 'sqrt(3)'],
-    ['ctg(pi/4)' , '1'],
-    ['ctg(pi/3)' , 'sqrt(3) / 3'],
-    ['ctg(pi/2)' , '0'],
+    ['ctg(const.pi/6)' , 'sqrt(3)'],
+    ['ctg(const.pi/4)' , '1'],
+    ['ctg(const.pi/3)' , 'sqrt(3) / 3'],
+    ['ctg(const.pi/2)' , '0'],
 
     ['atan(0)'         , '0'],
-    ['atan(sqrt(3)/3)' , 'pi / 6'],
-    ['atan(1)'         , 'pi / 4'],
-    ['atan(sqrt(3))'   , 'pi / 3'],
+    ['atan(sqrt(3)/3)' , 'const.pi / 6'],
+    ['atan(1)'         , 'const.pi / 4'],
+    ['atan(sqrt(3))'   , 'const.pi / 3'],
 
     ['sin(n)^2 + cos(n)^2' , '1'],
     ['sin(-n)' , '-sin(n)'],
@@ -723,6 +723,55 @@ describe('kemu extensions', function() {
     // Remove nested fractions.
     ['1/(2/3 c)'   , '3 / (2c)'],
     ['a/(b/c * d)' , 'a * c / (b * d)'],
+
+    // -------------------------------------------------------------------------
+    // Logarithms - general.
+    ['logXY(x,y)', 'logXY(x, y)'],
+    ['logXY(x,x)', '1'],
+    ['logXY(x,1)', '0'],
+
+    ['logXY(x, x^a)', 'a'],
+    ['logXY(x, x^2)', '2'],
+    ['logXY(x, x^-3)', '-3'],
+
+    ['logXY(x, sqrt(x))', '1/2'],
+    ['logXY(x, nthRoot(x,4))', '1/4'],
+
+    ['logXY(a, b^c)', 'c * logXY(a, b)'],
+    ['logXY(a, sqrt(b))', '1/2 * logXY(a, b)'],
+    ['logXY(a, nthRoot(b,c))', 'logXY(a, b) / c'],
+
+    // Logarithms - base 10.
+    ['log10(x)', 'logXY(10, x)'],
+    ['log10(10)', '1'],
+    ['log10(1)', '0'],
+
+    ['log10(10^a)', 'a'],
+    ['log10(10^2)', '2'],
+    ['log10(10^-3)', '-3'],
+
+    ['log10(sqrt(10))', '1/2'],
+    ['log10(nthRoot(10,4))', '1/4'],
+
+    ['log10(b^c)', 'c * logXY(10, b)'],
+    ['log10(sqrt(b))', '1/2 * logXY(10, b)'],
+    ['log10(nthRoot(b,c))', 'logXY(10, b) / c'],
+
+    // Logarithms - base e.
+    ['logE(x)', 'logXY(const.e, x)'],
+    ['logE(const.e)', '1'],
+    ['logE(1)', '0'],
+
+    ['logE(const.e^a)', 'a'],
+    ['logE(const.e^2)', '2'],
+    ['logE(const.e^-3)', '-3'],
+
+    ['logE(sqrt(const.e))', '1/2'],
+    ['logE(nthRoot(const.e,4))', '1/4'],
+
+    ['logE(b^c)', 'c * logXY(const.e, b)'],
+    ['logE(sqrt(b))', '1/2 * logXY(const.e, b)'],
+    ['logE(nthRoot(b,c))', 'logXY(const.e, b) / c'],
   ]
 
   // Create fake symbolic context to handle domain for PI.
@@ -735,10 +784,14 @@ describe('kemu extensions', function() {
     isNodeNonNegative: function(node) {
       let rv = false
 
-      if (node.name === 'pi') {
+      if ((node.type === 'AccessorNode') &&
+          (node.object.name === 'const') &&
+          (node.index.dimensions.length === 1) &&
+          (node.index.dimensions[0].value === 'pi')) {
         // We know that pi constant is non-negative.
         rv = true
       }
+
       return rv
     }
   }
