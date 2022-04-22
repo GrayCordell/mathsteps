@@ -18,6 +18,7 @@ const CACHE_TEXT_TO_NODE = {}
 // Stack of caller registered preprocess function.
 // Empty by default.
 const ARRAY_OF_PREPROCESS_FUNCTIONS_BEFORE_PARSE = []
+const ARRAY_OF_PREPROCESS_FUNCTIONS_AFTER_PARSE  = []
 
 function _compareByTextInternal(x, y) {
   try {
@@ -162,6 +163,11 @@ function _parseTextInternal(text) {
   rv = simplifyCommon.kemuNormalizeConstantNodes(rv)
   rv = _kemuNormalizeMultiplyDivision(rv)
 
+  // Preprocess just generated node tree if needed.
+  ARRAY_OF_PREPROCESS_FUNCTIONS_AFTER_PARSE.forEach((preprocessFct) => {
+    rv = preprocessFct(rv)
+  })
+
   return rv
 }
 
@@ -284,6 +290,10 @@ function registerPreprocessorBeforeParse(cb) {
   ARRAY_OF_PREPROCESS_FUNCTIONS_BEFORE_PARSE.push(cb)
 }
 
+function registerPreprocessorAfterParse(cb) {
+  ARRAY_OF_PREPROCESS_FUNCTIONS_AFTER_PARSE.push(cb)
+}
+
 module.exports = {
   simplifyExpression,
   solveEquation,
@@ -299,4 +309,5 @@ module.exports = {
   isOkAsSymbolicExpression,
   Node,
   registerPreprocessorBeforeParse,
+  registerPreprocessorAfterParse,
 }
