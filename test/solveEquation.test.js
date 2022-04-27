@@ -164,6 +164,11 @@ describe('solveEquation for =', function () {
     ['x^2 = -2x - 1', 'x = -1'],
     ['x - 3.4= ( x - 2.5)/( 1.3)', 'x = 32/5'],
     ['x + 3 - x^2 = 3', 'x = [1, 0]'],
+
+    // 2 test cases from google/mathsteps added in 2020.
+    // https://github.com/google/mathsteps/commit/d65a386364b0f6db5b29a99c0835a3d685600217
+    ['(x+1)=4', 'x = 3'],
+    ['((x)/(4))=4', 'x = 16'],
   ]
 
   tests.forEach((t) => {

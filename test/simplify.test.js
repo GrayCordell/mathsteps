@@ -86,6 +86,7 @@ describe('simplify (arithmetic)', function () {
     ['2*3*5', '30'],
     ['6*6', '36'],
     ['9/4', '9/4'], //  does not divide
+    ['16 + - 1953125', '-1953109'], // verify large negative number round correctly
     ['16 - 1953125', '-1953109'], // verify large negative number round correctly
 
     ['(2+2)', '4'],
@@ -103,6 +104,11 @@ describe('simplify (arithmetic)', function () {
     // Absolute value.
     ['abs(4)', '4'],
     ['abs(-5)', '5'],
+
+    // 2 cases from mrAlbert-development/mathsteps
+    // https://github.com/mrAlbert-development/mathsteps/commit/0a93063ffc89447b2ec76608b3d9f1307bedfaf5
+    ['12x - 11x', 'x'],
+    ['11x - 12x', '-x'],
   ]
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
@@ -329,6 +335,25 @@ describe('distribution', function () {
 
     // One case from al_distribute_over_mult
     ['1 / (x + 1)^x', '1 / (x + 1)^x'],
+
+    // Test case from jefferysac/mathsteps:
+    // https://github.com/jefferysac/mathsteps/commit/776439122dbeef1169d4c5661856fdd46ab25999
+    // distribute the non-fraction term into the numerator(s)
+    ['(3 / x^2 + x / (x^2 + 3)) * (x^2 + 3)', '9 / x^2 + x + 3'],
+
+    // Test case from jefferysac/mathsteps:
+    // https://github.com/jefferysac/mathsteps/commit/776439122dbeef1169d4c5661856fdd46ab25999
+    // if both groupings have fraction, the rule does not apply
+    [
+      '(3 / x^2 + x / (x^2 + 3)) * (5 / x + x^5)',
+      'x^6 / (x^2 + 3) + 15 / x^3 + 3x^3 + 5 / (x^2 + 3)'
+    ],
+
+    // Test cases from lexiross/mathsteps:
+    // https://github.com/lexiross/mathsteps/commit/059b5991e4e83eef08ef2b4b906c4e79ba467730
+    ['(1 / x +  x^2) * (x^3 + 1)', 'x^5 + 2x^2 + 1 / x '],
+    ['(3 / x^2 + x / (x^2 + 3)) * (x^2 + 3)', '-9 / x^2 + x + 3   '],
+    ['(3 / x^2 + x / (x^2 + 3)) * (5 / x + x^5)', 'x^6 / (x^2 + 3) + 15 / x^3 + 3x^3 + 5 / (x^2 + 3)'],
   ]
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
@@ -396,7 +421,18 @@ describe('cancelling out', function() {
     ['2 a / a', '2'],
     ['(35 * nthRoot (7)) / (5 * nthRoot(5))', '7 * sqrt(7) / sqrt(5)'],
     ['3/(9r^2)', '1 / (3r^2)'],
-    ['6/(2x)', '3 / x']
+    ['6/(2x)', '3 / x'],
+
+    // Cases from evykassirer/mathsteps:
+    // https://github.com/evykassirer/mathsteps/commit/e5a69b7c0e366ae0c51dd5296038a568bcbdf8db
+    ['6/(2x)', '3 / x'],
+    ['(40 * x) / (20 * y)', '2x / y'],
+    ['(20 * x) / (40 * y)', 'x / (2y)'],
+    ['20x / (40y)', 'x / (2y)'],
+    ['60x / (40y)', '3x / (2y)'],
+    ['4x / (2y)', '2x / y'],
+    ['(20 * x) / (5 * (40 * y))', 'x / (10y)'],
+    ['400 * z / ((20 * x) / (5 * (40 * y)))', '4000y * z / x'],
   ]
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
@@ -429,6 +465,15 @@ describe('nthRoot support', function() {
     ['nthRoot(x,3) * sqrt(x)', 'x^(5/6)'],
     ['nthRoot(x,3) * nthRoot(x,4)', 'x^(7/12)'],
     ['nthRoot(x,3) * nthRoot(x,4) * nthRoot(x,5)', 'x^(47/60)'],
+
+    // 2 cases from isadounikau/mathsteps
+    // https://github.com/isadounikau/mathsteps/commit/7809ff8e34bdab4bd95bf5e20c20c828673de964
+    ['nthRoot(64, 3)', '4'],
+    ['nthRoot(35937, 3)', '33'],
+
+    // 1 case from mrAlbert-development/mathsteps
+    // https://github.com/mrAlbert-development/mathsteps/commit/0a93063ffc89447b2ec76608b3d9f1307bedfaf5
+    ['3*nthRoot(11,2) - 2*nthRoot(11,2)', 'sqrt(11)']
   ]
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
@@ -486,7 +531,13 @@ describe('handles unnecessary parens at root level', function() {
 })
 
 describe('keeping parens in important places, on printing', function() {
-  testSimplify('2 / (3x^2) + 5', '2 / (3x^2) + 5')
+  const tests = [
+    ['2 / (3x^2) + 5', '2 / (3x^2) + 5'],
+    // Test case from shirleymiao/mathsteps
+    // https://github.com/shirleymiao/mathsteps/commit/27adb5eca3617a9b1cd083798086ffe738bf6c90
+    ['((4+x)-5)^(2)', 'x^2 - 2x + 1'],
+  ]
+  tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
 describe('nthRoot', function() {
