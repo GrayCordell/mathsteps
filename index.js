@@ -220,7 +220,7 @@ function simplifyExpression(optionsOrExpressionAsText) {
       options = optionsOrExpressionAsText
 
       if (options.expressionAsText != null) {
-      expressionNode = parseText(options.expressionAsText)
+        expressionNode = parseText(options.expressionAsText)
 
       } else if (options.expressionNode != null) {
         expressionNode = options.expressionNode
