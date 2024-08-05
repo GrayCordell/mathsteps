@@ -1,6 +1,7 @@
 const assert    = require('assert')
 const mathsteps = require('../index.js')
 const print     = require('../lib/util/print')
+const {expressionEquals} = require('../lib/util/expressionEqualsAndNormalization')
 
 function testSimplify(exprStr, outputStr, debug = false, ctx) {
   it(exprStr + ' -> ' + outputStr, function () {
@@ -13,7 +14,15 @@ function testSimplify(exprStr, outputStr, debug = false, ctx) {
 
     const resultNode   = mathsteps.simplifyExpression(options)
     const resultAsText = print.ascii(resultNode)
-    assert.deepEqual(resultAsText, outputStr)
+
+    const isEqual = expressionEquals(resultAsText, outputStr)
+    const isDeepEqual = resultAsText === outputStr
+    let outputMessage = `Expected: ${outputStr}, got: ${resultAsText}`
+    outputMessage += isEqual && !isDeepEqual
+        ? ' (but only deep equal)'
+        : ' (both deep and equal)'
+
+    assert.deepEqual(resultAsText, outputStr,outputMessage)
   })
 }
 
@@ -351,7 +360,7 @@ describe('distribution', function () {
 
     // Test cases from lexiross/mathsteps:
     // https://github.com/lexiross/mathsteps/commit/059b5991e4e83eef08ef2b4b906c4e79ba467730
-    ['(1 / x +  x^2) * (x^3 + 1)', 'x^5 + 2x^2 + 1 / x '],
+    ['(1 / x +  x^2) * (x^3 + 1)', 'x^5 + 2x^2 + 1 / x'],
     ['(3 / x^2 + x / (x^2 + 3)) * (x^2 + 3)', '-9 / x^2 + x + 3   '],
     ['(3 / x^2 + x / (x^2 + 3)) * (5 / x + x^5)', 'x^6 / (x^2 + 3) + 15 / x^3 + 3x^3 + 5 / (x^2 + 3)'],
   ]
