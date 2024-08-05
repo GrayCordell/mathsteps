@@ -1,54 +1,14 @@
-const {parseText} = require('../index')
 const mathsteps = require('../index')
-const kemuSortArgs = require('../lib/simplifyExpression/kemuSortArgs')
-const clone = require('../lib/util/clone')
-const EqualityCache = require('../lib/util/equalityCache')
 const {myToString} = require('../lib/util/myUtil')
 const {filterUniqueValues} = require('../lib/util/arrayUtils')
-const {travelTree} = require('../lib/util/treeUtil')
 const {cleanerMyToString} = require('../lib/util/myUtil')
+const {equalsCache} = require('../lib/util/expressionEqualsAndNormalization')
+const {expressionEquals} = require('../lib/util/expressionEqualsAndNormalization')
 
 
-function myMoreNormalization(node){
-  travelTree(node,(_node)=>{
-        // remove implicit multiplication.
-    if(_node.implicit)
-      _node.implicit = false
+const stepEquals = (step0, step1)=>expressionEquals(step0,step1)
 
-        // remove multiply by 1
-    if(node.type === 'OperatorNode' && node.fn === 'multiply'){
-      node.args = node.args.filter((arg)=>arg.toString() !== '1')
-      if(node.args.length === 1)
-        node = node.args[0]
-    }
-  })
-  return node
-}
-
-const equalsCache =  new EqualityCache(stepEqualsCore)
 const resultCache = new Map()
-
-function stepEquals(step0, step1){
-  return equalsCache.areEqual(step0,step1)
-}
-function stepEqualsCore(step0, step1){
-  if(typeof step0 === 'string' && myToString(step0) === myToString(step1)) // naive string check
-    return true
-  if(!step0 || !step1) // fail
-    return false
-
-  let newStep0 = typeof step0 !== 'string'
-      ? myMoreNormalization(kemuSortArgs(clone((step0))))
-      : myMoreNormalization(kemuSortArgs(parseText(step0)))
-
-  let newStep1 = typeof step1 !== 'string'
-      ? myMoreNormalization(kemuSortArgs((clone(step1))))
-      : myMoreNormalization(kemuSortArgs((parseText(step1))))
-
-  return newStep0.equals(newStep1) || newStep0.toString() === newStep1.toString()
-}
-
-
 function getAllValidNextSteps(userStep, isDryRun = false, isWithAlternativeRun = true) {
   // Find if there's an equivalent cached result
   let foundKey = null
@@ -63,7 +23,7 @@ function getAllValidNextSteps(userStep, isDryRun = false, isWithAlternativeRun =
     return resultCache.get(foundKey)
   }
 
-    // solve from this step
+  // solve from this step
   const correctStepsFromHere = []
   const eventualAnswer = mathsteps.simplifyExpression({
     expressionAsText: userStep,
@@ -103,7 +63,7 @@ function getAllValidNextSteps(userStep, isDryRun = false, isWithAlternativeRun =
   const filteredTosWithInfo = filterUniqueValues(tosWithInfo, (item1,item2)=>stepEquals(item1.to,item2.to))
   // check if any equal each other
 
- // type NextStep = { to:string, from:string, changeType:string },
+  // type NextStep = { to:string, from:string, changeType:string },
   // Cache the result using the userStep or its equivalent
   resultCache.set(userStep, filteredTosWithInfo)
   return {nextStep: filteredTosWithInfo, eventualAnswer}
@@ -116,7 +76,7 @@ function validStepFinder(lastTwoUserSteps) {
   const queue = []
   const hasTried = new Set()
 
-    // Initialize the queue with the first state and an empty history
+  // Initialize the queue with the first state and an empty history
   queue.push({ start: lastTwoUserSteps[0], history: [] })
 
   let depth = 0
@@ -137,11 +97,11 @@ function validStepFinder(lastTwoUserSteps) {
       continue
 
     for (const alternateStep of nextStep) {
-            // Record the step in history
+      // Record the step in history
       const newHistory = [...history, alternateStep]
 
       if (stepEquals(alternateStep.to, valueToFind)) {
-          // If the target is found, return the history leading up to it
+        // If the target is found, return the history leading up to it
         return newHistory
       }
 
@@ -158,14 +118,14 @@ function validStepFinder(lastTwoUserSteps) {
 
 console.log('-----START------')
 const userSteps = [
-    // '4 + 3 + (4 * 2 * 4/2)',
-    // '4 + 3 + 8',
+  // '4 + 3 + (4 * 2 * 4/2)',
+  // '4 + 3 + 8',
   '5x * 3x * 2x * x * 6x',
   '5x * 3x * 2x^2 * 6x',
   '5x * 6x^3 * 6x',
 ].map(step => step.replace(/\s/g, ''))
-  // printTree(simplifyCommon.kemuFlatten(parseText(userSteps[0])))
-  //
+// printTree(simplifyCommon.kemuFlatten(parseText(userSteps[0])))
+//
 const checkedSteps = []
 let lastStep
 
@@ -188,14 +148,14 @@ for(const step of userSteps){
 
   lastStep = step
 }
-  // print all
+// print all
 checkedSteps.forEach((steps,i)=> {
   console.log('steps',i)
   for(const step of steps){
     if(step.isInvalid)
       console.log(`invalid_change from: ${cleanerMyToString(step.from)} to: ${cleanerMyToString(step.to)}`)
     else
-        console.log(`valid_change:${step.ogChangeType || step.changeType} from: ${cleanerMyToString(step.from)} to: ${cleanerMyToString(step.to)}`)
+      console.log(`valid_change:${step.ogChangeType || step.changeType} from: ${cleanerMyToString(step.from)} to: ${cleanerMyToString(step.to)}`)
   }
 
 })
