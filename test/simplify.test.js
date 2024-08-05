@@ -1,28 +1,31 @@
-const assert    = require('assert')
-const mathsteps = require('../index.js')
-const print     = require('../lib/util/print')
-const {expressionEquals} = require('../lib/util/expressionEqualsAndNormalization')
+// const assert    = require('assert')
+// const mathsteps = require('../index.js')
+// const print     = require('../lib/util/print')
+// const {expressionEquals} = require('../lib/util/expressionEqualsAndNormalization')
+import mathsteps from '../lib/index.js'
+import print from '../lib/util/print'
+import { expressionEquals } from '../lib/util/expressionEqualsAndNormalization'
 
+import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
+function timeout(ms = 0) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
 function testSimplify(exprStr, outputStr, debug = false, ctx) {
-  it(exprStr + ' -> ' + outputStr, function () {
-    this.timeout(10000)
-    const options = {
-      expressionAsText: exprStr,
-      isDebugMode: debug,
-      expressionCtx: ctx
+  it(exprStr + ' -> ' + outputStr, async function(){
+    //await timeout(10000)
+    const options={
+      expressionAsText:exprStr,isDebugMode:debug,expressionCtx:ctx
     }
 
-    const resultNode   = mathsteps.simplifyExpression(options)
-    const resultAsText = print.ascii(resultNode)
+    const resultNode=mathsteps.simplifyExpression(options)
+    const resultAsText=print.ascii(resultNode)
 
-    const isEqual = expressionEquals(resultAsText, outputStr)
-    const isDeepEqual = resultAsText === outputStr
-    let outputMessage = `Expected: ${outputStr}, got: ${resultAsText}`
-    outputMessage += isEqual && !isDeepEqual
-        ? ' (but only deep equal)'
-        : ' (both deep and equal)'
+    const isEqual=expressionEquals(resultAsText,outputStr)
+    const isDeepEqual=resultAsText===outputStr
+    let outputMessage=`Expected: ${outputStr}, got: ${resultAsText}`
+    outputMessage+=isEqual&& !isDeepEqual?' (but only deep equal)':' (both deep and equal)'
 
-    assert.deepEqual(resultAsText, outputStr,outputMessage)
+    assert.deepEqual(resultAsText,outputStr,outputMessage)
   })
 }
 

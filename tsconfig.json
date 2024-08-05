@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "jsx": "preserve",
+    "lib": ["DOM", "ESNext"],
+    "rootDir": "./lib",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "paths": {
+      "~/*": ["./lib/*"]
+    },
+    "resolveJsonModule": true,
+    "types": [
+      "vitest",
+      "vite/client"
+    ],
+    "allowJs": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": false,
+    "noEmit": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
+  },
+  "include": ["lib/**/*", "index.js", "index.ts"],
+  "exclude": ["dist", "node_modules", "cypress", "build", "coverage"]
+}
