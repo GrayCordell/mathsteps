@@ -1,23 +1,6 @@
 const assert    = require('assert')
 const mathsteps = require('../index.js')
 const print     = require('../lib/util/print')
-const {parseText} = require('../index')
-const simplifyCommon = require('../lib/simplifyExpression/_common')
-const {getSplits} = require('../lib/util/myUtil')
-const clone = require('../lib/util/clone')
-const {printTree} = require('../lib/util/myUtil')
-const kemuSortArgs = require('../lib/simplifyExpression/kemuSortArgs')
-const _util = require('mathjs/lib/function/algebra/simplify/util')
-const {math} = require('../config')
-const OperatorNode    = math.OperatorNode
-const FunctionNode    = math.FunctionNode
-const SymbolNode      = math.SymbolNode
-const _createUtil = (0, _util.createUtil)({
-  FunctionNode: FunctionNode,
-  OperatorNode: OperatorNode,
-  SymbolNode: SymbolNode
-})
-const createMakeNodeFunction = _createUtil.createMakeNodeFunction
 
 function testSimplify(exprStr, outputStr, debug = false, ctx) {
   it(exprStr + ' -> ' + outputStr, function () {
@@ -33,228 +16,6 @@ function testSimplify(exprStr, outputStr, debug = false, ctx) {
     assert.deepEqual(resultAsText, outputStr)
   })
 }
-// function getSteps(userStep) {
-//   // solve from this step
-//   const correctStepsFromHere = []
-//   mathsteps.simplifyExpression({
-//     expressionAsText: userStep,
-//     isDebugMode: false,
-//     expressionCtx:undefined,
-//     onStepCb: (step) => {
-//       return correctStepsFromHere.push(step)
-//     }
-//   })
-//   console.log('-------------')
-//   return correctStepsFromHere
-// }
-function getAllValidNextSteps(userStep, isDryRun = false, isWithAlternativeRun = true) {
-  // solve from this step
-  const correctStepsFromHere = []
-  console.log('-------------')
-  console.log('attempting:', userStep)
-  const eventualAnswer = mathsteps.simplifyExpression({
-    expressionAsText: userStep,
-    isDebugMode: false,
-    expressionCtx:undefined,
-    isDryRun: isDryRun,
-    isWithAlternativeRun: isWithAlternativeRun,
-    onStepCb: (step) => {
-      return correctStepsFromHere.push(step)
-    }
-  })
-
-  // filter out correctStepsFromHere that have the same nodeAfterStrings array
-
-  const alreadyFound = []
-  let newCorrectStepsFromHere = []
-  const steps =  correctStepsFromHere.map((step)=>{
-    if(!step.resToFromJsonLog)
-      return null
-    if(Array.isArray(step.resToFromJsonLog))
-      return  null
-
-    if(!alreadyFound.includes(step.resToFromJsonLog)){
-      alreadyFound.push( step.resToFromJsonLog)
-      return step
-    } else return null
-  }).filter((v)=>v).map((v)=>{
-    const parsed = JSON.parse(v.resToFromJsonLog)
-    v.to = clean(parsed.to)
-    v.from = clean(parsed.from)
-    v.ogChangeType = parsed.ogChangeType
-    // v.changeType = v.ogChangeType
-    return v
-  })
-
-
-  return {nextStep: steps, eventualAnswer}
-}
-
-// function getValidNextStepOptions(userStep){
-//   const {nextStep,eventualAnswer} = getAllValidNextSteps(userStep, true, true)
-//   if(!nextStep || nextStep.length === 0)
-//     return
-//   return {nextStep,eventualAnswer}
-// }
-
-// describe('temp2', function (){
-//   console.log('-------------')
-//   const equation = '2 * 3 * 4 * 5'
-//   const steps = getSteps(equation)
-//   console.log('steps', steps)
-// })
-
-//  travel node and get all possible multiplication combinations
-// function _internalGetAllMultiplicationCombinations(stepNode,logMultiplications = []){
-//   if(!stepNode || !stepNode.args || stepNode.args.length === 0)
-//     return
-//   if(stepNode.type === 'OperatorNode' && stepNode.fn === 'multiply'){
-//     logMultiplications.push(stepNode)
-//     stepNode.args.forEach((arg)=>_internalGetAllMultiplicationCombinations(arg,logMultiplications))
-//   } else {
-//     stepNode.args.forEach((arg)=>_internalGetAllMultiplicationCombinations(arg,logMultiplications))
-//   }
-// }
-// //  travel node and get all possible addition combinations
-// function _internalGetAllAdditionCombinations(stepNode,logAddition = []){
-//   if(!stepNode || !stepNode.args || stepNode.args.length === 0)
-//     return
-//   if(stepNode.type === 'OperatorNode' && stepNode.fn === 'add'){
-//     logAddition.push(stepNode)
-//     stepNode.args.forEach((arg)=>_internalGetAllAdditionCombinations(arg,logAddition))
-//   } else {
-//     stepNode.args.forEach((arg)=>_internalGetAllAdditionCombinations(arg,logAddition))
-//   }
-// }
-
-// function getAllMultiplicationCombinations(stepStr){
-//   const stepNode =  simplifyCommon.kemuFlatten(parseText(stepStr))
-//   const log = getSplits(stepNode)
-//
-//   console.log('resTest', clean(log))
-//   return log
-//   // const logMultiplications = []
-//   // _internalGetAllMultiplicationCombinations(stepNode,logMultiplications)
-//   // return logMultiplications
-// }
-
-function stepEquals(step0, step1){
-  if(typeof step0 === 'string' && step0 === step1) // naive string check
-    return true
-  if(!step0 || !step1) // fail
-    return false
-
-  const newStep0 = typeof step0 !== 'string'
-    ? kemuSortArgs(clone(step0))
-    : kemuSortArgs(parseText(step0))
-
-  const newStep1 = typeof step1 !== 'string'
-    ? kemuSortArgs(clone(step1))
-    : kemuSortArgs(parseText(step1))
-
-  return newStep0.equals(newStep1)
-}
-
-// function isValidStepFinder(lastTwoUserSteps){
-//   const allLogTemp = new Set()
-//   const res = validStepFinder(lastTwoUserSteps, [], null, allLogTemp)
-//   // print allLogTemp
-//   // for(const v of allLogTemp){
-//   //   console.log('log',v)
-//   // }
-//   return res && res.length > 0
-// }
-function clean(unknownThing){
-  const toStringFn = (thing)=>{
-    if(thing && thing.toString)
-      return thing.toString()
-    return thing
-  }
-
-  if(typeof unknownThing === 'string')
-    return unknownThing.replace(/\s/g, '')
-  else if(Array.isArray(unknownThing))
-    return unknownThing.map((v)=>toStringFn(v).replace(/\s/g, ''))
-  else if(typeof unknownThing === 'object'){
-    const tryToStr =  toStringFn(unknownThing)
-    return typeof tryToStr === 'string' ? tryToStr.replace(/\s/g,'') : tryToStr
-  }
-}
-
-
-function validStepFinder(lastTwoUserSteps) {
-  const valueToFind = lastTwoUserSteps[1]
-  const queue = []
-  const hasTried = new Set()
-
-  // Initialize the queue with the first state and an empty history
-  queue.push({ start: lastTwoUserSteps[0], history: [] })
-
-  while (queue.length > 0) {
-    const { start, history } = queue.shift() // Use shift for BFS (queue)
-
-    if (hasTried.has(start)) continue
-    hasTried.add(start)
-
-    const { nextStep } = getAllValidNextSteps(start, true, true)
-
-    if (!nextStep || nextStep.length === 0) continue
-
-    for (const alternateStep of nextStep) {
-      // Record the step in history
-      const newHistory = [...history, alternateStep]
-
-      if (stepEquals(alternateStep.to, valueToFind)) {
-        // If the target is found, return the history leading up to it
-        return newHistory
-      }
-
-      queue.push({ start: alternateStep.to, history: newHistory })
-    }
-  }
-
-  return null // Return null if no valid steps lead to the found answer
-}
-
-
-describe('temp1111', function () {
-  // TODO get all tracked changes from from to to
-  console.log('1-------------')
-  const userSteps = [
-    '2 * 3 * 4 * (5 + 1)',
-    '2 * 3 *  (20 + 4)'
-  ].map(step => step.replace(/\s/g, ''))
-  // printTree(simplifyCommon.kemuFlatten(parseText(userSteps[0])))
-  //
-  const checkedSteps = []
-  let lastStep
-  for(const step of userSteps){
-    if(!lastStep){
-      lastStep = step
-      continue
-    }
-    const hasTried = []
-    const steps = validStepFinder([lastStep,step],hasTried)
-    if(!steps || steps.length === 0)
-      checkedSteps.push([{isInvalid:true, from:lastStep, to:step}])
-    else
-      checkedSteps.push(steps)
-
-    lastStep = step
-  }
-  // print all
-  checkedSteps.forEach((steps,i)=> {
-    console.log('steps',i)
-    for(const step of steps){
-      if(step.isInvalid)
-        console.log(`invalid_change from: ${step.from} to: ${step.to}`)
-      else
-        console.log(`valid_change:${step.ogChangeType || step.changeType} from: ${step.from} to: ${step.to}`)
-    }
-
-  })
-})
-
 
 describe('simplify (basics)', function () {
   // Imported from https://github.com/google/mathsteps/tree/division.
@@ -314,67 +75,40 @@ describe('simplify (basics)', function () {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('simplify (basics)', function () {
-  // Imported from https://github.com/google/mathsteps/tree/division.
-  // Thanks to Anthony Liang (https://github.com/aliang8)
+describe('simplify (arithmetic)', function () {
   const tests = [
-    // Arithmetics with zero
-    ['x + 0', 'x'],
-    ['2 * 0 * x', '0'],
-    ['(x+3)^0', '1'],
-    ['0 x', '0'],
-    ['2*0*z^2','0'],
-    ['0/5', '0'],
-    ['0/(x+6+7+x^2+2^y)', '0'],
-    ['2+0+x', 'x + 2'],
-    ['2+x+0', 'x + 2'],
-    ['0+2+x', 'x + 2'],
+    ['(2+2)*5', '20'],
+    ['(8+(-4))*5', '20'],
+    ['5*(2+2)*10', '200'],
+    ['(2+(2)+7)', '11'],
+    ['(8-2) * 2^2 * (1+1) / (4 /2) / 5', '24/5'],
+    ['2+2', '4'],
+    ['2*3*5', '30'],
+    ['6*6', '36'],
+    ['9/4', '9/4'], //  does not divide
+    ['16 + - 1953125', '-1953109'], // verify large negative number round correctly
+    ['16 - 1953125', '-1953109'], // verify large negative number round correctly
 
-    // Arithmetic with one.
-    ['x/1', 'x'],
-    ['1^3', '1'],
-    ['1^x', '1'],
-    ['x^1', 'x'],
-    ['1^(2 + 3 + 5/4 + 7 - 6/7)', '1'],
-    ['x*1', 'x'],
-    ['1x', 'x'],
-    ['1*z^2', 'z^2'],
-    ['2*1*z^2', '2z^2'],
+    ['(2+2)', '4'],
+    ['(2+2)*5', '20'],
+    ['5*(2+2)', '20'],
+    ['2*(2+2) + 2^3', '16'],
+    ['6*6', '36'],
+    ['2+x', 'x + 2'],
+    ['(2+2)*x', '4x'],
+    ['(2+2)*x+3', '4x + 3'],
+    ['2+x+7', 'x + 9'],
+    ['2x^2 * y * x * y^3', '2x^3 * y^4'],
+    ['12x^2', '12x^2'],
 
+    // Absolute value.
+    ['abs(4)', '4'],
+    ['abs(-5)', '5'],
 
-    // Arithmetic with minus one.
-    ['-1*x', '-x'],
-    ['x^2*-1', '-x^2'],
-    ['2x*2*-1', '-4x'],
-
-    // Rearrange coefficients
-    ['2 * x^2', '2x^2'],
-    ['y^3 * 5', '5y^3'],
-
-    // Remove unary minus.
-    ['--5', '5'],
-    ['--x', 'x'],
-
-    // Simplify signs.
-    ['-12x / -27', '4/9x'],
-    ['x / -y', '-x / y'],
-
-    // Division.
-    ['6/x/5', '6 / (5x)'],
-    ['-(6/x/5)', '-6 / (5x)'],
-    ['-6/x/5', '-6 / (5x)'],
-    ['(2+2)/x/6/(y-z)', '2 / (3x * y - 3x * z)'],
-    ['2/x', '2 / x'],
-    ['x/(2/3)', '3/2x'],
-    ['x / (y/(z+a))', 'x * z / y + a * x / y'],
-    ['x/((2+z)/(3/y))', '3x / (y * z + 2y)'],
-  ]
-  tests.forEach(t => testSimplify(t[0], t[1], t[2]))
-})
-
-describe('simplify2 (arithmetic)', function () {
-  const tests = [
-    ['1 + 2 + 3 + 4', '10'],
+    // 2 cases from mrAlbert-development/mathsteps
+    // https://github.com/mrAlbert-development/mathsteps/commit/0a93063ffc89447b2ec76608b3d9f1307bedfaf5
+    ['12x - 11x', 'x'],
+    ['11x - 12x', '-x'],
   ]
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
