@@ -1,4 +1,5 @@
-# Contributing to mathsteps
+# Contributing to mathsteps (NEEDS UPDATING FOR THIS FORK.)
+# This Is the original contributing file from the mathsteps project. It is not all applicable to this new version. Still very worth reading. 
 
 #### We're excited to have you helping out! Thank you so much for your time
 

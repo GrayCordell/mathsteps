@@ -1,4 +1,12 @@
+Sure, here's an improved version of your history section:
+
 # History
+
+## 2024-08-06, Version A1.0.0
+The first version published by Grayson Cordell, a fork of the Calculla team's fork of the original mathsteps project.
+  ### Introduction from Grayson / Vanderbilt Team
+  Hello, I am Grayson Cordell, a research engineer at Vanderbilt's Institute for Software Integrated Systems. I am working on a project that requires accessing and evaluating students' math steps. The primary intention of this fork is to facilitate this process. However, it is likely that improvements to the original code will also be necessary. The current name of this fork is TBD.
+
 
 ## 2020-07-23, version k1.0.0
 The first version published by [Calculla](https://calculla.com) team.

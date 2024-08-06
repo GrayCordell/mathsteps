@@ -1,75 +1,87 @@
-# Mathsteps - A step by step solver for math
+# Mathsteps - Experimental Fork (Name TBD)
 
-[![CircleCI](https://circleci.com/gh/kemu-studio/mathsteps.svg?style=svg)](https://app.circleci.com/pipelines/github/kemu-studio/mathsteps.svg)
-[![Git Commit](https://img.shields.io/github/last-commit/kemu-studio/mathsteps.svg?style=flat)](https://github.com/kemu-studio/mathsteps/commits/master)
+This is an experimental fork of Kemu Studio's [mathsteps](https://github.com/kemu-studio/mathsteps), a step-by-step solver for math problems. This fork introduces several significant changes and improvements:
 
-# Demo ![Calculla.com](https://calculla.com/g/calculla_logo_small_32.png)
+## Major Changes & Future Changes
+- **Converted CommonJS to ESM**: Modernized the module system.
+- **Added TypeScript/JSDoc Support**: Enhanced code quality and developer experience.
+- **Optimized for Browser Use**: Tailored for better performance in web environments.
+- **Modernized ESLint Configuration**: Ensured code adheres to contemporary JavaScript standards.
 
-To see this version of mathsteps in action go to [calculla.com](https://calculla.com). For example it's used in [Sum of angles calculator](https://calculla.com/sum_of_angles_in_triangle), so you can put something like "1/3 pi" into alpha and beta angles and it will show you all steps needed to achieve "1/3 pi" result.
+Considering the extensive changes and my limited familiarity with some of the original code's intentions, merging this fork back into the main mathsteps repository might not be feasible. However, it remains a possibility for the future. KemuStudios is free to contact me if they think my future work could benefit the main project.
 
-## Requirements
+## New Project Focus
+The primary goal of this fork is to add an ability to evaluate users' steps in solving math problems and diagnose where they might have gone wrong. The current implementation uses existing solving rules to find all possible next steps. This feature is still a work in progress and may not yet be highly performant.
 
-Mathsteps requires Node version > 6.0.0
+Check out `main.js` to see the current implementation of this feature in action.
 
-## Usage
+## Installation
+1. Clone this repository:
+   ```sh
+   git clone <repository-url>
+   ```
+2. Install all dependencies:
+   ```sh
+   pnpm install
+   ```
 
-To install mathsteps using npm:
+## Usage for Evaluating User Steps (Work in Progress)
+1. Modify the `usersteps` array in `main.js` to include the desired user steps.
+2. Run the development server:
+   ```sh
+   pnpm dev
+   ```
+   Check the console for the current output.
 
-    npm install mathsteps
+For more information on solving math problems using mathsteps, see the examples below:
 
-```js
-const mathsteps = require('mathsteps');
+## Code Examples
 
-const steps = mathsteps.simplifyExpression('2x + 2x + x + x');
+### Simplifying an Expression
+```javascript
+let steps = [];
+const newNode = mathsteps.simplifyExpression({
+  expressionAsText: '2x + 2x + x + x',
+  onStepCb: (step) => {
+    steps.push(step);
+
+    // Uncomment the following lines to see alternate forms
+    // if (stepMeta.altForms) {
+    //   console.log('ALT FORM:', mathsteps.printAsTeX(stepMeta.altForms[0].node));
+    //   console.log(stepMeta.altForms[0].node);
+    // }
+  }
+});
 
 steps.forEach(step => {
-        console.log("before change: " + step.oldNode.toString());   // before change: 2 x + 2 x + x + x
-        console.log("change: " + step.changeType);                  // change: ADD_POLYNOMIAL_TERMS
-        console.log("after change: " + step.newNode.toString());    // after change: 6 x
-        console.log("# of substeps: " + step.substeps.length);      // # of substeps: 3
+  console.log("change: " + step.changeType); // change: ADD_POLYNOMIAL_TERMS
+  console.log("after change: " + mathsteps.printAsTeX(step.rootNode)); // after change: 6x
 });
 ```
 
-To solve an equation:
-```js
+### Simplifying an Equation
+```javascript
+const steps = [];
+const eventualAnswer = mathsteps.simplifyExpression({
+  expressionAsText: userStep,
+  isDebugMode: false,
+  onStepCb: (step) => {
+    steps.push(step);
+  }
+});
+```
+
+### Solving an Equation
+```javascript
 const result = mathsteps.solveEquation({
   equationAsText: '2x + 3x = 35',
   unknownVariable: 'x',
   onStepCb: function(step) {
-    console.log(`[ ${step.equation.getId()} ] ${step.stepId} | ${step.equation}`)
+    console.log(`[ ${step.equation.getId()} ] ${step.stepId} | ${step.equation}`);
   }
-})
+});
 ```
 
-(if you're using mathsteps v0.1.6 or lower, use `.print()` instead of `.ascii()`)
+Feel free to contribute, open issues, or suggest improvements. I'd love for this project to be a collaborative effort, and your input is highly valued!
 
-To see all the change types:
-```js
-const changes = mathsteps.ChangeTypes;
-```
-
-## Contributing
-
-Hi! If you're interested in working on this, that would be super awesome!
-Learn more here: [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Build
-
-First clone the project from github:
-
-    git clone https://github.com/socraticorg/mathsteps.git
-    cd mathsteps
-
-Install the project dependencies:
-
-    npm ci
-
-## Test
-
-To execute tests for the library, install the project dependencies once:
-
-    npm ci
-
-Then, the tests can be executed:
-
-    npm test
+---
