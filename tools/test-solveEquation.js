@@ -1,5 +1,4 @@
-const mathsteps = require('../index.js')
-
+import mathsteps from '~/index.js'
 const result = mathsteps.solveEquation({
   equationAsText: 'x/(2/3) = 1',
   unknownVariable: 'x',
