@@ -1,12 +1,12 @@
-import Node from '~/node'
-import TestUtil from '../TestUtil'
-import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
+import Node from '~/node.js'
+import TestUtil from '../TestUtil.js'
+import { describe } from 'vitest'
 
 function testIsPolynomialTerm(exprStr, isTerm) {
   TestUtil.testBooleanFunction(Node.Type.isPolynomialTerm, exprStr, isTerm)
 }
 
-describe('classifies symbol terms correctly', function() {
+describe('classifies symbol terms correctly', () => {
   const tests = [
     ['x', true],
     ['x^2', true],

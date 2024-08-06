@@ -1,6 +1,7 @@
 import mathsteps from '~/index.js'
-const expr      = '(x - 2)^2'
-const exprObj   = mathsteps.parseText(expr)
+
+const expr = '(x - 2)^2'
+const exprObj = mathsteps.parseText(expr)
 
 console.log('--------------------------')
 console.log('BEFORE')
@@ -14,8 +15,8 @@ console.log('STEPS')
 
 const newNode = mathsteps.simplifyExpression({
   expressionAsText: expr,
-  isWithAlternativeRun:true,
-  isDryRun:false,
+  isWithAlternativeRun: true,
+  isDryRun: false,
   onStepCb: (stepMeta) => {
     console.log(stepMeta.changeType, '|', mathsteps.print(stepMeta.rootNode))
 
@@ -25,7 +26,7 @@ const newNode = mathsteps.simplifyExpression({
       console.log(stepMeta.altForms[0].node)
     }
     */
-  }
+  },
 })
 
 console.log()

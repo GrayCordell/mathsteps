@@ -1,31 +1,31 @@
 import mathsteps from '../lib/index.js'
-import print from '../lib/util/print'
-import { expressionEquals } from '../lib/util/expressionEqualsAndNormalization'
+import print from '../lib/util/print.js'
+import { expressionEquals } from '../lib/util/expressionEqualsAndNormalization.js'
 
-import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
-function timeout(ms = 0) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-}
+import { assert, describe, it } from 'vitest'
+
 function testSimplify(exprStr, outputStr, debug = false, ctx) {
-  it(exprStr + ' -> ' + outputStr, async function(){
-    //await timeout(10000)
-    const options={
-      expressionAsText:exprStr,isDebugMode:debug,expressionCtx:ctx
+  it(`${exprStr} -> ${outputStr}`, async () => {
+    // await timeout(10000)
+    const options = {
+      expressionAsText: exprStr,
+      isDebugMode: debug,
+      expressionCtx: ctx,
     }
 
-    const resultNode=mathsteps.simplifyExpression(options)
-    const resultAsText=print.ascii(resultNode)
+    const resultNode = mathsteps.simplifyExpression(options)
+    const resultAsText = print.ascii(resultNode)
 
-    const isEqual=expressionEquals(resultAsText,outputStr)
-    const isDeepEqual=resultAsText===outputStr
-    let outputMessage=`Expected: ${outputStr}, got: ${resultAsText}`
-    outputMessage+=isEqual&& !isDeepEqual?' (but only deep equal)':' (both deep and equal)'
+    const isEqual = expressionEquals(resultAsText, outputStr)
+    const isDeepEqual = resultAsText === outputStr
+    let outputMessage = `Expected: ${outputStr}, got: ${resultAsText}`
+    outputMessage += isEqual && !isDeepEqual ? ' (but only deep equal)' : ' (both deep and equal)'
 
-    assert.deepEqual(resultAsText,outputStr,outputMessage)
+    assert.deepEqual(resultAsText, outputStr, outputMessage)
   })
 }
 
-describe('simplify (basics)', function () {
+describe('simplify (basics)', () => {
   // Imported from https://github.com/google/mathsteps/tree/division.
   // Thanks to Anthony Liang (https://github.com/aliang8)
   const tests = [
@@ -34,7 +34,7 @@ describe('simplify (basics)', function () {
     ['2 * 0 * x', '0'],
     ['(x+3)^0', '1'],
     ['0 x', '0'],
-    ['2*0*z^2','0'],
+    ['2*0*z^2', '0'],
     ['0/5', '0'],
     ['0/(x+6+7+x^2+2^y)', '0'],
     ['2+0+x', 'x + 2'],
@@ -51,7 +51,6 @@ describe('simplify (basics)', function () {
     ['1x', 'x'],
     ['1*z^2', 'z^2'],
     ['2*1*z^2', '2z^2'],
-
 
     // Arithmetic with minus one.
     ['-1*x', '-x'],
@@ -83,7 +82,7 @@ describe('simplify (basics)', function () {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('simplify (arithmetic)', function () {
+describe('simplify (arithmetic)', () => {
   const tests = [
     ['(2+2)*5', '20'],
     ['(8+(-4))*5', '20'],
@@ -121,7 +120,7 @@ describe('simplify (arithmetic)', function () {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('simplify (percents)', function () {
+describe('simplify (percents)', () => {
   const tests = [
     // Percent to fraction conversion.
     ['percent(1)', '1/100'],
@@ -157,7 +156,7 @@ describe('simplify (percents)', function () {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('collects and combines like terms', function() {
+describe('collects and combines like terms', () => {
   const tests = [
     ['x^2 + 3x*(-4x) + 5x^3 + 3x^2 + 6', '5x^3 - 8x^2 + 6'],
     ['2x^2 * y * x * y^3', '2x^3 * y^4'],
@@ -173,8 +172,7 @@ describe('collects and combines like terms', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-
-describe('can simplify with division', function () {
+describe('can simplify with division', () => {
   const tests = [
     ['2 * 4 / 5 * 10 + 3', '19'],
     ['2x * 5x / 2', '5x^2'],
@@ -191,7 +189,7 @@ describe('can simplify with division', function () {
   // e.g. (x^2 - 3 + 2)/(x-2) -> (x-1)
 })
 
-describe('subtraction support', function() {
+describe('subtraction support', () => {
   const tests = [
     ['-(-(2+3))', '5'],
     ['-(-5)', '5'],
@@ -206,7 +204,7 @@ describe('subtraction support', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('break up numerator', function() {
+describe('break up numerator', () => {
   const tests = [
     ['(x+3+y)/3', 'x / 3 + y / 3 + 1'],
     ['(2+x)/4', 'x / 4 + 1/2'],
@@ -215,17 +213,17 @@ describe('break up numerator', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('support for more * and ( that come from latex conversion', function () {
+describe('support for more * and ( that come from latex conversion', () => {
   const tests = [
     ['(3*x)*(4*x)', '12x^2'],
     ['(12*z^(2))/27', '4/9z^2'],
     ['x^2 - 12x^2 + 5x^2 - 7', '-6x^2 - 7'],
-    ['-(12 x ^ 2)', '-12x^2']
+    ['-(12 x ^ 2)', '-12x^2'],
   ]
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('distribution', function () {
+describe('distribution', () => {
   const tests = [
     ['(3*x)*(4*x)', '12x^2'],
     ['(3+x)*(4+x)*(x+5)', 'x^3 + 12x^2 + 47x + 60'],
@@ -242,7 +240,7 @@ describe('distribution', function () {
     ['(nthRoot(x, 2))^6 * (nthRoot(x, 3))^3', 'x^4'],
     ['(x - 2)^2', 'x^2 - 4x + 4'],
     ['(3x + 5)^2', '9x^2 + 30x + 25'],
-    ['(2x + 3)^2','4x^2 + 12x + 9'],
+    ['(2x + 3)^2', '4x^2 + 12x + 9'],
     ['(x + 3 + 4)^2', 'x^2 + 14x + 49'],
 
     // -------------------------------------------------------------------------
@@ -255,7 +253,7 @@ describe('distribution', function () {
 
     // Distributing exponents to base
     ['(x y)^2', 'x^2 * y^2'],
-    ['(x y)^(2x)' ,'x^(2x) * y^(2x)'],
+    ['(x y)^(2x)', 'x^(2x) * y^(2x)'],
 
     ['((x + 1) y)^2', 'x^2 * y^2 + 2x * y^2 + y^2'],
     ['(2x * y * z)^2', '4x^2 * y^2 * z^2'],
@@ -283,7 +281,7 @@ describe('distribution', function () {
     // distribute - into paren with addition
     ['-(x+3)', '-x - 3'],
     ['-(x - 3)', '-x + 3'],
-    ['-(-x^2 + 3y^6)' , '-3y^6 + x^2'],
+    ['-(-x^2 + 3y^6)', '-3y^6 + x^2'],
 
     // distribute - into paren with multiplication/division
     ['-(x*3)', '-3x'],
@@ -299,34 +297,34 @@ describe('distribution', function () {
     // distribute the non-fraction term into the numerator(s)
     [
       '(3 / x^2 + x / (x^2 + 3)) * (x^2 + 3)',
-      '9 / x^2 + x + 3'
+      '9 / x^2 + x + 3',
     ],
 
     // if both groupings have fraction, the rule does not apply
     [
       '(3 / x^2 + x / (x^2 + 3)) * (5 / x + x^5)',
-      'x^6 / (x^2 + 3) + 15 / x^3 + 3x^3 + 5 / (x^2 + 3)'
+      'x^6 / (x^2 + 3) + 15 / x^3 + 3x^3 + 5 / (x^2 + 3)',
     ],
 
     // multisteps
     [
       '(2 / x +  3x^2) * (x^3 + 1)',
-      '3x^5 + 5x^2 + 2 / x'
+      '3x^5 + 5x^2 + 2 / x',
     ],
 
     [
       '(2x + x^2) * (1 / (x^2 -4) + 4x^2)',
-      'x^2 / (x^2 - 4) + 4x^4 + 2x / (x^2 - 4) + 8x^3'
+      'x^2 / (x^2 - 4) + 4x^4 + 2x / (x^2 - 4) + 8x^3',
     ],
 
     [
       '(2x + x^2) * (3x^2 / (x^2 -4) + 4x^2)',
-      '3x^4 / (x^2 - 4) + 6x^3 / (x^2 - 4) + 4x^4 + 8x^3'
+      '3x^4 / (x^2 - 4) + 6x^3 / (x^2 - 4) + 4x^4 + 8x^3',
     ],
 
     // expand base
-    ['(nthRoot(x, 2))^2' , 'x'],
-    ['(nthRoot(x, 2))^3' , 'x^(3/2)'],
+    ['(nthRoot(x, 2))^2', 'x'],
+    ['(nthRoot(x, 2))^3', 'x^(3/2)'],
     ['3 * (nthRoot(x, 2))^4', '3x^2'],
     ['(nthRoot(x, 2) + nthRoot(x, 3))^2', 'x + 2x^(5/6) + x^(2/3)'],
     ['(2x + 3)^2', '4x^2 + 12x + 9'],
@@ -354,7 +352,7 @@ describe('distribution', function () {
     // if both groupings have fraction, the rule does not apply
     [
       '(3 / x^2 + x / (x^2 + 3)) * (5 / x + x^5)',
-      'x^6 / (x^2 + 3) + 15 / x^3 + 3x^3 + 5 / (x^2 + 3)'
+      'x^6 / (x^2 + 3) + 15 / x^3 + 3x^3 + 5 / (x^2 + 3)',
     ],
 
     // Test cases from lexiross/mathsteps:
@@ -366,7 +364,7 @@ describe('distribution', function () {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('fractions', function() {
+describe('fractions', () => {
   const tests = [
     ['5x + (1/2)x', '11/2x'],
     ['x + x/2', '3/2x'],
@@ -393,11 +391,11 @@ describe('fractions', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('floating point', function() {
+describe('floating point', () => {
   testSimplify('1.983*10', '1983/100')
 })
 
-describe('cancelling out', function() {
+describe('cancelling out', () => {
   const tests = [
     ['(x^3*y)/x^2 + 5', 'x * y + 5'], // TODO: x y + 5
     ['(x^(2)+y^(2))/(5x-6x) + 5', '-y^2 / x - x + 5'],
@@ -445,7 +443,7 @@ describe('cancelling out', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('absolute value support', function() {
+describe('absolute value support', () => {
   const tests = [
     ['(x^3*y)/x^2 + abs(-5)', 'x * y + 5'],
     ['-6 + -5 - abs(-4) + -10 - 3 abs(-4)', '-37'],
@@ -459,7 +457,7 @@ describe('absolute value support', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('nthRoot support', function() {
+describe('nthRoot support', () => {
   const tests = [
     ['nthRoot(4x, 2)', '2 * sqrt(x)'],
     ['2 * nthRoot(4x, 2)', '4 * sqrt(x)'],
@@ -481,12 +479,12 @@ describe('nthRoot support', function() {
 
     // 1 case from mrAlbert-development/mathsteps
     // https://github.com/mrAlbert-development/mathsteps/commit/0a93063ffc89447b2ec76608b3d9f1307bedfaf5
-    ['3*nthRoot(11,2) - 2*nthRoot(11,2)', 'sqrt(11)']
+    ['3*nthRoot(11,2) - 2*nthRoot(11,2)', 'sqrt(11)'],
   ]
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('add constant fractions', function () {
+describe('add constant fractions', () => {
   const tests = [
     ['4/5 + 3/5', '7/5'],
     ['4/10 + 3/5', '1'],
@@ -496,7 +494,7 @@ describe('add constant fractions', function () {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('add constant and fraction', function () {
+describe('add constant and fraction', () => {
   const tests = [
     ['7 + 1/2', '15/2'],
     ['5/6 + 3', '23/6'],
@@ -506,8 +504,7 @@ describe('add constant and fraction', function () {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-
-describe('multiply fractions', function() {
+describe('multiply fractions', () => {
   const tests = [
     ['3 * 1/5 * 5/9', '1/3'],
     ['3/7 * 10/11', '30/77'],
@@ -530,7 +527,7 @@ describe('multiply fractions', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('handles unnecessary parens at root level', function() {
+describe('handles unnecessary parens at root level', () => {
   const tests = [
     ['(x+(y))', 'x + y'],
     ['((x+y) + ((z^3)))', 'z^3 + x + y'],
@@ -538,7 +535,7 @@ describe('handles unnecessary parens at root level', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('keeping parens in important places, on printing', function() {
+describe('keeping parens in important places, on printing', () => {
   const tests = [
     ['2 / (3x^2) + 5', '2 / (3x^2) + 5'],
     // Test case from shirleymiao/mathsteps
@@ -548,7 +545,7 @@ describe('keeping parens in important places, on printing', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('nthRoot', function() {
+describe('nthRoot', () => {
   const tests = [
     ['nthRoot(4)', '2'],
     ['nthRoot(8, 3)', '2'],
@@ -583,11 +580,11 @@ describe('nthRoot', function() {
   tests.forEach(t => testSimplify(t[0], t[1], t[2]))
 })
 
-describe('kemu extensions', function() {
+describe('kemu extensions', () => {
   const tests = [
     // Basic.
     ['((2 const.pi)^2)/(4*const.pi)', 'const.pi'],
-    ['sqrt((2 const.pi) ^ 2 / (4 const.pi ^ 2))' , '1'],
+    ['sqrt((2 const.pi) ^ 2 / (4 const.pi ^ 2))', '1'],
     ['(a*b*c*d)^2', 'a^2 * b^2 * c^2 * d^2'],
     ['(4 const.pi^2)/(4*const.pi)', 'const.pi'],
     ['sqrt(a)*sqrt(a)', 'a'],
@@ -618,7 +615,7 @@ describe('kemu extensions', function() {
     ['sqrt(const.pi^6)', 'const.pi^3'],
     ['2*5x^2 + sqrt(5)', '10x^2 + sqrt(5)'],
     ['5^2-4*sqrt(2)*(-8)', '25 + 32 * sqrt(2)'], // TODO: 25 + 32 sqrt(2)
-    ['2-3*sqrt(5)*(-4)', '2 + 12 * sqrt(5)'],    // TODO: 2 + 12 sqrt(5)
+    ['2-3*sqrt(5)*(-4)', '2 + 12 * sqrt(5)'], // TODO: 2 + 12 sqrt(5)
     ['1 - 1/2', '1/2'],
     ['-20/9*q - 109/25', '-20/9*q - 109/25'],
 
@@ -670,9 +667,9 @@ describe('kemu extensions', function() {
     ['(x - y)^10', 'x^10 - 10x^9 * y + 45x^8 * y^2 - 120x^7 * y^3 + 210x^6 * y^4 - 252x^5 * y^5 + 210x^4 * y^6 - 120x^3 * y^7 + 45x^2 * y^8 - 10x * y^9 + y^10'],
 
     // Short multiplication formulas: negative exponents.
-    ['(x + y)^0'    , '1'],
-    ['(x + y)^(-1)' , '1 / (x + y)'],
-    ['(x + y)^(-2)' , '1 / (x^2 + 2x * y + y^2)'],
+    ['(x + y)^0', '1'],
+    ['(x + y)^(-1)', '1 / (x + y)'],
+    ['(x + y)^(-2)', '1 / (x^2 + 2x * y + y^2)'],
     ['(x + y)^(-10)', '1 / (x^10 + 10x^9 * y + 45x^8 * y^2 + 120x^7 * y^3 + 210x^6 * y^4 + 252x^5 * y^5 + 210x^4 * y^6 + 120x^3 * y^7 + 45x^2 * y^8 + 10x * y^9 + y^10)'],
     ['(x - y)^(-10)', '1 / (x^10 - 10x^9 * y + 45x^8 * y^2 - 120x^7 * y^3 + 210x^6 * y^4 - 252x^5 * y^5 + 210x^4 * y^6 - 120x^3 * y^7 + 45x^2 * y^8 - 10x * y^9 + y^10)'],
 
@@ -684,42 +681,42 @@ describe('kemu extensions', function() {
     ['2/x - 1/x', '1 / x'],
 
     // Trigonometric functions.
-    ['-sin(0)'       , '0'],
-    ['sin(const.pi/6)'     , '1/2'],
-    ['sin(const.pi/4)'     , 'sqrt(2) / 2'],
-    ['sin(const.pi/3)'     , 'sqrt(3) / 2'],
-    ['sin(const.pi/2)'     , '1'],
-    ['sin(const.pi)'       , '0'],
-    ['-sin(0*x)'     , '0'],
-    ['sin(-4 const.pi/24)' , '-1/2'],
+    ['-sin(0)', '0'],
+    ['sin(const.pi/6)', '1/2'],
+    ['sin(const.pi/4)', 'sqrt(2) / 2'],
+    ['sin(const.pi/3)', 'sqrt(3) / 2'],
+    ['sin(const.pi/2)', '1'],
+    ['sin(const.pi)', '0'],
+    ['-sin(0*x)', '0'],
+    ['sin(-4 const.pi/24)', '-1/2'],
 
-    ['cos(0)'    , '1'],
-    ['cos(const.pi/6)' , 'sqrt(3) / 2'],
-    ['cos(const.pi/4)' , 'sqrt(2) / 2'],
-    ['cos(const.pi/3)' , '1/2'],
-    ['cos(const.pi/2)' , '0'],
-    ['cos(const.pi)'   , '-1'],
+    ['cos(0)', '1'],
+    ['cos(const.pi/6)', 'sqrt(3) / 2'],
+    ['cos(const.pi/4)', 'sqrt(2) / 2'],
+    ['cos(const.pi/3)', '1/2'],
+    ['cos(const.pi/2)', '0'],
+    ['cos(const.pi)', '-1'],
 
-    ['tg(0)'     , '0'],
-    ['tg(const.pi/6)'  , 'sqrt(3) / 3'],
-    ['tg(const.pi/4)'  , '1'],
-    ['tg(const.pi/3)'  , 'sqrt(3)'],
+    ['tg(0)', '0'],
+    ['tg(const.pi/6)', 'sqrt(3) / 3'],
+    ['tg(const.pi/4)', '1'],
+    ['tg(const.pi/3)', 'sqrt(3)'],
 
-    ['ctg(const.pi/6)' , 'sqrt(3)'],
-    ['ctg(const.pi/4)' , '1'],
-    ['ctg(const.pi/3)' , 'sqrt(3) / 3'],
-    ['ctg(const.pi/2)' , '0'],
+    ['ctg(const.pi/6)', 'sqrt(3)'],
+    ['ctg(const.pi/4)', '1'],
+    ['ctg(const.pi/3)', 'sqrt(3) / 3'],
+    ['ctg(const.pi/2)', '0'],
 
-    ['atan(0)'         , '0'],
-    ['atan(sqrt(3)/3)' , 'const.pi / 6'],
-    ['atan(1)'         , 'const.pi / 4'],
-    ['atan(sqrt(3))'   , 'const.pi / 3'],
+    ['atan(0)', '0'],
+    ['atan(sqrt(3)/3)', 'const.pi / 6'],
+    ['atan(1)', 'const.pi / 4'],
+    ['atan(sqrt(3))', 'const.pi / 3'],
 
-    ['sin(n)^2 + cos(n)^2' , '1'],
-    ['sin(-n)' , '-sin(n)'],
-    ['cos(-n)' , 'cos(n)'],
-    ['tg(-n)'  , '-tg(n)'],
-    ['ctg(-n)' , '-ctg(n)'],
+    ['sin(n)^2 + cos(n)^2', '1'],
+    ['sin(-n)', '-sin(n)'],
+    ['cos(-n)', 'cos(n)'],
+    ['tg(-n)', '-tg(n)'],
+    ['ctg(-n)', '-ctg(n)'],
 
     // -------------------------------------------------------------------------
     // Cases from al_distribute_over_mult
@@ -732,7 +729,7 @@ describe('kemu extensions', function() {
     ['(x y)^(-(x + 1))', '1 / (x^(x + 1) * y^(x + 1))'],
 
     // When terms are polynomialTerms
-    ['(x^2 y^2)^2', 'x^4 * y^4',],
+    ['(x^2 y^2)^2', 'x^4 * y^4'],
     ['(x y)^2', 'x^2 * y^2'],
     ['(x y z)^2', 'x^2 * y^2 * z^2'],
     ['(x^2 y z^2)^2', 'x^4 * y^2 * z^4'],
@@ -780,8 +777,8 @@ describe('kemu extensions', function() {
 
     // -------------------------------------------------------------------------
     // Remove nested fractions.
-    ['1/(2/3 c)'   , '3 / (2c)'],
-    ['a/(b/c * d)' , 'a * c / (b * d)'],
+    ['1/(2/3 c)', '3 / (2c)'],
+    ['a/(b/c * d)', 'a * c / (b * d)'],
 
     // -------------------------------------------------------------------------
     // Logarithms - general.
@@ -837,22 +834,22 @@ describe('kemu extensions', function() {
   // We know that PI is positive constant.
   // Possible improvement: default context if not set explicit.
   const ctx = {
-    isNumerical: function() {
+    isNumerical() {
       return false
     },
-    isNodeNonNegative: function(node) {
+    isNodeNonNegative(node) {
       let rv = false
 
-      if ((node.type === 'AccessorNode') &&
-          (node.object.name === 'const') &&
-          (node.index.dimensions.length === 1) &&
-          (node.index.dimensions[0].value === 'pi')) {
+      if ((node.type === 'AccessorNode')
+        && (node.object.name === 'const')
+        && (node.index.dimensions.length === 1)
+        && (node.index.dimensions[0].value === 'pi')) {
         // We know that pi constant is non-negative.
         rv = true
       }
 
       return rv
-    }
+    },
   }
 
   tests.forEach(t => testSimplify(t[0], t[1], t[2], ctx))

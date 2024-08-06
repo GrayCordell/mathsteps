@@ -1,4 +1,4 @@
-# Roadmap  (NEEDS UPDATING FOR THIS FORK.)
+# Roadmap (NEEDS UPDATING FOR THIS FORK.)
 
 A rough roadmap for `mathsteps`
 
@@ -24,4 +24,3 @@ concepts might overlap and both need to be covered for us to solve the problem):
 - Systems of equations ([#48](https://github.com/socraticorg/mathsteps/issues/48))
 
 ## Version 2.x
-

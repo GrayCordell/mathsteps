@@ -1,2 +1,42 @@
-.git
+.DS_Store
+.vite-ssg-dist
+.vite-ssg-temp
+/dist/
+dist-ssr
 node_modules
+cypress/downloads
+
+
+# local env files
+*.local
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.idea
+.vscode/launch.json
+.vscode/tasks.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+/.run/
+
+
+test/*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+*.sw?
+

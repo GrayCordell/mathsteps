@@ -1,59 +1,69 @@
-import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
+import { assert, describe, it } from 'vitest'
 import Node from '../../lib/node'
-import { math } from "~/config.js";
+import { math } from '~/config.js'
 
 const constNode = Node.Creator.constant
 
-describe('Node.Type works', function () {
-  it('10 constant', function () {
+describe('node.Type works', () => {
+  it('10 constant', () => {
     assert.deepEqual(
       Node.Type.isConstant(math.parse('10')),
-      true)
+      true,
+    )
   })
-  it('-2 constant', function () {
+  it('-2 constant', () => {
     assert.deepEqual(
       Node.Type.isConstant(constNode('-2')),
-      true)
+      true,
+    )
   })
-  it('2+2 operator without operator param', function () {
+  it('2+2 operator without operator param', () => {
     assert.deepEqual(
       Node.Type.isOperator(math.parse('2+2')),
-      true)
+      true,
+    )
   })
-  it('2+2 operator with correct operator param', function () {
+  it('2+2 operator with correct operator param', () => {
     assert.deepEqual(
       Node.Type.isOperator(math.parse('2+2'), '+'),
-      true)
+      true,
+    )
   })
-  it('2+2 operator with incorrect operator param', function () {
+  it('2+2 operator with incorrect operator param', () => {
     assert.deepEqual(
       Node.Type.isOperator(math.parse('2+2'), '-'),
-      false)
+      false,
+    )
   })
-  it('-x not operator', function () {
+  it('-x not operator', () => {
     assert.deepEqual(
       Node.Type.isOperator(math.parse('-x')),
-      false)
+      false,
+    )
   })
-  it('-x not symbol', function () {
+  it('-x not symbol', () => {
     assert.deepEqual(
       Node.Type.isSymbol(math.parse('-x')),
-      false)
+      false,
+    )
   })
-  it('y symbol', function () {
+  it('y symbol', () => {
     assert.deepEqual(
       Node.Type.isSymbol(math.parse('y')),
-      true)
+      true,
+    )
   })
-  it('abs(5) is abs function', function () {
+  it('abs(5) is abs function', () => {
     assert.deepEqual(
       Node.Type.isFunction(math.parse('abs(5)'), 'abs'),
-      true)
+      true,
+    )
   })
-  it('sqrt(5) is not abs function', function () {
+  it('sqrt(5) is not abs function', () => {
     assert.deepEqual(
       Node.Type.isFunction(math.parse('sqrt(5)'), 'abs'),
-      false)
+      false,
+    )
   })
   // it('nthRoot(4) is an nthRoot function', function () {
   //   assert.deepEqual(
@@ -62,43 +72,50 @@ describe('Node.Type works', function () {
   // });
 })
 
-describe('isConstantOrConstantFraction', function () {
-  it('2 true', function () {
+describe('isConstantOrConstantFraction', () => {
+  it('2 true', () => {
     assert.deepEqual(
       Node.Type.isConstantOrConstantFraction(math.parse('2')),
-      true)
+      true,
+    )
   })
-  it('2/9 true', function () {
+  it('2/9 true', () => {
     assert.deepEqual(
       Node.Type.isConstantOrConstantFraction(math.parse('4/9')),
-      true)
+      true,
+    )
   })
-  it('x/2 false', function () {
+  it('x/2 false', () => {
     assert.deepEqual(
       Node.Type.isConstantOrConstantFraction(math.parse('x/2')),
-      false)
+      false,
+    )
   })
 })
 
-describe('isIntegerFraction', function () {
-  it('4/5 true', function () {
+describe('isIntegerFraction', () => {
+  it('4/5 true', () => {
     assert.deepEqual(
       Node.Type.isIntegerFraction(math.parse('4/5')),
-      true)
+      true,
+    )
   })
-  it('4.3/5 false', function () {
+  it('4.3/5 false', () => {
     assert.deepEqual(
       Node.Type.isIntegerFraction(math.parse('4.3/5')),
-      false)
+      false,
+    )
   })
-  it('4x/5 false', function () {
+  it('4x/5 false', () => {
     assert.deepEqual(
       Node.Type.isIntegerFraction(math.parse('4x/5')),
-      false)
+      false,
+    )
   })
-  it('5 false', function () {
+  it('5 false', () => {
     assert.deepEqual(
       Node.Type.isIntegerFraction(math.parse('5')),
-      false)
+      false,
+    )
   })
 })

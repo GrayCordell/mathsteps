@@ -3,6 +3,7 @@
 This is an experimental fork of Kemu Studio's [mathsteps](https://github.com/kemu-studio/mathsteps), a step-by-step solver for math problems. This fork introduces several significant changes and improvements:
 
 ## Major Changes & Future Changes
+
 - **Converted CommonJS to ESM**: Modernized the module system.
 - **Added TypeScript/JSDoc Support**: Enhanced code quality and developer experience.
 - **Optimized for Browser Use**: Tailored for better performance in web environments.
@@ -11,11 +12,13 @@ This is an experimental fork of Kemu Studio's [mathsteps](https://github.com/kem
 Considering the extensive changes and my limited familiarity with some of the original code's intentions, merging this fork back into the main mathsteps repository might not be feasible. However, it remains a possibility for the future. KemuStudios is free to contact me if they think my future work could benefit the main project.
 
 ## New Project Focus
+
 The primary goal of this fork is to add an ability to evaluate users' steps in solving math problems and diagnose where they might have gone wrong. The current implementation uses existing solving rules to find all possible next steps. This feature is still a work in progress and may not yet be highly performant.
 
 Check out `main.js` to see the current implementation of this feature in action.
 
 ## Installation
+
 1. Clone this repository:
    ```sh
    git clone <repository-url>
@@ -26,6 +29,7 @@ Check out `main.js` to see the current implementation of this feature in action.
    ```
 
 ## Usage for Evaluating User Steps (Work in Progress)
+
 1. Modify the `usersteps` array in `main.js` to include the desired user steps.
 2. Run the development server:
    ```sh
@@ -38,6 +42,7 @@ For more information on solving math problems using mathsteps, see the examples 
 ## Code Examples
 
 ### Simplifying an Expression
+
 ```javascript
 let steps = [];
 const newNode = mathsteps.simplifyExpression({
@@ -60,6 +65,7 @@ steps.forEach(step => {
 ```
 
 ### Simplifying an Equation
+
 ```javascript
 const steps = [];
 const eventualAnswer = mathsteps.simplifyExpression({
@@ -72,6 +78,7 @@ const eventualAnswer = mathsteps.simplifyExpression({
 ```
 
 ### Solving an Equation
+
 ```javascript
 const result = mathsteps.solveEquation({
   equationAsText: '2x + 3x = 35',

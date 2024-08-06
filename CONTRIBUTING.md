@@ -1,5 +1,6 @@
 # Contributing to mathsteps (NEEDS UPDATING FOR THIS FORK.)
-# This Is the original contributing file from the mathsteps project. It is not all applicable to this new version. Still very worth reading. 
+
+# This Is the original contributing file from the mathsteps project. It is not all applicable to this new version. Still very worth reading.
 
 #### We're excited to have you helping out! Thank you so much for your time
 
@@ -112,7 +113,6 @@ We're excited to see your [pull request](https://help.github.com/articles/about-
   code (for debugging), you can log a `node` as an expression string (e.g.
   '2x + 5') with `console.log(print.ascii(node))`, and you can log the full tree
   structure with `console.log(JSON.stringify(node, null, 2))`
-
 
 There's lots to be done, lots of students to help, and we're so glad you'll be a
 part of this.

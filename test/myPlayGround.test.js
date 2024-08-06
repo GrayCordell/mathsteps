@@ -4,20 +4,18 @@
 // const {cleanerMyToString} = require('../lib/util/myUtil')
 // const {equalsCache} = require('../lib/util/expressionEqualsAndNormalization')
 // const {expressionEquals} = require('../lib/util/expressionEqualsAndNormalization')
-import { expressionEquals } from '../lib/util/expressionEqualsAndNormalization'
-import { cleanerMyToString, myToString } from '../lib/util/myUtil'
-import { filterUniqueValues } from '../lib/util/arrayUtils'
-import { equalsCache } from '../lib/util/expressionEqualsAndNormalization'
-import { myToString } from '../lib/util/myUtil.js'
-import mathsteps from "~/index.js";
+import { equalsCache, expressionEquals } from '../lib/util/expressionEqualsAndNormalization.js'
+import { cleanerMyToString, myToString } from '../lib/util/myUtil.js'
+import { filterUniqueValues } from '../lib/util/arrayUtils.js'
+import mathsteps from '~/index.js'
 
-const stepEquals = (step0, step1)=>expressionEquals(step0,step1)
+const stepEquals = (step0, step1) => expressionEquals(step0, step1)
 
 const resultCache = new Map()
 function getAllValidNextSteps(userStep, isDryRun = false, isWithAlternativeRun = true) {
   // Find if there's an equivalent cached result
   let foundKey = null
-  for (let cachedStep of resultCache.keys()) {
+  for (const cachedStep of resultCache.keys()) {
     if (equalsCache.areEqual(cachedStep, userStep)) {
       foundKey = cachedStep
       break
@@ -33,28 +31,27 @@ function getAllValidNextSteps(userStep, isDryRun = false, isWithAlternativeRun =
   const eventualAnswer = mathsteps.simplifyExpression({
     expressionAsText: userStep,
     isDebugMode: false,
-    expressionCtx:undefined,
-    isDryRun: isDryRun,
-    isWithAlternativeRun: isWithAlternativeRun,
+    expressionCtx: undefined,
+    isDryRun,
+    isWithAlternativeRun,
     getAllNextStepPossibilities: true,
     onStepCb: (step) => {
       // if(step.changeType === 'KEMU_ORIGINAL_EXPRESSION' || step.changeType === 'REARRANGE_COEFF')
       //  correctStepsFromHere.push(step)
       correctStepsFromHere.push(step)
-    }
+    },
   })
 
   const onlyStepsWithTo = correctStepsFromHere.filter((step) => {
     return step.to
   })
 
-
   const toSet = new Set()
   const tosWithInfo = onlyStepsWithTo.map((step) => {
     const fromTos = step.to.map((to) => {
       return {
         changeType: step.changeType,
-        to: to,
+        to,
         from: step.from,
       }
     })
@@ -65,18 +62,17 @@ function getAllValidNextSteps(userStep, isDryRun = false, isWithAlternativeRun =
     toSet.add(step.to)
     return true
   })
-  const filteredTosWithInfo = filterUniqueValues(tosWithInfo, (item1,item2)=>stepEquals(item1.to,item2.to))
+  const filteredTosWithInfo = filterUniqueValues(tosWithInfo, (item1, item2) => stepEquals(item1.to, item2.to))
   // check if any equal each other
 
   // type NextStep = { to:string, from:string, changeType:string },
   // Cache the result using the userStep or its equivalent
   resultCache.set(userStep, filteredTosWithInfo)
-  return {nextStep: filteredTosWithInfo, eventualAnswer}
+  return { nextStep: filteredTosWithInfo, eventualAnswer }
 }
 
 const MAX_STEP_DEPTH = 30
 function validStepFinder(lastTwoUserSteps) {
-
   const valueToFind = lastTwoUserSteps[1]
   const queue = []
   const hasTried = new Set()
@@ -89,7 +85,7 @@ function validStepFinder(lastTwoUserSteps) {
     let { start, history } = queue.shift() // Use shift for BFS (queue)
     start = myToString(start)
 
-    if (hasTried.has(start) || Array.from(hasTried).some((step)=>stepEquals(step,start)))
+    if (hasTried.has(start) || Array.from(hasTried).some(step => stepEquals(step, start)))
       continue
     hasTried.add(start)
 
@@ -110,13 +106,11 @@ function validStepFinder(lastTwoUserSteps) {
         return newHistory
       }
 
-
       queue.push({ start: alternateStep.to, history: newHistory })
     }
 
     depth++
   }
-
 
   return null // Return null if no valid steps lead to the found answer
 }
@@ -134,19 +128,20 @@ const userSteps = [
 const checkedSteps = []
 let lastStep
 
-for(const step of userSteps){
-  if(!lastStep){
+for (const step of userSteps) {
+  if (!lastStep) {
     lastStep = step
     continue
   }
   const hasTried = []
-  let start = performance.now()
-  const steps = validStepFinder([lastStep,step],hasTried)
-  let timeTaken = performance.now() - start
-  console.log('Total time taken : ' + timeTaken + ' milliseconds')
-  if(!steps || steps.length === 0)
-    checkedSteps.push([{isInvalid:true, from:lastStep, to:step}])
-  else{
+  const start = performance.now()
+  const steps = validStepFinder([lastStep, step], hasTried)
+  const timeTaken = performance.now() - start
+  console.log(`Total time taken : ${timeTaken} milliseconds`)
+  if (!steps || steps.length === 0) {
+    checkedSteps.push([{ isInvalid: true, from: lastStep, to: step }])
+  }
+  else {
     console.log('-----FOUND STEPS-----')
     checkedSteps.push(steps)
   }
@@ -154,13 +149,12 @@ for(const step of userSteps){
   lastStep = step
 }
 // print all
-checkedSteps.forEach((steps,i)=> {
-  console.log('steps',i)
-  for(const step of steps){
-    if(step.isInvalid)
+checkedSteps.forEach((steps, i) => {
+  console.log('steps', i)
+  for (const step of steps) {
+    if (step.isInvalid)
       console.log(`invalid_change from: ${cleanerMyToString(step.from)} to: ${cleanerMyToString(step.to)}`)
     else
       console.log(`valid_change:${step.ogChangeType || step.changeType} from: ${cleanerMyToString(step.from)} to: ${cleanerMyToString(step.to)}`)
   }
-
 })

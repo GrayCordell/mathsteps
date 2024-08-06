@@ -3,89 +3,99 @@ Sure, here's an improved version of your history section:
 # History
 
 ## 2024-08-06, Version A1.0.0
-The first version published by Grayson Cordell, a fork of the Calculla team's fork of the original mathsteps project.
-  ### Introduction from Grayson / Vanderbilt Team
-  Hello, I am Grayson Cordell, a research engineer at Vanderbilt's Institute for Software Integrated Systems. I am working on a project that requires accessing and evaluating students' math steps. The primary intention of this fork is to facilitate this process. However, it is likely that improvements to the original code will also be necessary. The current name of this fork is TBD.
 
+The first version published by Grayson Cordell, a fork of the Calculla team's fork of the original mathsteps project.
+
+### Introduction from Grayson / Vanderbilt Team
+
+Hello, I am Grayson Cordell, a research engineer at Vanderbilt's Institute for Software Integrated Systems. I am working on a project that requires accessing and evaluating students' math steps. The primary intention of this fork is to facilitate this process. However, it is likely that improvements to the original code will also be necessary. The current name of this fork is TBD.
 
 ## 2020-07-23, version k1.0.0
+
 The first version published by [Calculla](https://calculla.com) team.
 This is the fork derived from **mathsteps 0.1.7** originaly created by **Evy Kassirer**.
 
-  ### Introduction from Calculla team
-  We've started using mathsteps experimentally in Calculla's code in 2017. After a while we've started adding small extensions as well as additional tests and automation. Our fork diverged more and more from original mathsteps code as we had our own ideas for improvements and we've made technical decisions which may not be in line with original authors way of thinking (e.g. we've introduced *bignumber* for constants accuracy). Also, the original project looks a bit abandoned.
+### Introduction from Calculla team
 
-  With all this in mind, we've decided that instead of putting effort to merge back to original repo, we're gonna publish our changes as fork. If that works and current state persists, we're gonna move to separate repository (non-forked one) to avoid confusions. Also we added "k" to the version numbering to clearly state that is not exactly original versioning of mathsteps.
+We've started using mathsteps experimentally in Calculla's code in 2017. After a while we've started adding small extensions as well as additional tests and automation. Our fork diverged more and more from original mathsteps code as we had our own ideas for improvements and we've made technical decisions which may not be in line with original authors way of thinking (e.g. we've introduced _bignumber_ for constants accuracy). Also, the original project looks a bit abandoned.
 
-  TLDR:
-  - this is diverged version of mathsteps, called kmathsteps
-  - version is now k1.0.0
-  - we will release it as separate npm package (soon)
+With all this in mind, we've decided that instead of putting effort to merge back to original repo, we're gonna publish our changes as fork. If that works and current state persists, we're gonna move to separate repository (non-forked one) to avoid confusions. Also we added "k" to the version numbering to clearly state that is not exactly original versioning of mathsteps.
 
-  #### Special thanks
-  Special thanks to:
-  - the team that actually built original mathsteps - we really like and appreciate your work
-  - Sylwester Wysocki (dzik-at-ke.mu) for his hard work pushing this forward
+TLDR:
 
-  ### General improvements
-  - Show parentheses removal as separate step,
-  - Initial support for user delivered **context** (symbolic vs numerical),
-  - All constants are stored as **bignumber rational** in **symbolic mode** e.g. *986/100* instead of *9.86*,
-  - Values are presented as **bingumber decimals** in **numerical mode** e.g. *1.23* instead of *123/100*,
-  - Initial support for **domains** e.g. *sqrt(a)* gives *a* if **a is positive** and *|a|* in general case.
+- this is diverged version of mathsteps, called kmathsteps
+- version is now k1.0.0
+- we will release it as separate npm package (soon)
 
-  ### New simplify steps:
+#### Special thanks
 
-  *NOTE: we are going to clean up all "kemu" references from this code in next few chunks of changes. This was added initially to clearly distinguish the orignal code from our extensions, but is no longer needed.*
+Special thanks to:
 
-  - KEMU_REDUCE - better *(a b c ...)/(d e f ...)* cancelation,
-  - KEMU_MULTIPLY_SQRTS - *sqrt(a) sqrt(b)* gives *sqrt(a b)*,
-  - KEMU_MULTIPLY_SQRTS_WITH_COMMON_ROOT - *sqrt(a) sqrt(a)* gives *a*,
-  - KEMU_POWER_FACTORS - *(a b c ...)^x* gives *ax bx cx ...*,
-  - KEMU_POWER_FRACTION - *(a/b)^x* gives *a^x / b^x*,
-  - KEMU_POWER_SQRT - *sqrt(a)^b* gives *a^(b/2)*,
-  - KEMU_SQRT_FROM_ZERO - *sqrt(0)* gives *0*,
-  - KEMU_SQRT_FROM_ONE - *sqrt(1)* gives *1*,
-  - KEMU_SQRT_FROM_POW - *sqrt(x^2)* gives *|x|* or *x* etc.,
-  - KEMU_SQRT_FROM_CONST - *sqrt(8)* gives *2 sqrt(2)* etc.
-  - KEMU_POWER_TO_MINUS_ONE - *(a/b)^-1* gives *b/a*,
-  - KEMU_POWER_TO_NEGATIVE_EXPONENT - *x^-a* gives *1/(x^a)* etc.,
-  - KEMU_MULTIPLY_EXPONENTS - *(a^x)^y* gives *a^(x y)*,
-  - KEMU_REMOVE_UNNEDED_PARENTHESIS - show parenthesis remove as another step,
-  - KEMU_REMOVE_FRACTION_WITH_UNIT_NUMERATOR - *(a 1)/x* gives *a/x*,
-  - KEMU_REMOVE_DOUBLE_FRACTION - *x/y/z* gives *x/(y*z)*,
-  - KEMU_NUMERICAL_SQRT - evaluate *sqrt(a)* as decimal (non-fraction) e.g. *sqrt(3)* gives *1.73205080756887729357...*,
-  - KEMU_NUMERICAL_DIV - evaluate *a/b* as decimal (non-fraction) e.g. *1/3* gives *0.3333333333333333333...*,
-  - KEMU_FACTOR_EXPRESSION_UNDER_ROOT - *sqrt(8)* gives *sqrt(4*2)* etc.,
-  - KEMU_DECIMAL_TO_FRACTION - *3.14* gives *314/100* etc.,
+- the team that actually built original mathsteps - we really like and appreciate your work
+- Sylwester Wysocki (dzik-at-ke.mu) for his hard work pushing this forward
 
-  - KEMU_SHORT_MULTIPLICATION_AB2_ADD - *(a+b)^2* gives *a^2 + 2ab + b^2*,
-  - KEMU_SHORT_MULTIPLICATION_AB3_ADD - *(a+b)^3* gives *a^3 + 3a^2b + 3ab^2 + b^3*,
-  - KEMU_SHORT_MULTIPLICATION_ABN_ADD - general case for integer n: *(a+b)^n*,
+### General improvements
 
-  - KEMU_SHORT_MULTIPLICATION_AB2_SUB - *(a-b)^2* gives *a^2 - 2ab + b^2*,
-  - KEMU_SHORT_MULTIPLICATION_AB3_SUB - *(a-b)^3* gives *a^3 − 3a^2b +3ab^2 − b^3*,
-  - KEMU_SHORT_MULTIPLICATION_ABN_SUB - general case for integer n: *(a-b)^n*,
+- Show parentheses removal as separate step,
+- Initial support for user delivered **context** (symbolic vs numerical),
+- All constants are stored as **bignumber rational** in **symbolic mode** e.g. _986/100_ instead of _9.86_,
+- Values are presented as **bingumber decimals** in **numerical mode** e.g. _1.23_ instead of _123/100_,
+- Initial support for **domains** e.g. _sqrt(a)_ gives _a_ if **a is positive** and _|a|_ in general case.
 
-  - KEMU_FUNCTION_VALUE - evaluate of known function e.g. *sin(pi/2)* gives *1*,
-  - KEMU_PYTHAGOREAN_IDENTITY - *sin(x)^2 + sin(x)^y* gives *1*,
-  - KEMU_EVEN_FUNCTION_OF_NEGATIVE - *cos(-x)* gives *cos(x)* etc.,
-  - KEMU_ODD_FUNCTION_OF_NEGATIVE - *sin(-x)* gives *-sin(x)* etc.,
-  - KEMU_CONVERT_SIN_PER_COS_TO_TAN - *sin(x)/cos(x)* gives *tan(x)*,
-  - KEMU_CONVERT_COS_PER_SIN_TO_COT - *cos(x)/sin(x)* gives *cot(x)*,
-  - KEMU_CANCEL_INVERSE_FUNCTION - *atan(tan(x))* gives *x* etc..
+### New simplify steps:
 
-  ### Internal maintenance
-  - Adjusted to work with *mathjs 7.1.0*,
-  - Improved code formatting,
-  - All constants are stored as *bignumber*,
-  - Ability to write rules using *mathjs* notation directly (see [example](https://github.com/kemu-studio/mathsteps/blob/sync-with-calculla/lib/simplifyExpression/kemuCommonSearch/commonFunctions.js)), this is prefered way to add new rules if possible,
-  - Better args sorting for expression comparison,
-  - Better *flip-flop* detection (*a -> b -> a -> b -> a -> ...*),
-  - Results caching,
+_NOTE: we are going to clean up all "kemu" references from this code in next few chunks of changes. This was added initially to clearly distinguish the orignal code from our extensions, but is no longer needed._
+
+- KEMU*REDUCE - better *(a b c ...)/(d e f ...)\_ cancelation,
+- KEMU*MULTIPLY_SQRTS - \_sqrt(a) sqrt(b)* gives _sqrt(a b)_,
+- KEMU*MULTIPLY_SQRTS_WITH_COMMON_ROOT - \_sqrt(a) sqrt(a)* gives _a_,
+- KEMU*POWER_FACTORS - *(a b c ...)^x* gives \_ax bx cx ...*,
+- KEMU*POWER_FRACTION - *(a/b)^x* gives \_a^x / b^x*,
+- KEMU*POWER_SQRT - \_sqrt(a)^b* gives _a^(b/2)_,
+- KEMU*SQRT_FROM_ZERO - \_sqrt(0)* gives _0_,
+- KEMU*SQRT_FROM_ONE - \_sqrt(1)* gives _1_,
+- KEMU*SQRT_FROM_POW - \_sqrt(x^2)* gives _|x|_ or _x_ etc.,
+- KEMU*SQRT_FROM_CONST - \_sqrt(8)* gives _2 sqrt(2)_ etc.
+- KEMU*POWER_TO_MINUS_ONE - *(a/b)^-1* gives \_b/a*,
+- KEMU*POWER_TO_NEGATIVE_EXPONENT - \_x^-a* gives _1/(x^a)_ etc.,
+- KEMU*MULTIPLY_EXPONENTS - *(a^x)^y* gives \_a^(x y)*,
+- KEMU_REMOVE_UNNEDED_PARENTHESIS - show parenthesis remove as another step,
+- KEMU*REMOVE_FRACTION_WITH_UNIT_NUMERATOR - *(a 1)/x* gives \_a/x*,
+- KEMU*REMOVE_DOUBLE_FRACTION - \_x/y/z* gives *x/(y*z)\*,
+- KEMU*NUMERICAL_SQRT - evaluate \_sqrt(a)* as decimal (non-fraction) e.g. _sqrt(3)_ gives _1.73205080756887729357..._,
+- KEMU*NUMERICAL_DIV - evaluate \_a/b* as decimal (non-fraction) e.g. _1/3_ gives _0.3333333333333333333..._,
+- KEMU*FACTOR_EXPRESSION_UNDER_ROOT - \_sqrt(8)* gives *sqrt(4*2)\* etc.,
+- KEMU*DECIMAL_TO_FRACTION - \_3.14* gives _314/100_ etc.,
+
+- KEMU*SHORT_MULTIPLICATION_AB2_ADD - *(a+b)^2* gives \_a^2 + 2ab + b^2*,
+- KEMU*SHORT_MULTIPLICATION_AB3_ADD - *(a+b)^3* gives \_a^3 + 3a^2b + 3ab^2 + b^3*,
+- KEMU*SHORT_MULTIPLICATION_ABN_ADD - general case for integer n: *(a+b)^n\_,
+
+- KEMU*SHORT_MULTIPLICATION_AB2_SUB - *(a-b)^2* gives \_a^2 - 2ab + b^2*,
+- KEMU*SHORT_MULTIPLICATION_AB3_SUB - *(a-b)^3* gives \_a^3 − 3a^2b +3ab^2 − b^3*,
+- KEMU*SHORT_MULTIPLICATION_ABN_SUB - general case for integer n: *(a-b)^n\_,
+
+- KEMU*FUNCTION_VALUE - evaluate of known function e.g. \_sin(pi/2)* gives _1_,
+- KEMU*PYTHAGOREAN_IDENTITY - \_sin(x)^2 + sin(x)^y* gives _1_,
+- KEMU*EVEN_FUNCTION_OF_NEGATIVE - \_cos(-x)* gives _cos(x)_ etc.,
+- KEMU*ODD_FUNCTION_OF_NEGATIVE - \_sin(-x)* gives _-sin(x)_ etc.,
+- KEMU*CONVERT_SIN_PER_COS_TO_TAN - \_sin(x)/cos(x)* gives _tan(x)_,
+- KEMU*CONVERT_COS_PER_SIN_TO_COT - \_cos(x)/sin(x)* gives _cot(x)_,
+- KEMU*CANCEL_INVERSE_FUNCTION - \_atan(tan(x))* gives _x_ etc..
+
+### Internal maintenance
+
+- Adjusted to work with _mathjs 7.1.0_,
+- Improved code formatting,
+- All constants are stored as _bignumber_,
+- Ability to write rules using _mathjs_ notation directly (see [example](https://github.com/kemu-studio/mathsteps/blob/sync-with-calculla/lib/simplifyExpression/kemuCommonSearch/commonFunctions.js)), this is prefered way to add new rules if possible,
+- Better args sorting for expression comparison,
+- Better _flip-flop_ detection (_a -> b -> a -> b -> a -> ..._),
+- Results caching,
 
 # Original history of math-steps up to 0.1.7
-All history entries below have been copied from *original mathsteps 0.1.7* initiated by **Evy Kassirer**.
+
+All history entries below have been copied from _original mathsteps 0.1.7_ initiated by **Evy Kassirer**.
 Please visit https://github.com/google/mathsteps for more.
 
 ## 2017-10-26, version 0.1.7
@@ -105,7 +115,6 @@ Functionality and Teaching Enhancements:
 - multiply denominators with terms #88
 - Better sum-product factoring steps #210
 
-
 Bug Fixes
 
 - fix the check for perfect roots of a constant when there's roundoff error #224
@@ -116,7 +125,6 @@ Other:
 - (code structure) generalizing polynomial terms #190
 - latex printing for equations
 - added linting rules #222
-
 
 ## 2017-04-03, version 0.1.6
 
@@ -135,7 +143,7 @@ Bug fixes:
 
 Refactoring + Documentation + other dev enhancements:
 
-- Fixed #107: Improve our linter. Thanks  @Raibaz !
+- Fixed #107: Improve our linter. Thanks @Raibaz !
 - Added Travis continuous integration
 - Refactor test to use TestUtil. Thanks @nitin42 !
 - Work on #58: Adding missing tests. Thanks @nitin42 !

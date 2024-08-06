@@ -1,27 +1,28 @@
-import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
+import { assert, describe, it } from 'vitest'
 
-import Equation from '../lib/kemuEquation/Equation'
+import Equation from '../lib/kemuEquation/Equation.js'
 import EquationSolver from '~/kemuEquation/EquationSolver.js'
 
-function testSolve(equationAsText, outputStr, debug = false) {
+function testSolve(equationAsText, outputStr) {
   // Possible improvement: Better unknown variable detect.
   const unknownVariable = outputStr[0]
-  const equation        = new Equation({equationAsText, unknownVariable})
-  let   solution        = '[error]'
+  const equation = new Equation({ equationAsText, unknownVariable })
+  let solution = '[error]'
 
   try {
     EquationSolver.solveEquation(equation)
     solution = equation.getSolutionsAsText()
-  } catch (err) {
+  }
+  catch (err) {
     console.log(err)
   }
 
-  it(equationAsText + ' -> ' + outputStr, (done) => {
+  it(`${equationAsText} -> ${outputStr}`, () => {
     assert.equal(solution, outputStr)
   })
 }
 
-describe('solveEquation for =', function () {
+describe('solveEquation for =', () => {
   const tests = [
     ['g *( x ) = ( x - 4) ^ ( 2) - 3', 'g = 13 / x + x - 8'],
 
@@ -146,7 +147,7 @@ describe('solveEquation for =', function () {
     ['44x=2.74', 'x = 137/2200'],
 
     // Possible improvement: Possibility to point unknown variable directly?
-    ['(x + y) (y + 2) = 0', 'x = -y'],       // Solve for x (first found symbol)
+    ['(x + y) (y + 2) = 0', 'x = -y'], // Solve for x (first found symbol)
     ['(y + x) (y + 2) = 0', 'y = [-x, -2]'], // Solve for y (first found symbol)
 
     // Possible improvement: Skip repeated solutions.
@@ -189,7 +190,7 @@ describe('solveEquation for non = comparators', function() {
 })
 */
 
-describe('constant comparison support', function () {
+describe('constant comparison support', () => {
   const tests = [
     /*
   POSSIBLE IMPROVEMENT: Support for unequalities.
