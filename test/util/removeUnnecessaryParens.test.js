@@ -1,3 +1,10 @@
+import { assert, describe, it } from 'vitest'
+
+describe('commented_out_test_0', () => {
+  it('temp', () => {
+    assert.deepEqual(true, true)
+  })
+})
 /*
   TODO
 const mathsteps = require('../../index.js')

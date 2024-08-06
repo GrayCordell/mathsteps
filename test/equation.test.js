@@ -1,3 +1,11 @@
+import { assert, describe, it } from 'vitest'
+
+describe('commented_out_test_2', () => {
+  it('temp', () => {
+    assert.deepEqual(true, true)
+  })
+})
+
 /*
   TODO: Similar tests for kemuEquation?
 
