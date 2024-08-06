@@ -1,4 +1,4 @@
-import Node from '~/node.js'
+import Node from '~/node/index.js'
 import TestUtil from '../TestUtil.js'
 import { describe } from 'vitest'
 
