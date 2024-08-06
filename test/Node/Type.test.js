@@ -1,5 +1,5 @@
 import { assert, describe, it } from 'vitest'
-import Node from '../../lib/node'
+import Node from '~/node/index.js'
 import { math } from '~/config.js'
 
 const constNode = Node.Creator.constant
