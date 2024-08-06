@@ -1,7 +1,7 @@
-const assert = require('assert')
+import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
 
-const Equation       = require('../lib/kemuEquation/Equation')
-const EquationSolver = require('../lib/kemuEquation/EquationSolver')
+import Equation from '../lib/kemuEquation/Equation'
+import EquationSolver from '~/kemuEquation/EquationSolver.js'
 
 function testSolve(equationAsText, outputStr, debug = false) {
   // Possible improvement: Better unknown variable detect.
@@ -18,7 +18,6 @@ function testSolve(equationAsText, outputStr, debug = false) {
 
   it(equationAsText + ' -> ' + outputStr, (done) => {
     assert.equal(solution, outputStr)
-    done()
   })
 }
 

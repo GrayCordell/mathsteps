@@ -1,6 +1,5 @@
-const assert = require('assert')
-
-const Util = require('../../lib/util/Util')
+import Util from '~/util/Util'
+import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
 
 describe('appendToArrayInObject', function () {
   it('creates empty array', function () {

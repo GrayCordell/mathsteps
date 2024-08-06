@@ -1,18 +1,18 @@
-const assert = require('assert')
-const math = require('mathjs')
-const Node = require('../../lib/node')
+import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
+import Node from '../../lib/node'
+import { math } from "~/config.js";
 
 const constNode = Node.Creator.constant
 
 describe('Node.Type works', function () {
   it('10 constant', function () {
     assert.deepEqual(
-      Node.Type.isConstant(math.parse(10)),
+      Node.Type.isConstant(math.parse('10')),
       true)
   })
   it('-2 constant', function () {
     assert.deepEqual(
-      Node.Type.isConstant(constNode(-2)),
+      Node.Type.isConstant(constNode('-2')),
       true)
   })
   it('2+2 operator without operator param', function () {

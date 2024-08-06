@@ -1,4 +1,4 @@
-import assert from "assert";
+import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
 import simplifyCommon from "../lib/simplifyExpression/_common.js";
 import print from "../lib/util/print.js";
 import mathsteps from "~/index.js";

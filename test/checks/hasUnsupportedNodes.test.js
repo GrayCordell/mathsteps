@@ -1,7 +1,6 @@
-const assert    = require('assert')
-const mathsteps = require('../../index.js')
-
-const checks = require('../../lib/checks')
+import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
+import mathsteps from "~/index.js";
+import checks from "~/checks/index.js";
 
 describe('arithmetic stepping', function () {
   it('4 + sqrt(16)', function () {

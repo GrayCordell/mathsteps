@@ -1,7 +1,8 @@
-const Node = require('../../lib/node')
-const print = require('../../lib/util/print')
-const mathsteps = require('../../index.js')
-const TestUtil = require('../TestUtil')
+import Node from "~/node/index.js";
+import print from "~/util/print.js";
+import mathsteps from "~/index.js";
+import TestUtil from "../TestUtil.js";
+import { afterEach, beforeEach,assert, describe, expect } from 'vitest'
 
 // to create nodes, for testing
 const opNode = Node.Creator.operator

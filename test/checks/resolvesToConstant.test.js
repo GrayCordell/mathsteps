@@ -1,6 +1,6 @@
-const checks = require('../../lib/checks')
-
-const TestUtil = require('../TestUtil')
+import checks from '~/checks/index.js'
+import TestUtil from '../TestUtil.js'
+import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
 
 function testResolvesToConstant(exprString, resolves) {
   TestUtil.testBooleanFunction(checks.resolvesToConstant, exprString, resolves)

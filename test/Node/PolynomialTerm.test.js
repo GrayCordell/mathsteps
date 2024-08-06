@@ -1,6 +1,6 @@
-const Node = require('../../lib/node')
-
-const TestUtil = require('../TestUtil')
+import Node from '~/node'
+import TestUtil from '../TestUtil'
+import { afterEach, beforeEach,assert, describe, expect, it } from 'vitest'
 
 function testIsPolynomialTerm(exprStr, isTerm) {
   TestUtil.testBooleanFunction(Node.Type.isPolynomialTerm, exprStr, isTerm)

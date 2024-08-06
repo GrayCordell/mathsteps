@@ -1,7 +1,3 @@
-// const assert    = require('assert')
-// const mathsteps = require('../index.js')
-// const print     = require('../lib/util/print')
-// const {expressionEquals} = require('../lib/util/expressionEqualsAndNormalization')
 import mathsteps from '../lib/index.js'
 import print from '../lib/util/print'
 import { expressionEquals } from '../lib/util/expressionEqualsAndNormalization'
