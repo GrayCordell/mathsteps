@@ -30,6 +30,7 @@ export default antfu(
   },
   {
     rules: {
+      'ts/explicit-function-return-type': 'off',
       'style/no-multiple-empty-lines': 'warn',
       'ts/no-require-imports': 'off',
       'vue/no-unused-vars': 'off',
