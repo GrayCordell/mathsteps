@@ -79,8 +79,9 @@ export const commonPoolOfRules = [
   {
     l: 'c1 + c2', id: SIMPLIFY_ARITHMETIC__ADD, replaceFct: createConstantOp(math.add),
     mistakes: [
-      // also could be. But getFromRule will just grab it from the roolpool
+      // Also could be:
       // { l: 'c1 - c2', id: SIMPLIFY_ARITHMETIC__SUBTRACT, replaceFct: createConstantOp(math.subtract) },
+      //  But getFromRule will just grab it from the rulePool
       { getFromRule: () => findRule('c1 - c2', SIMPLIFY_ARITHMETIC__SUBTRACT) },
       { getFromRule: () => findRule('c1 * c2', SIMPLIFY_ARITHMETIC__MULTIPLY) },
     ],
