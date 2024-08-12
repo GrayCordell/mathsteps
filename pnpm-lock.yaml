@@ -14,6 +14,9 @@ dependencies:
   mathjs:
     specifier: ^13.0.3
     version: 13.0.3
+  mutative:
+    specifier: ^1.0.8
+    version: 1.0.8
 
 devDependencies:
   '@antfu/eslint-config':
@@ -4335,6 +4338,11 @@ packages:
   /muggle-string@0.4.1:
     resolution: {integrity: sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ==}
     dev: true
+
+  /mutative@1.0.8:
+    resolution: {integrity: sha512-bVVGCfEQTJDbsa+L1LX3jJftFnWZWfH0XIM+h/rJYnjgof3ZimBSuF/mOrh/NJI7H4pWGoji+DDuurPGpUZofw==}
+    engines: {node: '>=14.0'}
+    dev: false
 
   /nanoid@3.3.7:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
