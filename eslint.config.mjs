@@ -46,6 +46,7 @@ export default antfu(
       'ts/no-var-requires': 'off',
       'style/eol-last': 'warn',
       'no-prototype-builtins': 'warn',
+      'jsdoc/require-returns-description': 'off',
     },
   },
 )
