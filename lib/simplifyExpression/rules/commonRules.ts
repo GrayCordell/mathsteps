@@ -6,7 +6,7 @@ import {
 import Node from '../../node/index.js'
 import { math } from '~/config.js'
 import { createFunctionForEveryRule } from '~/newServices/ruleHelper.js'
-import { applyRules } from '../_common.js'
+import { applyRules } from '../kemuSimplifyCommonServices.js'
 import { cleanString } from '~/util/stringUtils'
 import { commonRuleMistakes } from '~/simplifyExpression/mistakes/commonRulesMistakes'
 

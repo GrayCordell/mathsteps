@@ -1,9 +1,9 @@
 import { assert, it } from 'vitest'
-import simplifyCommon from '../lib/simplifyExpression/_common.js'
 import print from '../lib/util/print.js'
 import mathsteps from '~/index.js'
+import { kemuFlatten } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
 
-const flatten = simplifyCommon.kemuFlatten
+const flatten = kemuFlatten
 // TestUtil contains helper methods to share code across tests
 const TestUtil = {}
 // Takes in an input string and returns a flattened and parsed node
