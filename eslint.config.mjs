@@ -26,6 +26,7 @@ export default antfu(
       'build',
       'public',
       '**/docs',
+      '**/README.md',
     ],
   },
   {
