@@ -1,13 +1,13 @@
 /* eslint-disable antfu/consistent-list-newline */
 import {
   ADD_FRACTIONS, COMMON_DENOMINATOR, DISTRIBUTE_NEGATIVE_ONE, DIVISION_BY_NEGATIVE_ONE, DIVISION_BY_ONE, KEMU_REMOVE_DOUBLE_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, PERCENTS_ADD, PERCENTS_CONVERT_TO_FRACTION, PERCENTS_SUB, REDUCE_EXPONENT_BY_ZERO, REDUCE_ZERO_NUMERATOR, REMOVE_ADDING_ZERO, REMOVE_EXPONENT_BASE_ONE, REMOVE_EXPONENT_BASE_ZERO, REMOVE_EXPONENT_BY_ONE, REMOVE_MULTIPLYING_BY_NEGATIVE_ONE, REMOVE_MULTIPLYING_BY_ONE, RESOLVE_DOUBLE_MINUS, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__POWER, SIMPLIFY_ARITHMETIC__SUBTRACT, SIMPLIFY_SIGNS,
-} from '~/ChangeTypes'
+} from '~/types/ChangeTypes'
 
 import Node from '../../node/index.js'
 import { math } from '~/config.js'
-import { createFunctionForEveryRule } from '~/util/ruleHelper.js'
+import { createFunctionForEveryRule } from '~/newServices/ruleHelper.js'
 import { applyRules } from '../_common.js'
-import { cleanString } from '~/util/mscStringUtils'
+import { cleanString } from '~/util/stringUtils'
 import { commonRuleMistakes } from '~/simplifyExpression/mistakes/commonRulesMistakes'
 
 // Utilities for making nodes faster and more readable

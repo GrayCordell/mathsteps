@@ -1,6 +1,6 @@
 import mathsteps from '../lib/index.js'
 import print from '../lib/util/print.js'
-import { areExpressionEqual } from '../lib/util/expressionEqualsAndNormalization.js'
+import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization.js'
 
 import { assert, describe, it } from 'vitest'
 

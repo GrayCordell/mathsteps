@@ -1,12 +1,10 @@
 /* eslint-disable unused-imports/no-unused-vars */
 import Node from '~/node/index.js'
 import { math } from '~/config.js'
-import { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__SUBTRACT } from '~/checks/ChangeTypes'
+import { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__SUBTRACT } from '~/types/ChangeTypes'
 
-const makeConstant = (value: any) => {
-  const num = Node.Creator.constant(value)
-  return num
-}
+// Utilities for making nodes faster and more readable
+const makeConstant = (value: any) => Node.Creator.constant(value)
 
 function getOrMakeANodeValue(a: any, b: any) {
   let _a = typeof a === 'number' ? makeConstant(a) : a
@@ -39,8 +37,6 @@ const pow = (a: any, b: any) => {
 }
 
 const toNum = (node: any) => node.value ? node.value.toNumber() : node.toNumber()
-
-// Utilities for making nodes faster and more readable
 
 const makeOperator = (operator: any, operands: any) => Node.Creator.operator(operator, operands)
 const makePercent = (value: any) => Node.Creator.percent(makeConstant(value))

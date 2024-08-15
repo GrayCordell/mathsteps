@@ -1,4 +1,4 @@
-import ChangeTypes from '~/ChangeTypes'
+import ChangeTypes from '~/types/ChangeTypes'
 
 export default {
   ...ChangeTypes,

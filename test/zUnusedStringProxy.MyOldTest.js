@@ -1,3 +1,4 @@
+/*
 import { describe, it } from 'vitest'
 import { math } from '~/config.js'
 import { isOperatorNode } from 'mathjs'
@@ -120,3 +121,4 @@ describe('temp', () => {
 
   it(`temp`, () => true)
 })
+*/

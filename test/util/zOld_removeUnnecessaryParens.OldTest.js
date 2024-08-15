@@ -1,12 +1,4 @@
-import { assert, describe, it } from 'vitest'
-
-describe('commented_out_test_0', () => {
-  it('temp', () => {
-    assert.deepEqual(true, true)
-  })
-})
 /*
-  TODO
 const mathsteps = require('../../index.js')
 const print = require('../../lib/util/print')
 const removeUnnecessaryParens = require('../../lib/util/removeUnnecessaryParens')
