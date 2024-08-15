@@ -1,37 +1,38 @@
-export enum LogLevel {
-  DEBUG = 'DEBUG',
-  INFO = 'INFO',
-  WARN = 'WARN',
-  ERROR = 'ERROR',
-}
+export const LogLevel = {
+  DEBUG: 'DEBUG',
+  INFO: 'INFO',
+  WARN: 'WARN',
+  ERROR: 'ERROR',
+} as const
+export type LogLevelKeys = keyof typeof LogLevel
 
 interface LogEntry {
-  level: LogLevel
+  level: LogLevelKeys
   message: string
   optionalParams: any[]
 }
 
 class Logger {
-  private logLevel: LogLevel
+  private logLevel: LogLevelKeys
   private deferredLogs: LogEntry[] = []
 
-  constructor(logLevel: LogLevel = LogLevel.INFO) {
+  constructor(logLevel: LogLevelKeys = LogLevel.INFO) {
     this.logLevel = logLevel
   }
 
-  private shouldLog(level: LogLevel): boolean {
+  private shouldLog(level: LogLevelKeys): boolean {
     const levels = Object.values(LogLevel)
     const currentIndex = levels.indexOf(this.logLevel)
     const targetIndex = levels.indexOf(level)
     return targetIndex >= currentIndex
   }
 
-  private formatMessage(level: LogLevel, message: string): string {
+  private formatMessage(level: LogLevelKeys, message: string): string {
     const timestamp = new Date().toISOString()
     return `[${timestamp}] [${level}] ${message}`
   }
 
-  private addLogEntry(level: LogLevel, message: string, optionalParams: any[]): void {
+  private addLogEntry(level: LogLevelKeys, message: string, optionalParams: any[]): void {
     const logEntry: LogEntry = { level, message, optionalParams }
     this.deferredLogs.push(logEntry)
   }
@@ -56,17 +57,17 @@ class Logger {
     console.log(message, ...optionalParams)
   }
 
-  private log(level: LogLevel, message: string, ...optionalParams: any[]): void {
+  private log(level: LogLevelKeys, message: string, ...optionalParams: any[]): void {
     if (this.shouldLog(level)) {
       console.log(this.formatMessage(level, message), ...optionalParams)
     }
   }
 
-  public setLogLevel(level: LogLevel): void {
+  public setLogLevel(level: LogLevelKeys): void {
     this.logLevel = level
   }
 
-  public deferred(message: string, level: LogLevel = LogLevel.INFO, ...optionalParams: any[]): void {
+  public deferred(message: string, level: LogLevelKeys = LogLevel.INFO, ...optionalParams: any[]): void {
     this.addLogEntry(level, message, optionalParams)
   }
 
@@ -103,7 +104,7 @@ try {
 catch (_e: any) { process_ = '' }
 const isDev = devEnvirements.includes(process_) || devEnvirements.includes(import.meta.env.MODE)
 
-let logLevel = LogLevel.DEBUG
+let logLevel: LogLevelKeys = LogLevel.DEBUG
 if (!isDev)
   logLevel = LogLevel.INFO
 export const logger = new Logger(logLevel)
