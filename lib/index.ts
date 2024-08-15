@@ -8,38 +8,44 @@ import clone from '~/newServices/nodeServices/clone.js'
 import Equation from './kemuEquation/Equation.js'
 import EquationSolver from './kemuEquation/EquationSolverCore.js'
 import { kemuNormalizeConstantNodes } from './simplifyExpression/kemuSimplifyCommonServices.js'
+import type { MathNode } from 'mathjs'
+import { isOperatorNode } from 'mathjs'
 
-const print = { ascii }.ascii
-const printLatex = { latex }.latex
+const print = ascii
+const printLatex = latex
 const CACHE_ENABLED = true
 const CACHE_LOG_MISSING_ENABLED = false
 const CACHE_LOG_REUSED_ENABLED = false
-const CACHE_COMPARE = {}
-const CACHE_TEXT_TO_TEX = {}
-const CACHE_TEXT_TO_NODE = {}
+const CACHE_COMPARE: Record<string, number> = {}
+const CACHE_TEXT_TO_TEX: Record<string, string> = {}
+const CACHE_TEXT_TO_NODE: Record<string, MathNode> = {}
+
 // Stack of caller registered preprocess function.
 // Empty by default.
+const ARRAY_OF_PREPROCESS_FUNCTIONS_BEFORE_PARSE: ((text: string) => string)[] = []
+const ARRAY_OF_PREPROCESS_FUNCTIONS_AFTER_PARSE: ((node: MathNode) => MathNode)[] = []
 
-const ARRAY_OF_PREPROCESS_FUNCTIONS_BEFORE_PARSE = []
-const ARRAY_OF_PREPROCESS_FUNCTIONS_AFTER_PARSE = []
-function _compareByTextInternal(x, y) {
+function _compareByTextInternal(x: string, y: string): number {
   try {
-    return math.compare(x, y)
+    return <number>math.compare(x, y)
   }
   // eslint-disable-next-line unused-imports/no-unused-vars
   catch (err) {
     return Number.NaN
   }
 }
-function _postProcessResultTeX(resultTeX) {
+
+function _postProcessResultTeX(resultTeX: string): string {
   // Don't use x := y definitions.
   // We want x = y everywhere.
   return resultTeX.replace(':=', '=')
 }
-function printAsTeX(node) {
+
+function printAsTeX(node: MathNode): string {
   return _postProcessResultTeX(printLatex(node))
 }
-function compareByText(x, y) {
+
+function compareByText(x: string, y: string): number {
   let rv = Number.NaN
   if (CACHE_ENABLED) {
     const cacheKey = `${x}|${y}`
@@ -64,7 +70,8 @@ function compareByText(x, y) {
   }
   return rv
 }
-function _convertTextToTeXInternal(text) {
+
+function _convertTextToTeXInternal(text: string): string {
   // Handle equation render: a = b = c = ...
   let rv = ''
   const tokens = text.split('=')
@@ -78,9 +85,10 @@ function _convertTextToTeXInternal(text) {
   })
   return rv
 }
-function convertTextToTeX(text) {
+
+function convertTextToTeX(text: string): string {
   let rv = text
-  if (text && (text.trim() !== '')) {
+  if (text && text.trim() !== '') {
     if (CACHE_ENABLED) {
       text = text.trim()
       rv = CACHE_TEXT_TO_TEX[text]
@@ -106,23 +114,25 @@ function convertTextToTeX(text) {
   return rv
 }
 
-function _kemuNormalizeMultiplyDivision(node) {
-  if (node.op === '/') {
-    // x/y
+function _kemuNormalizeMultiplyDivision(node: MathNode): MathNode {
+  if (isOperatorNode(node) && node.op === '/') {
     const nodeTop = node.args[0]
     const nodeBottom = node.args[1]
-    if ((nodeTop.op === '*')
-      && (nodeTop.args[0].op === '/')) {
-      // a/b * c         a   c
-      // -------- gives  - * -
-      //  d              b   d
+    if (
+      isOperatorNode(nodeTop)
+      && nodeTop.op === '*'
+      && isOperatorNode(nodeTop.args[0])
+      && nodeTop.args[0].op === '/'
+      && isOperatorNode(node)
+    ) {
       const nodeCd = node
       node = node.args[0]
       nodeCd.args = [nodeTop.args[1], nodeBottom]
+      // @ts-expect-error ---
       node.args[1] = nodeCd
     }
   }
-  if (node.args) {
+  if (isOperatorNode(node) && node.args) {
     node.args.forEach((oneArg, idx) => {
       if (oneArg)
         node.args[idx] = _kemuNormalizeMultiplyDivision(oneArg)
@@ -130,13 +140,14 @@ function _kemuNormalizeMultiplyDivision(node) {
   }
   return node
 }
-function _parseTextInternal(text) {
+
+function _parseTextInternal(text: string): MathNode {
   // Preprocess text before passing in to mathjs parser if needed.
   ARRAY_OF_PREPROCESS_FUNCTIONS_BEFORE_PARSE.forEach((preprocessFct) => {
     text = preprocessFct(text)
   })
   // Process text into node.
-  let rv = math.parse(text)
+  let rv = math.parse(text) as MathNode
   // Make sure we store all constant nodes as bignumber to avoid fake unequals.
   rv = kemuNormalizeConstantNodes(rv)
   rv = _kemuNormalizeMultiplyDivision(rv)
@@ -146,8 +157,9 @@ function _parseTextInternal(text) {
   })
   return rv
 }
-function parseText(text) {
-  let rv = null
+
+function parseText(text: string): MathNode {
+  let rv: MathNode | null = null
   if (CACHE_ENABLED) {
     text = text.trim()
     rv = CACHE_TEXT_TO_NODE[text]
@@ -171,15 +183,20 @@ function parseText(text) {
     // Cache disabled - just wrap original call.
     rv = _parseTextInternal(text)
   }
-  return rv
+  return <MathNode>rv
 }
-function simplifyExpression(optionsOrExpressionAsText) {
+
+interface SimplifyOptions {
+  expressionAsText?: string
+  expressionNode?: MathNode
+}
+
+function simplifyExpression(optionsOrExpressionAsText: SimplifyOptions | string): any {
   let rv = null
   // eslint-disable-next-line no-useless-catch
   try {
-    // Fetch input expression.
-    let expressionNode = null
-    let options = {}
+    let expressionNode: MathNode | null = null
+    let options: SimplifyOptions = {}
     if (typeof optionsOrExpressionAsText === 'string') {
       expressionNode = parseText(optionsOrExpressionAsText)
     }
@@ -187,7 +204,6 @@ function simplifyExpression(optionsOrExpressionAsText) {
       options = optionsOrExpressionAsText
       if (options.expressionAsText != null)
         expressionNode = parseText(options.expressionAsText)
-
       else if (options.expressionNode != null)
         expressionNode = options.expressionNode
     }
@@ -203,13 +219,14 @@ function simplifyExpression(optionsOrExpressionAsText) {
 
   return rv
 }
-function isOkAsSymbolicExpression(expressionAsText) {
+
+function isOkAsSymbolicExpression(expressionAsText: string): boolean {
   let rv = false
-  if (expressionAsText && (expressionAsText.search(/-\s*-/) === -1)) {
+  if (expressionAsText && expressionAsText.search(/-\s*-/) === -1) {
     try {
       const expressionNode = parseText(`${expressionAsText}*1`)
       const steps = stepThrough.oldApi(expressionNode)
-      rv = (steps.length > 0)
+      rv = steps.length > 0
     }
     // eslint-disable-next-line unused-imports/no-unused-vars
     catch (e) {
@@ -218,18 +235,22 @@ function isOkAsSymbolicExpression(expressionAsText) {
   }
   return rv
 }
-function kemuSolveEquation(options) {
+
+function kemuSolveEquation(options: any): Equation {
   const equation = new Equation(options)
+  // @ts-expect-error ---
   EquationSolver.solveEquation(equation)
   return equation
 }
-function solveEquation(x) {
-  if (typeof (x) !== 'object')
+
+function solveEquation(x: any): Equation {
+  if (typeof x !== 'object')
     throw 'error: options object expected'
 
   return kemuSolveEquation(x)
 }
-function normalizeExpression(text) {
+
+function normalizeExpression(text: string): string {
   let rv = '[?]'
   try {
     rv = print(parseText(text))
@@ -240,27 +261,33 @@ function normalizeExpression(text) {
   }
   return rv
 }
-function registerPreprocessorBeforeParse(cb) {
+
+function registerPreprocessorBeforeParse(cb: (text: string) => string): void {
   ARRAY_OF_PREPROCESS_FUNCTIONS_BEFORE_PARSE.push(cb)
 }
-function registerPreprocessorAfterParse(cb) {
+
+function registerPreprocessorAfterParse(cb: (node: MathNode) => MathNode): void {
   ARRAY_OF_PREPROCESS_FUNCTIONS_AFTER_PARSE.push(cb)
 }
-export { simplifyExpression }
-export { solveEquation }
-export { kemuSolveEquation }
-export { ChangeTypes }
-export { normalizeExpression }
-export { print }
-export { printAsTeX }
-export { compareByText }
-export { math }
-export { convertTextToTeX }
-export { parseText }
-export { isOkAsSymbolicExpression }
-export { Node }
-export { registerPreprocessorBeforeParse }
-export { registerPreprocessorAfterParse }
+
+export {
+  simplifyExpression,
+  solveEquation,
+  kemuSolveEquation,
+  ChangeTypes,
+  normalizeExpression,
+  print,
+  printAsTeX,
+  compareByText,
+  math,
+  convertTextToTeX,
+  parseText,
+  isOkAsSymbolicExpression,
+  Node,
+  registerPreprocessorBeforeParse,
+  registerPreprocessorAfterParse,
+}
+
 export default {
   simplifyExpression,
   solveEquation,

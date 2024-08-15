@@ -1,6 +1,6 @@
 import { assert, it } from 'vitest'
 import print from '../lib/util/print.js'
-import mathsteps from '~/index.js'
+import mathsteps from '~/index'
 import { kemuFlatten } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
 
 const flatten = kemuFlatten

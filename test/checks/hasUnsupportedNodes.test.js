@@ -1,5 +1,5 @@
 import { assert, describe, it } from 'vitest'
-import mathsteps from '~/index.js'
+import mathsteps from '~/index'
 import checks from '~/checks/index.js'
 
 describe('arithmetic stepping', () => {

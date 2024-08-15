@@ -1,4 +1,4 @@
-import mathsteps from '../lib/index.js'
+import mathsteps from '../lib/index'
 import print from '../lib/util/print.js'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization.js'
 

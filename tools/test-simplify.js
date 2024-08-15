@@ -1,4 +1,4 @@
-import mathsteps from '~/index.js'
+import mathsteps from '~/index'
 
 const expr = '(x - 2)^2'
 const exprObj = mathsteps.parseText(expr)

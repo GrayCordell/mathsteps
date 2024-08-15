@@ -1,6 +1,6 @@
 import Node from '~/node/index.js'
 import print from '~/util/print.js'
-import mathsteps from '~/index.js'
+import mathsteps from '~/index'
 import TestUtil from '../TestUtil.js'
 import { describe } from 'vitest'
 
