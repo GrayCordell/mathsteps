@@ -47,7 +47,8 @@
   "dependencies": {
     "fast-json-stringify": "^6.0.0",
     "globals": "^15.9.0",
-    "mathjs": "^13.0.3"
+    "mathjs": "^13.0.3",
+    "mutative": "^1.0.8"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
