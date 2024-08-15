@@ -52,6 +52,10 @@ class Logger {
     this.log(LogLevel.ERROR, message, ...optionalParams)
   }
 
+  public regularLog(message: string, ...optionalParams: any[]): void {
+    console.log(message, ...optionalParams)
+  }
+
   private log(level: LogLevel, message: string, ...optionalParams: any[]): void {
     if (this.shouldLog(level)) {
       console.log(this.formatMessage(level, message), ...optionalParams)
