@@ -1,6 +1,6 @@
 /* eslint-disable unused-imports/no-unused-vars,no-unused-vars */
 import Node from '~/node/index.js'
-import { math } from '~/config.js'
+import { math } from '~/config'
 import { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__SUBTRACT } from '~/types/ChangeTypes'
 
 // Utilities for making nodes faster and more readable

@@ -1,6 +1,6 @@
 /*
 import { describe, it } from 'vitest'
-import { math } from '~/config.js'
+import { math } from '~/config.ts'
 import { isOperatorNode } from 'mathjs'
 
 describe('temp', () => {

@@ -1,4 +1,3 @@
-// @ts-check
 import { all, create } from 'mathjs'
 
 // change the default mathjs configuration.
