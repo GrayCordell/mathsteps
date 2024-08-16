@@ -82,13 +82,10 @@ const subtractionMistakes = [
 // Multiplication Mistakes
 const createMultiplicationMistake = createMistake(OperationIds.MULTIPLY)
 const multiplicationMistakes = [
-  createMultiplicationMistake('MULTIPLIED_WITHOUT_CARRYING', (node, vars) => makeConstant((vars.c1.value % 10) * (vars.c2.value % 10))),
-  // createMultiplicationMistake('ADDED_INSTEAD_OF_MULTIPLIED', (node, vars) => makeConstant(add(vars.c1.value, vars.c2.value))),
-  // createMultiplicationMistake('MULTIPLIED_ONE_TOO_MANY', (node, vars) => makeConstant(multiply(vars.c1.value + 1, vars.c2.value))),
-  // createMultiplicationMistake('MULTIPLIED_ONE_TOO_FEW', (node, vars) => makeConstant(multiply(vars.c1.value - 1, vars.c2.value))),
-  // createMultiplicationMistake('MULTIPLIED_BY_ZERO', (node, vars) => makeConstant(0)),
-  // createMultiplicationMistake('MULTIPLIED_WITHOUT_ADDING_ZEROS', (node, vars) => makeConstant(multiply(vars.c1.value, vars.c2.value) % 10)),
-  // createMultiplicationMistake('MULTIPLIED_WITH_INCORRECT_PLACE_VALUE', (node, vars) => makeConstant((vars.c1.value * 10) * vars.c2.value)),
+  // createMultiplicationMistake('MULTIPLIED_WITHOUT_CARRYING', (node, vars) => makeConstant(toNum((vars.c1.value) % 10) * toNum((vars.c2.value) % 10))),
+  createMultiplicationMistake('ADDED_INSTEAD_OF_MULTIPLIED', (node, vars) => makeConstant(add(vars.c1.value, vars.c2.value))),
+  createMultiplicationMistake('MULTIPLIED_ONE_TOO_MANY', (node, vars) => makeConstant(multiply(toNum(vars.c1.value) + 1, vars.c2.value))),
+  createMultiplicationMistake('MULTIPLIED_ONE_FEW', (node, vars) => makeConstant(multiply(toNum(vars.c1.value) - 1, vars.c2.value))),
 ]
 // Division Mistakes
 // const createDivisionMistake = createMistake(OperationIds.DIVIDE)
@@ -100,6 +97,6 @@ const multiplicationMistakes = [
 export const commonRuleMistakes = [
   ...additionMistakes,
   ...subtractionMistakes,
-  // ...multiplicationMistakes,
+  ...multiplicationMistakes,
   // ...divisionMistakes,
 ]
