@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { main } from '~/mainExperment.js'
+import { main } from '~/mainExperiment.js'
 
 describe('myPlayGround2', () => {
   main()
