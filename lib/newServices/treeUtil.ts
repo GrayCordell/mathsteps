@@ -108,8 +108,8 @@ export function travelTreeExpanded(node: MathNode, fn: (node: MathNode, context:
 }
 
 export function removeImplicitMultiplicationFromNode(node: MathNode): MathNode {
-  travelTreeExpanded(node, (_node) => {
-    const node_ = _node as MathNode & { implicit?: boolean }
+  node.traverse((node) => {
+    const node_ = node as MathNode & { implicit?: boolean }
     if (node_.implicit)
       node_.implicit = false
   })
