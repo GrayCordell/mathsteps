@@ -14,16 +14,22 @@ export const MultiplicationErrors = {
   SUBTRACTED_INSTEAD_OF_ADDED,
   MULTIPLIED_ONE_TOO_MANY,
   MULTIPLIED_ONE_TOO_FEW,
-}
+} as const
 
 export const AdditionErrors = {
   ADDED_ONE_TOO_FEW,
   ADDED_ONE_TOO_MANY,
   SUBTRACTED_INSTEAD_OF_ADDED,
-}
+} as const
 
-export default {
-  ...ChangeTypes,
+export const UNKNOWN = 'UNKNOWN' as const
+export const NO_CHANGE = 'NO_CHANGE' as const
+export const MistakeTypes = {
+  ...ChangeTypes, // Also include the ChangeTypes
   ...MultiplicationErrors,
   ...AdditionErrors,
+  UNKNOWN,
+  NO_CHANGE,
 } as const
+export type AMistakeType = typeof MistakeTypes[keyof typeof MistakeTypes] | null
+export default MistakeTypes

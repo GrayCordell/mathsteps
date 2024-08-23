@@ -198,7 +198,8 @@ export const RootAndPowerRules = {
   KEMU_POWER_TO_NEGATIVE_EXPONENT, // Also in ExponentSimplificationRules
 } as const
 
-export default {
+export const UNKNOWN = 'UNKNOWN' as const
+export const ChangeTypes = {
   ...SimplifyArithmetic,
   ...DivisionRules,
   ...MultiplicationRules,
@@ -211,6 +212,7 @@ export default {
   ...LogarithmRules,
   ...PercentageRules,
   ...RootAndPowerRules,
+  UNKNOWN,
   // simplifyArithmetic: SimplifyArithmetic,
   // divisionRules: DivisionRules,
   // multiplicationRules: MultiplicationRules,
@@ -224,3 +226,5 @@ export default {
   // percentageRules: PercentageRules,
   // rootAndPowerRules: RootAndPowerRules,
 } as const
+export type AChangeType = typeof ChangeTypes[keyof typeof ChangeTypes]
+export default ChangeTypes
