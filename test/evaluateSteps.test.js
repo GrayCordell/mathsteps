@@ -1,9 +1,9 @@
-// @ts-check
 import { CANCEL_TERMS, COLLECT_AND_COMBINE_LIKE_TERMS, KEMU_DECIMAL_TO_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, REMOVE_ADDING_ZERO, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY } from '~/types/ChangeTypes'
 import { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_ONE_TOO_MANY, MULTIPLIED_ONE_TOO_MANY } from '~/types/ErrorTypes'
 import { describe, it } from 'vitest'
 import { assessUserSteps } from '~/simplifyExpression/stepEvaluationCore'
-import { assertSpecifiedValues } from './util/assertHelpers.js'
+// @ts-expect-error --- I don't know why this needs to be ignored.
+import { assertSpecifiedValues } from './util/assertHelpers'
 
 function testStepEvaluation(test, index) {
   it(`test ${index + 1}: ${test.description}`, () => {
