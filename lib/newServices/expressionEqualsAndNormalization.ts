@@ -4,25 +4,17 @@ import { myNodeToString } from '~/newServices/nodeServices/myNodeToString.js'
 import { cleanString } from '~/util/stringUtils.js'
 import { kemuNormalizeConstantNodes } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
 import { removeImplicitMultiplicationFromNode } from '~/newServices/treeUtil'
+import type { MathNode } from 'mathjs'
+import type { EqualityCache } from '~/util/equalityCache'
 
-/**
- * @param node {string| import('mathjs').MathNode}
- * @returns {import('mathjs').MathNode}
- */
-export function veryNormalizeNode(node) {
+export function veryNormalizeNode(node: MathNode | string): MathNode {
   if (typeof node === 'string')
     node = parseText(node)
-  node = kemuSortArgs(kemuNormalizeConstantNodes(removeImplicitMultiplicationFromNode(node), true))
-  return node
+  node = kemuSortArgs(kemuNormalizeConstantNodes(removeImplicitMultiplicationFromNode(node)), true)
+  return <MathNode>node
 }
 
-/**
- * @param exp0 {string| import('mathjs').MathNode}
- * @param exp1 {string| import('mathjs').MathNode}
- * @param equalityCache {EqualityCache|null} - provide a cache to get cached equality.
- * @returns {boolean|null} -
- */
-export function areExpressionEqual(exp0, exp1, equalityCache = null) {
+export function areExpressionEqual(exp0: string | MathNode, exp1: string | MathNode, equalityCache: EqualityCache | null = null): boolean {
   if (!exp0 || !exp1) // if either is null or undefined, we aren't going to compare them.
     return false
   if (exp0 === exp1) // same object reference. Or also same exact string but we will check "cleaned" strings later.
@@ -43,12 +35,7 @@ export function areExpressionEqual(exp0, exp1, equalityCache = null) {
     return equalityCache.getCachedEquality(strExp0, strExp1, areExpressionEqualCore)
 }
 
-/**
- * @param exp0 {string|import('mathjs').MathNode}
- * @param exp1 {string|import('mathjs').MathNode}
- * @returns {boolean} -
- */
-function areExpressionEqualCore(exp0, exp1) {
+function areExpressionEqualCore(exp0?: string | MathNode | null, exp1?: string | MathNode | null): boolean {
   if (!exp0 || !exp1) // if either is null or undefined, we aren't going to compare them.
     return false
   if (exp0 === exp1) // same object reference. Or also same exact string but we will check "cleaned" strings later.
