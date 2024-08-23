@@ -2,6 +2,7 @@
 import Node from '~/node/index.js'
 import { math } from '~/config'
 import { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY } from '~/types/ChangeTypes'
+import { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_FEW, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_INSTEAD_OF_ADDED } from '~/types/ErrorTypes'
 
 // Utilities for making nodes faster and more readable
 const makeConstant = (value: any) => Node.Creator.constant(value)
@@ -49,33 +50,33 @@ const OperationIds = {
   // DIVIDE: SIMPLIFY_ARITHMETIC__DIVIDE,
 } as const
 
-const createMistake = (placeIn: string) => (id: any, replaceFct: (node: any, vars: any) => unknown) => ({ id, placeIn, replaceFct })
+const createMistake = (placeIn: string) => (id: any, replaceFct: (node: any, vars: any) => unknown) => ({ id, placeIn, replaceFct }) as const
 
 // Addition Mistakes
 const createAdditionMistake = createMistake(OperationIds.ADD)
 const additionMistakes = [
-  createAdditionMistake('SUBTRACTED_INSTEAD_OF_ADDED', (node, { c1, c2 }) => makeConstant(subtract(c1, c2))),
-  createAdditionMistake('MULTIPLIED_INSTEAD_OF_ADDED', (node, { c1, c2 }) => makeConstant(multiply(c1, c2))),
-  createAdditionMistake('ADDED_ONE_TOO_MANY', (node, { c1, c2 }) => makeConstant(add(toNum(c1) + 1, c2))),
-  createAdditionMistake('ADDED_ONE_TOO_FEW', (node, { c1, c2 }) => makeConstant(add(toNum(c1) - 1, c2))),
-]
+  createAdditionMistake(SUBTRACTED_INSTEAD_OF_ADDED, (node, { c1, c2 }) => makeConstant(subtract(c1, c2))),
+  createAdditionMistake(MULTIPLIED_INSTEAD_OF_ADDED, (node, { c1, c2 }) => makeConstant(multiply(c1, c2))),
+  createAdditionMistake(ADDED_ONE_TOO_MANY, (node, { c1, c2 }) => makeConstant(add(toNum(c1) + 1, c2))),
+  createAdditionMistake(ADDED_ONE_TOO_FEW, (node, { c1, c2 }) => makeConstant(add(toNum(c1) - 1, c2))),
+] as const
 
 // Multiplication Mistakes
 const createMultiplicationMistake = createMistake(OperationIds.MULTIPLY)
 const multiplicationMistakes = [
-  createMultiplicationMistake('ADDED_INSTEAD_OF_MULTIPLIED', (node, { c1, c2 }) => makeConstant(add(c1, c2))),
-  createMultiplicationMistake('MULTIPLIED_ONE_TOO_MANY', (node, { c1, c2 }) => makeConstant(multiply(toNum(c1) + 1, c2))),
-  createMultiplicationMistake('MULTIPLIED_ONE_TOO_MANY', (node, { c1, c2 }) => makeConstant(multiply(c1, toNum(c2) + 1))),
-  createMultiplicationMistake('MULTIPLIED_ONE_FEW', (node, { c1, c2 }) => makeConstant(multiply(toNum(c1) - 1, c2))),
-  createMultiplicationMistake('MULTIPLIED_ONE_FEW', (node, { c1, c2 }) => makeConstant(multiply(c1, toNum(c2) - 1))),
-]
+  createMultiplicationMistake(ADDED_INSTEAD_OF_MULTIPLIED, (node, { c1, c2 }) => makeConstant(add(c1, c2))),
+  createMultiplicationMistake(MULTIPLIED_ONE_TOO_MANY, (node, { c1, c2 }) => makeConstant(multiply(toNum(c1) + 1, c2))),
+  createMultiplicationMistake(MULTIPLIED_ONE_TOO_MANY, (node, { c1, c2 }) => makeConstant(multiply(c1, toNum(c2) + 1))),
+  createMultiplicationMistake(MULTIPLIED_ONE_TOO_FEW, (node, { c1, c2 }) => makeConstant(multiply(toNum(c1) - 1, c2))),
+  createMultiplicationMistake(MULTIPLIED_ONE_TOO_FEW, (node, { c1, c2 }) => makeConstant(multiply(c1, toNum(c2) - 1))),
+] as const
 
 export const commonRuleMistakes = [
   ...additionMistakes,
   ...multiplicationMistakes,
   // ...subtractionMistakes,
   // ...divisionMistakes,
-]
+] as const
 
 // Maybe later
 // Division Mistakes
