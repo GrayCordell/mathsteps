@@ -1,16 +1,24 @@
-// assertHelpers.js
 import { assert } from 'vitest'
 import { cleanString } from '~/util/stringUtils.js'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
-import { removeCaseNumberFromRuleId } from '~/newServices/ruleHelper.js'
+import { removeCaseNumberFromRuleId } from '~/newServices/ruleHelper'
+import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
+import { objectKeys } from '~/types/ObjectKeys'
 
-function _normalizeRulesProcedure(stepObject, expectedObject) {
+/**
+ * @param stepObject
+ * @param expectedObject
+ * @mutates stepObject & expectedObject
+ */
+function _normalizeRulesProcedure(stepObject: StepInfo, expectedObject: Partial<StepInfo>) {
   // clean strings
-  for (const key of Object.keys(expectedObject)) {
-    if (typeof expectedObject[key] === 'string')
+  for (const key of objectKeys(expectedObject)) {
+    if (typeof expectedObject[key] === 'string') { // @ts-expect-error ---
       expectedObject[key] = cleanString(expectedObject[key])
-    if (typeof stepObject[key] === 'string')
+    }
+    if (typeof stepObject[key] === 'string') { // @ts-expect-error ---
       stepObject[key] = cleanString(stepObject[key])
+    }
   }
 
   // remove COLLECT_AND_COMBINE_LIKE_TERMS from availableChangeTypes for now
@@ -20,9 +28,6 @@ function _normalizeRulesProcedure(stepObject, expectedObject) {
     stepObject.availableChangeTypes = stepObject.availableChangeTypes.map(changeType => removeCaseNumberFromRuleId(changeType))
     stepObject.availableChangeTypes.sort()
   }
-  if (stepObject.changeType)
-    stepObject.changeType = removeCaseNumberFromRuleId(stepObject.changeType)
-
   if (expectedObject.availableChangeTypes) {
     expectedObject.availableChangeTypes = expectedObject.availableChangeTypes.filter(changeType => changeType !== 'COLLECT_AND_COMBINE_LIKE_TERMS')
     expectedObject.availableChangeTypes = expectedObject.availableChangeTypes.map(changeType => removeCaseNumberFromRuleId(changeType))
@@ -34,12 +39,17 @@ function _normalizeRulesProcedure(stepObject, expectedObject) {
     stepObject.attemptedChangeType = removeCaseNumberFromRuleId(stepObject.attemptedChangeType)
 }
 
-export function assertSpecifiedValues(stepObject, expectedObject) {
+/**
+ * @param stepObject
+ * @param expectedObject
+ * @mutates stepObject & expectedObject
+ */
+export function assertSpecifiedValues(stepObject: StepInfo, expectedObject: Partial<StepInfo>) {
   // remove COLLECT_AND_COMBINE_LIKE_TERMS from availableChangeTypes for now
   // Also lets remove the _CASE_1, _CASE_2, etc. from the ruleId.
   _normalizeRulesProcedure(stepObject, expectedObject)
 
-  for (const key in expectedObject) {
+  for (const key of objectKeys(expectedObject)) {
     let expectedValue = expectedObject[key]
     let actualValue = stepObject[key]
     if (expectedValue === undefined)
@@ -51,10 +61,11 @@ export function assertSpecifiedValues(stepObject, expectedObject) {
 
     // These are math strings. And they can differ in formatting. Ex. (x+1) vs x+1 or 1+-5 vs 1-5 vs 1+(-5)
     if (key === 'from' || key === 'to' || key === 'attemptedToGetTo') {
-      const isEqual = areExpressionEqual(actualValue, expectedValue)
-      assert.isTrue(isEqual, `Expected "${key}" to be "${expectedValue}" but got "${actualValue}"`)
+      if (typeof actualValue === 'string' && typeof expectedValue === 'string') {
+        const isEqual = areExpressionEqual(actualValue, expectedValue)
+        assert.isTrue(isEqual, `Expected "${key}" to be "${expectedValue}" but got "${actualValue}"`)
+      }
     }
-
     else {
       assert.deepEqual(actualValue, expectedValue, `Expected "${key}" to be "${expectedValue}" but got "${actualValue}"`)
     }
