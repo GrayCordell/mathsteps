@@ -758,7 +758,27 @@ describe('multiplication Mistakes', () => {
         ],
       ]),
     },
-    // Add more tests here as needed
+    // Test 6
+    {
+      description: 'Completely Incoherent Multiplication',
+      steps: [
+        '2 * 3', // Starting equation
+        '200', // Step 1 from user
+      ],
+      expectedStepAnalysis: ([
+        [
+          {
+            availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
+            attemptedChangeType: 'UNKNOWN',
+            from: '2 * 3',
+            to: '200',
+            attemptedToGetTo: 'UNKNOWN',
+            mistakenChangeType: 'UNKNOWN',
+            isValid: false,
+          },
+        ],
+      ]),
+    },
   ]
   multiplicationMistakeCases.forEach((test, index) => testStepEvaluation(test, index))
 })
