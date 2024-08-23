@@ -28,7 +28,7 @@ type CoreAssessUserStepResult = {
 } | { history: [], isFoundStepAMistake: false }
 | { history: ProcessedStep[], isFoundStepAMistake: false }
 
-interface StepInfo {
+export interface StepInfo {
   isValid: boolean // Whether the step is valid from the previous step.
   reachesOriginalAnswer: boolean // Whether the step leads to the original answer of the expression.
   from: string // The expression before the step
@@ -109,7 +109,7 @@ function findAllNextStepOptions(userStep: string): ProcessedStep[] {
 }
 
 const MAX_STEP_DEPTH = 100
-function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AChangeType & AMistakeType)[]): CoreAssessUserStepResult {
+function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AChangeType | AMistakeType)[]): CoreAssessUserStepResult {
   const valueToFind = lastTwoUserSteps[1]
   const stepQueue: { start: string, history: ProcessedStep[] }[] = []
   const triedSteps = new Set<string>()

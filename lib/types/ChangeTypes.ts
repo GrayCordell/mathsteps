@@ -226,5 +226,9 @@ export const ChangeTypes = {
   // percentageRules: PercentageRules,
   // rootAndPowerRules: RootAndPowerRules,
 } as const
-export type AChangeType = typeof ChangeTypes[keyof typeof ChangeTypes]
+
+export type AChangeTypeCore = typeof ChangeTypes[keyof typeof ChangeTypes]
+type AChangeTypeWithCase = `${AChangeTypeCore}__CASE_${number}`
+export type AChangeType = AChangeTypeCore | AChangeTypeWithCase
+
 export default ChangeTypes

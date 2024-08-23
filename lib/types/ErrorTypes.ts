@@ -1,3 +1,4 @@
+import type { AChangeType } from '~/types/ChangeTypes'
 import ChangeTypes from '~/types/ChangeTypes'
 
 export const ADDED_ONE_TOO_FEW = 'ADDED_ONE_TOO_FEW' as const
@@ -31,5 +32,5 @@ export const MistakeTypes = {
   UNKNOWN,
   NO_CHANGE,
 } as const
-export type AMistakeType = typeof MistakeTypes[keyof typeof MistakeTypes] | null
+export type AMistakeType = typeof MistakeTypes[keyof typeof MistakeTypes] | AChangeType | null
 export default MistakeTypes

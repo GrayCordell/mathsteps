@@ -1,47 +1,26 @@
-// @ts-check
-import { applyRules } from '../simplifyExpression/kemuSimplifyCommonServices.js'
-import { makeKeyFromNode } from '~/newServices/nodeServices/nodeCacher.js'
+import { applyRules } from '~/simplifyExpression/kemuSimplifyCommonServices'
+import { makeKeyFromNode } from '~/newServices/nodeServices/nodeCacher'
+import type { AChangeType, AChangeTypeCore } from '~/types/ChangeTypes'
+import type { MathNode } from 'mathjs'
 
-/**
- * @param {{ id: any; }} rule
- * @param {any[]} ruleList
- */
-export function isRuleInList(rule, ruleList) {
+export function isRuleInList(rule: { id: string }, ruleList: { id: string }[]) {
   return ruleList.some(r => r.id === rule.id)
 }
 
-/**
- * @param {string} rootChangeType
- * @param {string} changeType
- */
-export function isSameRootChangeType(rootChangeType, changeType) {
+export function isSameRootChangeType(rootChangeType: string | AChangeType, changeType: string | AChangeType): boolean {
   // remove __CASE_1, __CASE_2, etc.
   const rootChangeTypeWithoutCase = rootChangeType.split('__CASE_')[0]
   const changeTypeWithoutCase = changeType.split('__CASE_')[0]
   return rootChangeTypeWithoutCase === changeTypeWithoutCase
 }
 
-/**
- * @param ruleId {string}
- * @returns {string}
- */
-export function removeCaseNumberFromRuleId(ruleId) {
-  return ruleId.split('__CASE_')[0]
-}
-/** @param changeType {string} @returns {string} */
-export function removeCaseNumberFromChangeType(changeType) {
-  return removeCaseNumberFromRuleId(changeType)
-}
+export const removeCaseNumberFromRuleId = (ruleId: AChangeType | string): AChangeTypeCore => (ruleId.split('__CASE_')[0] as AChangeTypeCore)
+export const removeCaseNumberFromChangeType = (changeType: AChangeType | string): AChangeTypeCore => removeCaseNumberFromRuleId(changeType)
 
-/**
- *
- * @param rules {any[]}
- * @param onApplyRuleFunction {function}
- * @returns {{id: string, ogId: string, fn: Function}[]}
- */
-export function createFunctionForEveryRule(rules, onApplyRuleFunction = applyRules) {
-  /** @type {{ id: string; ogId: string; fn: Function; }[]} */
-  const fns = []
+interface UnknownButMaybeHasGetMistakes { getMistakes?: boolean }
+type FN = (node: MathNode, arg2: UnknownButMaybeHasGetMistakes, arg3: UnknownButMaybeHasGetMistakes, arg4: UnknownButMaybeHasGetMistakes) => unknown
+export function createFunctionForEveryRule(rules: any[], onApplyRuleFunction = applyRules): { id: string, ogId: string, fn: FN }[] {
+  const fns: { id: string, ogId: string, fn: FN }[] = []
   rules.forEach((rule) => {
     // make sure the id is unique. If not, add a number to it.
     rule.ogId = rule.id
@@ -52,15 +31,7 @@ export function createFunctionForEveryRule(rules, onApplyRuleFunction = applyRul
     // The common function with the alone rule
     const cache = new Map()
 
-    /**
-     *
-     * @param node {import('mathjs').MathNode}
-     * @param arg2 {{getMistakes?: boolean}}
-     * @param arg3 {{getMistakes?: boolean}}
-     * @param arg4 {{getMistakes?: boolean}}
-     * @returns {any}
-     */
-    const fn = (node, arg2, arg3, arg4) => {
+    const fn: FN = (node, arg2, arg3, arg4) => {
       // TODO really dumb
       const isOptionsObjWithGetMistakes = arg2?.getMistakes || arg3?.getMistakes || arg4?.getMistakes || false
 
