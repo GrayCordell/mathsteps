@@ -1,12 +1,11 @@
 /* eslint-disable antfu/consistent-list-newline */
-import { ADD_FRACTIONS, COMMON_DENOMINATOR, DISTRIBUTE_NEGATIVE_ONE, DIVISION_BY_NEGATIVE_ONE, DIVISION_BY_ONE, KEMU_REMOVE_DOUBLE_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, PERCENTS_ADD, PERCENTS_CONVERT_TO_FRACTION, PERCENTS_SUB, REDUCE_EXPONENT_BY_ZERO, REDUCE_ZERO_NUMERATOR, REMOVE_ADDING_ZERO, REMOVE_EXPONENT_BASE_ONE, REMOVE_EXPONENT_BASE_ZERO, REMOVE_EXPONENT_BY_ONE, REMOVE_MULTIPLYING_BY_NEGATIVE_ONE, REMOVE_MULTIPLYING_BY_ONE, RESOLVE_DOUBLE_MINUS, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__POWER, SIMPLIFY_ARITHMETIC__SUBTRACT, SIMPLIFY_SIGNS } from '~/types/ChangeTypes'
-
 import Node from '../../node/index.js'
 import { math } from '~/config'
 import { createFunctionForEveryRule } from '~/newServices/ruleHelper.js'
 import { applyRules } from '../kemuSimplifyCommonServices.js'
 import { cleanString } from '~/util/stringUtils'
 import { commonRuleMistakes } from '~/simplifyExpression/mistakes/commonRulesMistakes'
+import { ADD_FRACTIONS, COMMON_DENOMINATOR, DISTRIBUTE_NEGATIVE_ONE, DIVISION_BY_NEGATIVE_ONE, DIVISION_BY_ONE, KEMU_REMOVE_DOUBLE_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, PERCENTS_ADD, PERCENTS_CONVERT_TO_FRACTION, PERCENTS_SUB, REDUCE_EXPONENT_BY_ZERO, REDUCE_ZERO_NUMERATOR, REMOVE_ADDING_ZERO, REMOVE_EXPONENT_BASE_ONE, REMOVE_EXPONENT_BASE_ZERO, REMOVE_EXPONENT_BY_ONE, REMOVE_MULTIPLYING_BY_NEGATIVE_ONE, REMOVE_MULTIPLYING_BY_ONE, RESOLVE_DOUBLE_MINUS, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__POWER, SIMPLIFY_ARITHMETIC__SUBTRACT, SIMPLIFY_SIGNS } from '~/types/ChangeTypes'
 
 // Utilities for making nodes faster and more readable
 const makeConstant = (value: any) => Node.Creator.constant(value)
@@ -113,22 +112,22 @@ const _commonPoolOfRules = [
   // Fractions
   { l: 'n1/v2 * n3', r: '(n1 * n3) / v2', id: MULTIPLY_FRACTIONS },
   { l: 'v1/n2 * n3', r: '(v1 * n3) / n2', id: MULTIPLY_FRACTIONS },
-  { l: 'n1/n2 * n3/n4', r: '(n1 n3) / (n2 n4)', id: MULTIPLY_FRACTIONS },
-  { l: 'c1/c2 * c3', r: '(c1 c3) / c2', id: MULTIPLY_FRACTIONS },
+  { l: 'n1/n2 * n3/n4', r: '(n1 * n3) / (n2 * n4)', id: MULTIPLY_FRACTIONS },
+  { l: 'c1/c2 * c3', r: '(c1 * c3) / c2', id: MULTIPLY_FRACTIONS },
   { l: 'n1/n2/n3', r: 'n1/(n3*n2)', id: KEMU_REMOVE_DOUBLE_FRACTION },
   { l: '(n1/n2)/n3', r: 'n1/(n2*n3)', id: KEMU_REMOVE_DOUBLE_FRACTION },
   { l: 'n1/(n2/n3)', r: 'n1*(n3/n2)', id: KEMU_REMOVE_DOUBLE_FRACTION },
-  { l: 'n1/(n2/n3*n4)', r: '(n1 n3)/(n2 n4)', id: KEMU_REMOVE_DOUBLE_FRACTION },
+  { l: 'n1/(n2/n3*n4)', r: '(n1 * n3)/(n2 * n4)', id: KEMU_REMOVE_DOUBLE_FRACTION },
 
   // Simplify signs
   { l: '-n1 / (-n2)', r: 'n1/n2', id: SIMPLIFY_SIGNS },
   { l: '-c1 / (-c2)', r: 'c1/c2', id: SIMPLIFY_SIGNS },
   { l: 'n1 / (-n2)', r: '-n1/n2', id: SIMPLIFY_SIGNS },
   { l: 'n1 / (-c2)', r: '-n1/c2', id: SIMPLIFY_SIGNS },
-  { l: 'n1 / ((-n2) * n3)', r: '-n1/(n2 n3)', id: SIMPLIFY_SIGNS },
-  { l: 'n1 + n2 * (-n3)', r: 'n1 - (n2 n3)', id: SIMPLIFY_SIGNS },
-  { l: '-n1 * (-n2)', r: 'n1 n2', id: SIMPLIFY_SIGNS },
-  { l: '-c1 * (-n2)', r: 'c1 n2', id: SIMPLIFY_SIGNS },
+  { l: 'n1 / ((-n2) * n3)', r: '-n1/(n2 * n3)', id: SIMPLIFY_SIGNS },
+  { l: 'n1 + n2 * (-n3)', r: 'n1 - (n2 * n3)', id: SIMPLIFY_SIGNS },
+  { l: '-n1 * (-n2)', r: 'n1 * n2', id: SIMPLIFY_SIGNS },
+  { l: '-c1 * (-n2)', r: 'c1 * n2', id: SIMPLIFY_SIGNS },
   { l: '-(c1/c2*n)', r: '-c1/c2*n', id: SIMPLIFY_SIGNS },
 
   // Add fractions
