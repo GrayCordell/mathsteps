@@ -25,6 +25,6 @@
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "include": ["lib/**/*", "index.js", "index.ts"],
+  "include": ["lib/**/*", "index.js", "index.ts", "test/**/*"],
   "exclude": ["dist", "node_modules", "cypress", "build", "coverage"]
 }
