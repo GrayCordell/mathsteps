@@ -1,13 +1,14 @@
+// @ts-check
 import { CANCEL_TERMS, COLLECT_AND_COMBINE_LIKE_TERMS, KEMU_DECIMAL_TO_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, REMOVE_ADDING_ZERO, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY } from '~/types/ChangeTypes'
 import { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_ONE_TOO_MANY, MULTIPLIED_ONE_TOO_MANY } from '~/types/ErrorTypes'
 import { describe, it } from 'vitest'
-import { evaluateUserSteps } from '~/simplifyExpression/stepEvaluationCore.js'
+import { assessUserSteps } from '~/simplifyExpression/stepEvaluationCore'
 import { assertSpecifiedValues } from './util/assertHelpers.js'
 
 function testStepEvaluation(test, index) {
   it(`test ${index + 1}: ${test.description}`, () => {
     const { steps, expectedStepAnalysis } = test
-    const evaluatedSteps = evaluateUserSteps(steps)
+    const evaluatedSteps = assessUserSteps(steps)
 
     for (let i = 0; i < evaluatedSteps.length; i++) {
       const stepsSteps = evaluatedSteps[i] // StepSteps because some steps can be implicit/skipped, but its still 1 users step.

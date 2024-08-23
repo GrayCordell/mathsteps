@@ -1,7 +1,7 @@
 // assertHelpers.js
 import { assert } from 'vitest'
 import { cleanString } from '~/util/stringUtils.js'
-import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization.js'
+import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { removeCaseNumberFromRuleId } from '~/newServices/ruleHelper.js'
 
 function _normalizeRulesProcedure(stepObject, expectedObject) {
