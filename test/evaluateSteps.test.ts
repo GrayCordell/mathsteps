@@ -1,11 +1,18 @@
 import { CANCEL_TERMS, COLLECT_AND_COMBINE_LIKE_TERMS, KEMU_DECIMAL_TO_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, REMOVE_ADDING_ZERO, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY } from '~/types/ChangeTypes'
 import { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_ONE_TOO_MANY, MULTIPLIED_ONE_TOO_MANY } from '~/types/ErrorTypes'
 import { describe, it } from 'vitest'
+import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { assessUserSteps } from '~/simplifyExpression/stepEvaluationCore'
-// @ts-expect-error --- I don't know why this needs to be ignored.
+// eslint-disable-next-line ts/ban-ts-comment
+// @ts-ignore --- I don't know why this needs to be ignored.
 import { assertSpecifiedValues } from './util/assertHelpers'
 
-function testStepEvaluation(test, index) {
+interface Test {
+  description: string // Description of the test
+  steps: string[] // The steps the user took. ['startingEquation', 'step1', 'step2', ...]
+  expectedStepAnalysis: Partial<StepInfo>[][] // Partial so we don't have to specify all the values for each step.
+}
+function testStepEvaluation(test: Test, index: number) {
   it(`test ${index + 1}: ${test.description}`, () => {
     const { steps, expectedStepAnalysis } = test
     const evaluatedSteps = assessUserSteps(steps)
@@ -22,27 +29,14 @@ function testStepEvaluation(test, index) {
     }
   })
 }
-/* type AnalyzedSteps = {
-  availableChangeTypes: Array<string>, // all possible change types that could have been used to get to the next step.
-  isValid: boolean, // if the step is correct based only on moving from the previous step. It does not have to reach the original answer.
-  reachesOriginalAnswer: boolean, // if the step would reach the original questions answer.
-  from: string, // the equation before the step.
-  to: string, // the equation after the step.
-  attemptedChangeType: ChangeType || 'UNKNOWN', // the change type that the user attempted to use to get to the next step. If we don't know what they were trying to do it will be 'UNKNOWN'.
-  attemptedToGetTo: string | 'UNKNOWN', // the equation that the user was trying to get to.(After The attempted change type). If we don't know what they were trying to get to it will be 'UNKNOWN'.
-  mistakenChangeType: null | MistakeChangeType | 'UNKNOWN', // if the user made a mistake, what type of mistake was it. If we haven't specified a mistake type it will be 'UNKNOWN'.
-} */
 
 /**
  * @description Helper function so we don't have to specify all the values for each step.
  * It will fill in the missing values with defaults.
  * This is helpful because some values are always the same if everything should be correct.
- *
- * @param correctStepStepsArr Array<Array<AnalyzedStepsWithSomeMissingProperties>>
- * @returns {Array<Array<AnalyzedSteps>>}
  */
-function makeCorrectStepsUtil(correctStepStepsArr) {
-  let lastStep = null
+function makeCorrectStepsUtil(correctStepStepsArr: Partial<StepInfo>[][]): Partial<StepInfo>[][] {
+  let lastStep: StepInfo['to'] | undefined
 
   correctStepStepsArr = correctStepStepsArr.map((stepSteps) => {
     return stepSteps.map((step) => {
@@ -51,7 +45,9 @@ function makeCorrectStepsUtil(correctStepStepsArr) {
         step.from = lastStep
       lastStep = step.to
 
-      const onUndefinedUseDefault = (value, defaultValue) => value === undefined ? defaultValue : value
+      function onUndefinedUseDefault<T>(value: T | undefined, defaultValue: T): T {
+        return value !== undefined ? value : defaultValue
+      }
 
       return {
         availableChangeTypes: step.availableChangeTypes,
@@ -70,7 +66,7 @@ function makeCorrectStepsUtil(correctStepStepsArr) {
 }
 
 describe('addition Success', () => {
-  const additionSuccessCases = [
+  const additionSuccessCases: Test[] = [
     // Test 1
     {
       description: 'Simple Addition',
@@ -272,7 +268,7 @@ describe('addition Success', () => {
   additionSuccessCases.forEach((test, index) => testStepEvaluation(test, index))
 })
 describe('addition Mistakes', () => {
-  const additionMistakeCases = [
+  const additionMistakeCases: Test[] = [
     // Test 1
     {
       description: 'Incorrect addition, added one too many',
@@ -494,7 +490,7 @@ describe('addition Mistakes', () => {
 })
 
 describe('multiplication Success', () => {
-  const multiplicationSuccessCases = [
+  const multiplicationSuccessCases: Test[] = [
     // Test 1
     {
       description: 'Simple Multiplication',
@@ -623,7 +619,7 @@ describe('multiplication Success', () => {
   multiplicationSuccessCases.forEach((test, index) => testStepEvaluation(test, index))
 })
 describe('multiplication Mistakes', () => {
-  const multiplicationMistakeCases = [
+  const multiplicationMistakeCases: Test[] = [
     // Test 1
     {
       description: 'Incorrect multiplication, multiplied one too many',
