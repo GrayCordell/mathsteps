@@ -1,6 +1,6 @@
-export function generatePermutations(arr) {
-  const results = []
-  function heapPermute(n) {
+export function generatePermutations<T>(arr: T[]): T[][] {
+  const results: T[][] = []
+  function heapPermute(n: number): void {
     if (n === 1) {
       results.push(arr.slice())
       return
@@ -10,7 +10,6 @@ export function generatePermutations(arr) {
       // Swap logic depending on n being odd or even
       if (n % 2 === 0)
         [arr[i], arr[n - 1]] = [arr[n - 1], arr[i]] // Swap for even n
-
       else
         [arr[0], arr[n - 1]] = [arr[n - 1], arr[0]] // Swap for odd n
     }
@@ -18,28 +17,28 @@ export function generatePermutations(arr) {
   heapPermute(arr.length)
   return results
 }
-export function generateCombinations(arr) {
-  const combinations = []
+export function generateCombinations<T>(arr: T[]): T[][] {
+  const combinations: T[][] = []
   for (let i = 0; i < arr.length - 1; i++) {
     for (let j = i + 1; j < arr.length; j++) {
-      // Get the pair of numbers
-      const pair = [arr[i], arr[j]]
-      // Get the remaining numbers excluding the current pair
-      const remaining = arr.filter((_, index) => index !== i && index !== j)
-      // Combine pair with the remaining numbers
+      // Get the pair of elements
+      const pair: T[] = [arr[i], arr[j]]
+      // Get the remaining elements excluding the current pair
+      const remaining: T[] = arr.filter((_, index) => index !== i && index !== j)
+      // Combine pair with the remaining elements
       combinations.push([...pair, ...remaining])
     }
   }
   return combinations
 }
-export function filterUniqueValues(arr, isEqual = (a, b) => a === b) {
-  const uniqueArray = []
-  const seen = new Map()
+
+export function filterUniqueValues<T>(arr: T[], isEqual: (a: T, b: T) => boolean = (a, b) => a === b): T[] {
+  const uniqueArray: T[] = []
+  const seen = new Map<T, boolean>()
   for (let i = 0; i < arr.length; i++) {
     const current = arr[i]
     let isUnique = true
-    // eslint-disable-next-line no-unused-vars
-    for (const [key, _value] of seen) {
+    for (const key of seen.keys()) {
       if (isEqual(current, key)) {
         isUnique = false
         break
