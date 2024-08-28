@@ -1,5 +1,6 @@
+import type { AChangeType } from '~/types/ChangeTypes'
 import { CANCEL_TERMS, COLLECT_AND_COMBINE_LIKE_TERMS, KEMU_DECIMAL_TO_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, REMOVE_ADDING_ZERO, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY } from '~/types/ChangeTypes'
-import { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_ONE_TOO_MANY, MULTIPLIED_ONE_TOO_MANY } from '~/types/ErrorTypes'
+import { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_MANY } from '~/types/ErrorTypes'
 import { describe, it } from 'vitest'
 import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { assessUserSteps } from '~/simplifyExpression/stepEvaluationCore'
@@ -30,6 +31,27 @@ function testStepEvaluation(test: Test, index: number) {
   })
 }
 
+function makeCorrectStepUtil(step: Partial<StepInfo>, lastStep: StepInfo['to'] | undefined): Partial<StepInfo> {
+  // If no from lets just use the last step as the from.
+  if (lastStep && step.from === undefined)
+    step.from = lastStep
+
+  function onUndefinedUseDefault<T>(value: T | undefined, defaultValue: T): T {
+    return value !== undefined ? value : defaultValue
+  }
+
+  return {
+    availableChangeTypes: step.availableChangeTypes,
+    reachesOriginalAnswer: onUndefinedUseDefault(step.reachesOriginalAnswer, true),
+    isValid: onUndefinedUseDefault(step.isValid, true),
+    attemptedChangeType: step.attemptedChangeType,
+    from: step.from,
+    to: step.to,
+    attemptedToGetTo: onUndefinedUseDefault(step.attemptedToGetTo, step.to),
+    mistakenChangeType: onUndefinedUseDefault(step.mistakenChangeType, null),
+  }
+}
+
 /**
  * @description Helper function so we don't have to specify all the values for each step.
  * It will fill in the missing values with defaults.
@@ -40,29 +62,29 @@ function makeCorrectStepsUtil(correctStepStepsArr: Partial<StepInfo>[][]): Parti
 
   correctStepStepsArr = correctStepStepsArr.map((stepSteps) => {
     return stepSteps.map((step) => {
-      // If no from lets just use the last step as the from.
-      if (lastStep && step.from === undefined)
-        step.from = lastStep
+      const newCorrectStep = makeCorrectStepUtil(step, lastStep)
       lastStep = step.to
-
-      function onUndefinedUseDefault<T>(value: T | undefined, defaultValue: T): T {
-        return value !== undefined ? value : defaultValue
-      }
-
-      return {
-        availableChangeTypes: step.availableChangeTypes,
-        reachesOriginalAnswer: onUndefinedUseDefault(step.reachesOriginalAnswer, true),
-        isValid: onUndefinedUseDefault(step.isValid, true),
-        attemptedChangeType: step.attemptedChangeType,
-        from: step.from,
-        to: step.to,
-        attemptedToGetTo: onUndefinedUseDefault(step.attemptedToGetTo, step.to),
-        mistakenChangeType: onUndefinedUseDefault(step.mistakenChangeType, null),
-      }
+      return newCorrectStep
     })
   })
 
   return correctStepStepsArr
+}
+
+/**
+ * @param fromToString 'from -> to'
+ * @param availableChangeTypes The availableChangeTypes for the step. We use the first as the attemptedChangeType.
+ */
+function makeOneCorrectStepUtil(fromToString: string, availableChangeTypes: AChangeType[]): { expectedStepAnalysis: Partial<StepInfo>[][], steps: [string, string] } {
+  const from = fromToString.split('->')[0]
+  const to = fromToString.split('->')[1]
+  const attemptedChangeType = availableChangeTypes[0]
+  return {
+    steps: [from, to],
+    expectedStepAnalysis: [[
+      makeCorrectStepUtil({ from, to, availableChangeTypes, attemptedChangeType }, undefined),
+    ]],
+  }
 }
 
 describe('addition Success', () => {
@@ -70,24 +92,7 @@ describe('addition Success', () => {
     // Test 1
     {
       description: 'Simple Addition',
-      steps: [
-        '5 + 5', // Starting equation
-        '10', // Step 1 from user
-      ],
-      // NOTE THAT makeCorrectStepsUtil WILL FILL IN THE MISSING VALUES WITH DEFAULTS.
-      expectedStepAnalysis: makeCorrectStepsUtil([
-        // Step 1
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
-            from: '5 + 5',
-            to: '10',
-          },
-          // Add more here if step1 has more than one step implicit in it. "skipped" steps.
-        ],
-        // No Step 2
-      ]),
+      ...makeOneCorrectStepUtil('5 + 5 -> 10', [SIMPLIFY_ARITHMETIC__ADD]),
     },
     // Test 2
     {
@@ -250,18 +255,7 @@ describe('addition Success', () => {
     // Test 7
     {
       description: 'Addition with decimal numbers',
-      steps: [
-        '5.5 + 3.5', // Starting equation
-        '9', // Step 1 from user
-      ],
-      expectedStepAnalysis: makeCorrectStepsUtil([
-        [{ // Step 1
-          availableChangeTypes: [KEMU_DECIMAL_TO_FRACTION, SIMPLIFY_ARITHMETIC__ADD],
-          attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
-          from: '5.5 + 3.5',
-          to: '9',
-        }], // No Step 2
-      ]),
+      ...makeOneCorrectStepUtil('5.5 + 3.5 -> 9', [SIMPLIFY_ARITHMETIC__ADD, KEMU_DECIMAL_TO_FRACTION]),
     },
     // Add more tests here
   ]
@@ -276,19 +270,15 @@ describe('addition Mistakes', () => {
         '4 + 3', // Starting equation
         '8', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
-            from: '4 + 3',
-            to: '8',
-            attemptedToGetTo: '7',
-            mistakenChangeType: ADDED_ONE_TOO_MANY,
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
+        from: '4 + 3',
+        to: '8',
+        attemptedToGetTo: '7',
+        mistakenChangeType: ADDED_ONE_TOO_MANY,
+        isValid: false,
+      }]]),
     },
 
     // Test 2
@@ -298,19 +288,15 @@ describe('addition Mistakes', () => {
         '5 + 2', // Starting equation
         '3', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
-            from: '5 + 2',
-            to: '3',
-            attemptedToGetTo: '7',
-            mistakenChangeType: 'SUBTRACTED_INSTEAD_OF_ADDED',
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
+        from: '5 + 2',
+        to: '3',
+        attemptedToGetTo: '7',
+        mistakenChangeType: 'SUBTRACTED_INSTEAD_OF_ADDED',
+        isValid: false,
+      }]]),
     },
 
     // Test 3
@@ -320,19 +306,15 @@ describe('addition Mistakes', () => {
         '6 + 4', // Starting equation
         '9', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
-            from: '6 + 4',
-            to: '9',
-            attemptedToGetTo: '10',
-            mistakenChangeType: 'ADDED_ONE_TOO_FEW',
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
+        from: '6 + 4',
+        to: '9',
+        attemptedToGetTo: '10',
+        mistakenChangeType: 'ADDED_ONE_TOO_FEW',
+        isValid: false,
+      }]]),
     },
 
     // Test 4
@@ -342,19 +324,15 @@ describe('addition Mistakes', () => {
         '3 + 3', // Starting equation
         '9', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
-            from: '3 + 3',
-            to: '9',
-            attemptedToGetTo: '6',
-            mistakenChangeType: 'MULTIPLIED_INSTEAD_OF_ADDED',
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
+        from: '3 + 3',
+        to: '9',
+        attemptedToGetTo: '6',
+        mistakenChangeType: MULTIPLIED_INSTEAD_OF_ADDED,
+        isValid: false,
+      }]]),
     },
 
     // Test 5
@@ -364,19 +342,15 @@ describe('addition Mistakes', () => {
         '2.5 + 1.5', // Starting equation
         '5', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD, KEMU_DECIMAL_TO_FRACTION],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
-            from: '2.5 + 1.5',
-            to: '5',
-            attemptedToGetTo: '4',
-            mistakenChangeType: 'ADDED_ONE_TOO_MANY',
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD, KEMU_DECIMAL_TO_FRACTION],
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
+        from: '2.5 + 1.5',
+        to: '5',
+        attemptedToGetTo: '4',
+        mistakenChangeType: 'ADDED_ONE_TOO_MANY',
+        isValid: false,
+      }]]),
     },
 
     // Test 6
@@ -386,19 +360,15 @@ describe('addition Mistakes', () => {
         '4 + (-2)', // Starting equation
         '3', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
-            from: '4 + (-2)',
-            to: '3',
-            attemptedToGetTo: '2',
-            mistakenChangeType: 'ADDED_ONE_TOO_MANY',
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
+        from: '4 + (-2)',
+        to: '3',
+        attemptedToGetTo: '2',
+        mistakenChangeType: 'ADDED_ONE_TOO_MANY',
+        isValid: false,
+      }]]),
     },
 
     // Test 7
@@ -420,7 +390,7 @@ describe('addition Mistakes', () => {
             isValid: true,
           },
           {
-            availableChangeTypes: [COLLECT_AND_COMBINE_LIKE_TERMS], // TODO not sure why SIMPLIFY_ARITHMETIC__ADD is not also her technically?
+            availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
             attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
             from: '(5+3)*a',
             to: '7a',
@@ -470,19 +440,15 @@ describe('addition Mistakes', () => {
         '2 + 3', // Starting equation
         '200', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
-            attemptedChangeType: 'UNKNOWN',
-            from: '2 + 3',
-            to: '200',
-            attemptedToGetTo: 'UNKNOWN',
-            mistakenChangeType: 'UNKNOWN',
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
+        attemptedChangeType: 'UNKNOWN',
+        from: '2 + 3',
+        to: '200',
+        attemptedToGetTo: 'UNKNOWN',
+        mistakenChangeType: 'UNKNOWN',
+        isValid: false,
+      }]]),
     },
 
   ]
@@ -498,16 +464,12 @@ describe('multiplication Success', () => {
         '4 * 5', // Starting equation
         '20', // Step 1 from user
       ],
-      expectedStepAnalysis: makeCorrectStepsUtil([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
-            from: '4 * 5',
-            to: '20',
-          },
-        ],
-      ]),
+      expectedStepAnalysis: makeCorrectStepsUtil([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
+        from: '4 * 5',
+        to: '20',
+      }]]),
     },
     // Test 2
     {
@@ -516,16 +478,12 @@ describe('multiplication Success', () => {
         '7 * 0', // Starting equation
         '0', // Step 1 from user
       ],
-      expectedStepAnalysis: makeCorrectStepsUtil([
-        [
-          {
-            availableChangeTypes: [MULTIPLY_BY_ZERO],
-            attemptedChangeType: MULTIPLY_BY_ZERO,
-            from: '7 * 0',
-            to: '0',
-          },
-        ],
-      ]),
+      expectedStepAnalysis: makeCorrectStepsUtil([[{
+        availableChangeTypes: [MULTIPLY_BY_ZERO],
+        attemptedChangeType: MULTIPLY_BY_ZERO,
+        from: '7 * 0',
+        to: '0',
+      }]]),
     },
     // Test 3
     {
@@ -534,16 +492,12 @@ describe('multiplication Success', () => {
         '-3 * 6', // Starting equation
         '-18', // Step 1 from user
       ],
-      expectedStepAnalysis: makeCorrectStepsUtil([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY/* , SIMPLIFY_SIGNS */], // No SIMPLIFY_SIGNS for some reason
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
-            from: '-3 * 6',
-            to: '-18',
-          },
-        ],
-      ]),
+      expectedStepAnalysis: makeCorrectStepsUtil([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY/* , SIMPLIFY_SIGNS */], // No SIMPLIFY_SIGNS for some reason
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
+        from: '-3 * 6',
+        to: '-18',
+      }]]),
     },
     // Test 4
     {
@@ -584,12 +538,12 @@ describe('multiplication Success', () => {
             to: '(1*3)/(2*4)',
           },
           {
-            availableChangeTypes: [MULTIPLY_FRACTIONS],
+            availableChangeTypes: [MULTIPLY_FRACTIONS, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__MULTIPLY],
             attemptedChangeType: REMOVE_MULTIPLYING_BY_ONE,
             to: '3/(2*4)',
           },
           {
-            availableChangeTypes: [MULTIPLY_FRACTIONS],
+            availableChangeTypes: [MULTIPLY_FRACTIONS, SIMPLIFY_ARITHMETIC__MULTIPLY],
             attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
             to: '3/8',
           },
@@ -603,16 +557,12 @@ describe('multiplication Success', () => {
         '0.5 * 0.4', // Starting equation
         '0.2', // Step 1 from user
       ],
-      expectedStepAnalysis: makeCorrectStepsUtil([
-        [
-          {
-            availableChangeTypes: [KEMU_DECIMAL_TO_FRACTION, SIMPLIFY_ARITHMETIC__MULTIPLY],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
-            from: '0.5 * 0.4',
-            to: '0.2',
-          },
-        ],
-      ]),
+      expectedStepAnalysis: makeCorrectStepsUtil([[{
+        availableChangeTypes: [KEMU_DECIMAL_TO_FRACTION, SIMPLIFY_ARITHMETIC__MULTIPLY],
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
+        from: '0.5 * 0.4',
+        to: '0.2',
+      }]]),
     },
     // Add more tests here as needed
   ]
@@ -627,19 +577,15 @@ describe('multiplication Mistakes', () => {
         '3 * 4', // Starting equation
         '15', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
-            from: '3 * 4',
-            to: '15',
-            attemptedToGetTo: '12',
-            mistakenChangeType: MULTIPLIED_ONE_TOO_MANY,
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
+        attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
+        from: '3 * 4',
+        to: '15',
+        attemptedToGetTo: '12',
+        mistakenChangeType: MULTIPLIED_ONE_TOO_MANY,
+        isValid: false,
+      }]]),
     },
     // Test 2
     {
@@ -648,19 +594,17 @@ describe('multiplication Mistakes', () => {
         '2 * 3', // Starting equation
         '5', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
-            from: '2 * 3',
-            to: '5',
-            attemptedToGetTo: '6',
-            mistakenChangeType: ADDED_INSTEAD_OF_MULTIPLIED,
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[
+        {
+          availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
+          attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
+          from: '2 * 3',
+          to: '5',
+          attemptedToGetTo: '6',
+          mistakenChangeType: ADDED_INSTEAD_OF_MULTIPLIED,
+          isValid: false,
+        },
+      ]]),
     },
     // Test 3
     {
@@ -669,19 +613,17 @@ describe('multiplication Mistakes', () => {
         '4 * 2', // Starting equation
         '6', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
-            from: '4 * 2',
-            to: '6',
-            attemptedToGetTo: '8',
-            mistakenChangeType: ADDED_INSTEAD_OF_MULTIPLIED, // TODO multiple types of mistakes can occur. ADDED_INSTEAD_OF_MULTIPLIED & MULTIPLIED_ONE_TOO_FEW
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[
+        {
+          availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
+          attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
+          from: '4 * 2',
+          to: '6',
+          attemptedToGetTo: '8',
+          mistakenChangeType: ADDED_INSTEAD_OF_MULTIPLIED, // TODO multiple types of mistakes can occur. ADDED_INSTEAD_OF_MULTIPLIED & MULTIPLIED_ONE_TOO_FEW
+          isValid: false,
+        },
+      ]]),
     },
     // Test 4
     {
@@ -714,8 +656,10 @@ describe('multiplication Mistakes', () => {
             attemptedChangeType: REMOVE_MULTIPLYING_BY_ONE,
             mistakenChangeType: null,
             availableChangeTypes: [
-              MULTIPLY_FRACTIONS,
               CANCEL_TERMS,
+              MULTIPLY_FRACTIONS,
+              REMOVE_MULTIPLYING_BY_ONE,
+              SIMPLIFY_ARITHMETIC__MULTIPLY,
             ],
           },
           {
@@ -727,8 +671,9 @@ describe('multiplication Mistakes', () => {
             attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
             mistakenChangeType: MULTIPLIED_ONE_TOO_MANY, // TODO could also have been ADDED_INSTEAD_OF_MULTIPLIED
             availableChangeTypes: [
-              MULTIPLY_FRACTIONS,
               CANCEL_TERMS,
+              MULTIPLY_FRACTIONS,
+              SIMPLIFY_ARITHMETIC__MULTIPLY,
             ],
           },
         ],
@@ -741,19 +686,17 @@ describe('multiplication Mistakes', () => {
         '-4 * 2', // Starting equation
         '-6', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
-            attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
-            from: '-4 * 2',
-            to: '-6',
-            attemptedToGetTo: '-8',
-            mistakenChangeType: MULTIPLIED_ONE_TOO_MANY, // TODO could also have been MULTIPLIED_ONE_TOO_FEW
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[
+        {
+          availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
+          attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
+          from: '-4 * 2',
+          to: '-6',
+          attemptedToGetTo: '-8',
+          mistakenChangeType: MULTIPLIED_ONE_TOO_MANY, // TODO could also have been MULTIPLIED_ONE_TOO_FEW
+          isValid: false,
+        },
+      ]]),
     },
     // Test 6
     {
@@ -762,19 +705,15 @@ describe('multiplication Mistakes', () => {
         '2 * 3', // Starting equation
         '200', // Step 1 from user
       ],
-      expectedStepAnalysis: ([
-        [
-          {
-            availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
-            attemptedChangeType: 'UNKNOWN',
-            from: '2 * 3',
-            to: '200',
-            attemptedToGetTo: 'UNKNOWN',
-            mistakenChangeType: 'UNKNOWN',
-            isValid: false,
-          },
-        ],
-      ]),
+      expectedStepAnalysis: ([[{
+        availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
+        attemptedChangeType: 'UNKNOWN',
+        from: '2 * 3',
+        to: '200',
+        attemptedToGetTo: 'UNKNOWN',
+        mistakenChangeType: 'UNKNOWN',
+        isValid: false,
+      }]]),
     },
   ]
   multiplicationMistakeCases.forEach((test, index) => testStepEvaluation(test, index))

@@ -18,7 +18,7 @@ interface RawStep {
   isMistake: boolean // the entire step is a mistake
   mTo?: { to: string, changeType: AMistakeType }[]
 }
-type ProcessedStep = Omit<RawStep, 'to'> & { to: string } // to is a string instead of an array of strings. We flattend it.
+type ProcessedStep = Omit<RawStep, 'to'> & { to: string, availableChangeTypes: (AMistakeType & AChangeType)[] } // to is a string instead of an array of strings. We flattend it.
 
 type CoreAssessUserStepResult = {
   history: ProcessedStep[]
@@ -56,12 +56,15 @@ function findAllNextStepOptions(userStep: string): ProcessedStep[] {
     onStepCb: (step: RawStep) => potentialSteps.push(step),
   })
 
-  function processSteps(steps: RawStep[]) {
+  function processSteps(steps: RawStep[]): ProcessedStep[] {
+    const availableChangeTypes = filterUniqueValues(steps.filter(step => !step?.isMistake).map(step => step?.changeType))
+
     const processedStepsSet = new Set<string>()
     return steps
       .filter(step => step.to)
       .flatMap(step => step.to.map(toStr => ({
         ...step,
+        availableChangeTypes,
         to: cleanString(toStr),
         from: cleanString(step.from),
       })))
@@ -105,11 +108,18 @@ function findAllNextStepOptions(userStep: string): ProcessedStep[] {
   const manualMistakes = mistakeSearches(userStep)
   filteredSteps.push(...manualMistakes)
 
-  return filteredSteps
+  // Add all possible change types for each step.
+  const availableChangeTypes = filteredSteps.filter(step => !step?.isMistake).map(step => step?.changeType)
+  const filteredSteps2 = filteredSteps.map((step) => {
+    step.availableChangeTypes = availableChangeTypes
+    return step
+  })
+
+  return filteredSteps2
 }
 
 const MAX_STEP_DEPTH = 100
-function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AChangeType | AMistakeType)[]): CoreAssessUserStepResult {
+function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AMistakeType & AChangeType)[] = []): CoreAssessUserStepResult {
   const valueToFind = lastTwoUserSteps[1]
   const stepQueue: { start: string, history: ProcessedStep[] }[] = []
   const triedSteps = new Set<string>()
@@ -172,63 +182,76 @@ function processStepInfo(
   previousStep: string,
   userStep: string,
   startingStepAnswer: string,
-  availableChangeTypes: AChangeType[] = [],
+  firstChangeTypesLog: (AMistakeType & AChangeType)[],
 ): StepInfo[] {
-  availableChangeTypes = filterUniqueValues(availableChangeTypes.flat())
+  /// / if somehow the users step.changeType is not in the availableChangeTypes, add it.
+  // if (!step.isMistake && !availableChangeTypes.includes(step.changeType))
+  //  availableChangeTypes.push(step.changeType)
+
   const history = res.history
   const isFoundStepAMistake = res.isFoundStepAMistake
   const mistakenChangeType = 'mistakenChangeType' in res ? res.mistakenChangeType : null
 
   let stepInfo: StepInfo[] = []
+
+  const firstAvailableChangeTypes = filterUniqueValues(firstChangeTypesLog.flat())
+
+  // Handle no history(unknown error type) or the user's step is the same as the starting step(No change).
   if (history.length === 0) {
     const isStartingStepsSame = previousStep === userStep
     const startingFrom = cleanString(previousStep)
     const wentTo = cleanString(userStep)
 
-    const sharedPart = { isValid: false, from: startingFrom, to: wentTo, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: UNKNOWN, mistakenChangeType: null, availableChangeTypes }
+    const sharedPart = { isValid: false, from: startingFrom, to: wentTo, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: UNKNOWN, mistakenChangeType: null, availableChangeTypes: firstAvailableChangeTypes }
     stepInfo = isStartingStepsSame
       ? [{ ...sharedPart, reachesOriginalAnswer: true, mistakenChangeType: NO_CHANGE }]
       : [{ ...sharedPart, reachesOriginalAnswer: false, mistakenChangeType: UNKNOWN }]
   }
+  // Handle the history Path to the MistakeStep or Path to the CorrectStep.
   else {
     stepInfo = history.map((step, index) => {
       const to = cleanString(step.to)
       const attemptedToGetTo = cleanString(step.to)
-      const lastFrom = history.length === 1 ? cleanString(previousStep) : step.from
+      const from = history.length === 1 ? cleanString(previousStep) : step.from
       const isLastStep = index === history.length - 1
-      if (isLastStep && isFoundStepAMistake) {
-        return { isValid: false, reachesOriginalAnswer: false, from: lastFrom, to: res.mToStep!, attemptedToGetTo, attemptedChangeType: step.changeType, mistakenChangeType, availableChangeTypes }
+      const availableChangeTypes = filterUniqueValues([...step.availableChangeTypes, ...firstAvailableChangeTypes])
+      const attemptedChangeType = step.changeType
+      // uses mistakenChangeType if the step is the last mistake.
+      if (isLastStep && isFoundStepAMistake) { // Technically we could have a reachesOriginalAnswer check here, but it might generally be unnecessary.
+        return { isValid: false, reachesOriginalAnswer: false, from, to: res.mToStep!, attemptedToGetTo, attemptedChangeType, mistakenChangeType, availableChangeTypes }
       }
+      // else
 
-      const hasSameEventualAnswer = expressionEquals(getAnswerFromStep(step.to), startingStepAnswer)
-      return { isValid: true, reachesOriginalAnswer: hasSameEventualAnswer, from: lastFrom, to, attemptedToGetTo, attemptedChangeType: step.changeType, mistakenChangeType: null, availableChangeTypes }
+      // Handle Valid. Since we have a history and its not a found mistake, then the step is going to just be one of the valid ones. Does not require sameEventualAnswer to be valid.
+      const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(step.to), startingStepAnswer)
+      return { isValid: true, reachesOriginalAnswer, from, to, attemptedToGetTo, attemptedChangeType, mistakenChangeType: null, availableChangeTypes }
     })
   }
 
   return stepInfo
-  /**
-   *
-   * @param previousUserStep
-   * @param userStep - The users step evaluate step ex. '5x'
-   * @param startingStepAnswer - The actual answer of the equation. If not provided, it will be calculated using the previous step.
-   * @returns {StepInfo[]}
-   * @see {StepInfo} for the structure of the returned object.
-   * @see {assessUserSteps} for evaluating many steps at once.
-   * @example
-   * const userSteps = [
-   *   '2x + 2x + 2x', // Initial expression
-   *   // '4x + 2x' -- Skipped by the user
-   *   '6x'            // First user-provided step
-   * ]
-   * const assessedStep = assessUserStep(userSteps[0], userSteps[1]); // Returns an array of StepInfo[]
-   * const skippedSteps = assessedStep.slice(0, stepSequence.length - 1); // All intermediate steps missed ('4x + 2x')
-   * const userProvidedStep = assessedStep[stepSequence.length - 1];      // The step provided by the user (6x)
-   * if(userProvidedStep.isValid) {
-   *  console.log('User provided a valid step!')
-   * }
-   */
 }
 
+/**
+ *
+ * @param previousUserStep - The previous step before the user's step. ex. '2x + 2x + 2x'
+ * @param userStep - The users step moving from the previous step to the current step. ex. '2x + 4x'
+ * @param startingStepAnswer - The actual answer of the equation. If not provided, it will be calculated using the previous step.
+ * @returns {StepInfo[]}
+ * @see {StepInfo} for the structure of the returned object.
+ * @see {assessUserSteps} for evaluating many steps at once.
+ * @example
+ * const userSteps = [
+ *   '2x + 2x + 2x', // Initial expression
+ *   // '4x + 2x' -- Skipped by the user
+ *   '6x'            // First user-provided step
+ * ]
+ * const assessedStep = assessUserStep(userSteps[0], userSteps[1]); // Returns an array of StepInfo[]
+ * const skippedSteps = assessedStep.slice(0, stepSequence.length - 1); // All intermediate steps missed ('4x + 2x')
+ * const userProvidedStep = assessedStep[stepSequence.length - 1];      // The step provided by the user (6x)
+ * if(userProvidedStep.isValid) {
+ *  console.log('User provided a valid step!')
+ * }
+ */
 export function assessUserStep(previousUserStep: string, userStep: string, startingStepAnswer: string = getAnswerFromStep(previousUserStep)): StepInfo[] {
   const firstChangeTypesLog: AChangeType[] = []
   const rawAssessedStepOptionsRes = _coreAssessUserStep([previousUserStep, userStep], firstChangeTypesLog)
@@ -238,6 +261,7 @@ export function assessUserStep(previousUserStep: string, userStep: string, start
 /**
  * Evaluates the sequence of steps a user took to simplify an expression and returns a detailed breakdown of each step.
  *
+ * @param problem
  * @param userSteps_ - An array of strings representing the steps the user took to simplify the expression, in order.
  * @example
  * const userSteps = [
