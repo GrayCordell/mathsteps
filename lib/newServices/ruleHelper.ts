@@ -17,7 +17,7 @@ export function isSameRootChangeType(rootChangeType: string | AChangeType, chang
 export const removeCaseNumberFromRuleId = (ruleId: AChangeType | string): AChangeTypeCore => (ruleId.split('__CASE_')[0] as AChangeTypeCore)
 export const removeCaseNumberFromChangeType = (changeType: AChangeType | string): AChangeTypeCore => removeCaseNumberFromRuleId(changeType)
 
-interface UnknownButMaybeHasGetMistakes { getMistakes?: boolean }
+export interface UnknownButMaybeHasGetMistakes { getMistakes?: boolean }
 type FN = (node: MathNode, arg2: UnknownButMaybeHasGetMistakes, arg3: UnknownButMaybeHasGetMistakes, arg4: UnknownButMaybeHasGetMistakes) => unknown
 export function createFunctionForEveryRule(rules: any[], onApplyRuleFunction = applyRules): { id: string, ogId: string, fn: FN }[] {
   const fns: { id: string, ogId: string, fn: FN }[] = []
