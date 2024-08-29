@@ -1,6 +1,6 @@
 import { assert, it } from 'vitest'
 import print from '../lib/util/print.js'
-import mathsteps from '~/index'
+import { parseText } from '~/index'
 import { kemuFlatten } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
 
 const flatten = kemuFlatten
@@ -8,7 +8,7 @@ const flatten = kemuFlatten
 const TestUtil = {}
 // Takes in an input string and returns a flattened and parsed node
 TestUtil.parseAndFlatten = function (exprString) {
-  return flatten(mathsteps.parseText(exprString))
+  return flatten(parseText(exprString))
 }
 // Tests a function that takes an input string and check its output
 TestUtil.testFunctionOutput = function (fn, input, output) {
@@ -19,14 +19,14 @@ TestUtil.testFunctionOutput = function (fn, input, output) {
 // tests a function that takes in a node and returns a boolean value
 TestUtil.testBooleanFunction = function (simplifier, exprString, expectedBooleanValue) {
   it(`${exprString} ${expectedBooleanValue}`, () => {
-    const inputNode = flatten(mathsteps.parseText(exprString))
+    const inputNode = flatten(parseText(exprString))
     assert.equal(simplifier(inputNode), expectedBooleanValue)
   })
 }
 // Tests a simplification function
 TestUtil.testSimplification = function (simplifyingFunction, exprString, expectedOutputString) {
   it(`${exprString} -> ${expectedOutputString}`, () => {
-    assert.deepEqual(print.ascii(simplifyingFunction(flatten(mathsteps.parseText(exprString))).rootNode), expectedOutputString)
+    assert.deepEqual(print.ascii(simplifyingFunction(flatten(parseText(exprString))).rootNode), expectedOutputString)
   })
 }
 export default TestUtil
