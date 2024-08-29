@@ -1,4 +1,4 @@
-import mathsteps from '../lib/index'
+import { simplifyExpression } from '../lib/index'
 import print from '../lib/util/print.js'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 
@@ -13,7 +13,7 @@ function testSimplify(exprStr, outputStr, debug = false, ctx) {
       expressionCtx: ctx,
     }
 
-    const resultNode = mathsteps.simplifyExpression(options)
+    const resultNode = simplifyExpression(options)
     const resultAsText = print.ascii(resultNode)
 
     const isEqual = areExpressionEqual(resultAsText, outputStr)
