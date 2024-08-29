@@ -1,16 +1,16 @@
-import Node from '~/node/index.js'
+import { Creator } from '~/node/index.js'
 import print from '~/util/print.js'
-import mathsteps from '~/index'
+import { parseText } from '~/index'
 import TestUtil from '../TestUtil.js'
 import { describe } from 'vitest'
 
 // to create nodes, for testing
-const opNode = Node.Creator.operator
-const constNode = Node.Creator.constant
-const symbolNode = Node.Creator.symbol
+const opNode = Creator.operator
+const constNode = Creator.constant
+const symbolNode = Creator.symbol
 
 function testPrintStr(exprStr, outputStr) {
-  const input = mathsteps.parseText(exprStr)
+  const input = parseText(exprStr)
   TestUtil.testFunctionOutput(print.ascii, input, outputStr)
 }
 
