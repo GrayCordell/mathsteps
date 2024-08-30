@@ -1,6 +1,6 @@
 import { assert, describe, it } from 'vitest'
 import Node from '~/node/index.js'
-import { math } from '~/config'
+import math from '~/config'
 
 const constNode = Node.Creator.constant
 

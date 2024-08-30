@@ -1,7 +1,6 @@
 /*
 import { describe, it } from 'vitest'
-import { math } from '~/config'
-import { isOperatorNode } from 'mathjs'
+import math  from '~/config'
 
 describe('temp', () => {
   function createProxy(target, onChange) {

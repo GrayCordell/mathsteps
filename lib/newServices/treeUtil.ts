@@ -1,5 +1,5 @@
 import type { MathNode } from 'mathjs'
-import { isConstantNode, isFunctionNode, isOperatorNode, isSymbolNode } from 'mathjs'
+import { isConstantNode, isFunctionNode, isOperatorNode, isSymbolNode } from '~/config'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString.js'
 import { kemuFlatten } from '~/simplifyExpression/kemuSimplifyCommonServices'
 

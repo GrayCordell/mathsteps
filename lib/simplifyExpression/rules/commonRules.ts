@@ -1,6 +1,6 @@
 /* eslint-disable antfu/consistent-list-newline */
 import Node from '../../node/index.js'
-import { math } from '~/config'
+import math from '~/config'
 import { createFunctionForEveryRule } from '~/newServices/ruleHelper'
 import { applyRules } from '../kemuSimplifyCommonServices.js'
 import { cleanString } from '~/util/stringUtils'

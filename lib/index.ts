@@ -1,7 +1,6 @@
 /* eslint-disable no-throw-literal */
-import { math } from '~/config'
+import math, { isOperatorNode } from '~/config'
 import ChangeTypes from './types/ChangeTypes'
-import Node from './node/index.js'
 import stepThrough from './simplifyExpression/index.js'
 import { ascii, latex } from './util/print.js'
 import clone from '~/newServices/nodeServices/clone.js'
@@ -9,7 +8,10 @@ import Equation from './kemuEquation/Equation.js'
 import EquationSolver from './kemuEquation/EquationSolverCore.js'
 import { kemuNormalizeConstantNodes } from './simplifyExpression/kemuSimplifyCommonServices.js'
 import type { MathNode } from 'mathjs'
-import { isOperatorNode } from 'mathjs'
+import { assessUserStep, assessUserSteps } from './simplifyExpression/stepEvaluationCore'
+import type { AMistakeType } from './types/ErrorTypes'
+import MistakeTypes from './types/ErrorTypes'
+import type { AChangeType } from './types/ChangeTypes'
 
 const print = ascii
 const printLatex = latex
@@ -270,11 +272,18 @@ function registerPreprocessorAfterParse(cb: (node: MathNode) => MathNode): void 
   ARRAY_OF_PREPROCESS_FUNCTIONS_AFTER_PARSE.push(cb)
 }
 
+export type{
+  AMistakeType,
+  AChangeType,
+}
 export {
+  assessUserSteps,
+  assessUserStep,
   simplifyExpression,
   solveEquation,
   kemuSolveEquation,
   ChangeTypes,
+  MistakeTypes,
   normalizeExpression,
   print,
   printAsTeX,
@@ -283,7 +292,6 @@ export {
   convertTextToTeX,
   parseText,
   isOkAsSymbolicExpression,
-  Node,
   registerPreprocessorBeforeParse,
   registerPreprocessorAfterParse,
 }
@@ -302,7 +310,6 @@ export default {
   convertTextToTeX,
   parseText,
   isOkAsSymbolicExpression,
-  Node,
   registerPreprocessorBeforeParse,
   registerPreprocessorAfterParse,
 }

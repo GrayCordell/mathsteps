@@ -6,40 +6,58 @@ import camelCase from 'camelcase'
 import packageJson from './package.json'
 
 const packageName = packageJson.name.split('/').pop() || packageJson.name
-
 export default defineConfig({
+  base: './',
   build: {
+    minify: false, // Disable minification
+    target: 'esnext',
     lib: {
-      entry: resolve(__dirname, 'lib/main.js'),
-      formats: ['es', 'cjs', 'umd', 'iife'],
+      entry: resolve(__dirname, 'lib/index.ts'),
+      formats: ['es'],
       name: camelCase(packageName, { pascalCase: true }),
-      fileName: packageName,
+      fileName: format => `${packageName}.${format}.js`,
     },
     rollupOptions: {
-      // make sure to externalize deps that shouldn't be bundled
-      // into your library
-      external: [], // ex. ['vue']
-      output: {
-        // Provide global variables to use in the UMD build
-        // for externalized deps
-        globals: {}, // ex. 'vue': 'Vue'
-      },
+      output: [
+        {
+          format: 'es',
+          dir: 'dist/es/', // Output ES modules here
+          sourcemap: false,
+          sourcemapExcludeSources: true,
+          inlineDynamicImports: false,
+          preserveModules: true,
+          entryFileNames: `[name].js`,
+        },
+        {
+          format: 'cjs',
+          dir: 'dist/cjs/', // Output CommonJS modules here
+          sourcemap: false,
+          sourcemapExcludeSources: true,
+          inlineDynamicImports: false,
+          preserveModules: true,
+          entryFileNames: `[name].js`,
+        },
+      ],
     },
   },
   resolve: {
     alias: {
       '~/': `${resolve(__dirname, 'lib')}/`,
-      'mathjs/util': resolve(__dirname, 'node_modules/mathjs/lib/esm/function/algebra/simplify/util.js'),
-      'mathjs/utilObject': resolve(__dirname, 'node_modules/mathjs/lib/esm/utils/object.js'),
-      'mathjs/utilIs': resolve(__dirname, 'node_modules/mathjs/lib/esm/utils/is.js'),
     },
   },
   plugins: [
-    dts({ rollupTypes: true }),
+    dts({
+      outDir: 'dist/types',
+      include: 'lib',
+      entryRoot: 'lib',
+      insertTypesEntry: true,
+      rollupTypes: true,
+      copyDtsFiles: false,
+    }),
   ],
-  // https://github.com/vitest-dev/vitest
   test: {
-    include: ['test/**/*.test.ts', 'test/**/*.test.js'],
     environment: 'jsdom',
+    include: ['test/**/*.test.ts', 'test/**/*.test.js'],
+    exclude: ['node_modules', 'dist'],
   },
 })

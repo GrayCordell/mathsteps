@@ -1,6 +1,6 @@
 /* eslint-disable unused-imports/no-unused-vars,no-unused-vars */
 import Node from '~/node/index.js'
-import { math } from '~/config'
+import math from '~/config'
 import { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY } from '~/types/ChangeTypes'
 import { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_FEW, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_INSTEAD_OF_ADDED } from '~/types/ErrorTypes'
 

@@ -1,25 +1,30 @@
 {
   "name": "mathsteps-expermental-fork",
   "description": "Step by step math solutions. Experimental Fork",
-  "version": "0.0.1",
+  "version": "0.3.94",
   "type": "module",
   "private": false,
   "packageManager": "pnpm@9.7.0",
   "exports": {
     ".": {
-      "import": "./dist/math-steps-expermental-fork.js",
-      "require": "./dist/math-steps-expermental-fork.cjs"
+      "types": "./dist/types/mathsteps-expermental-fork.d.ts",
+      "import": "./dist/es/lib/index.js",
+      "require": "./dist/cjs/lib/index.js"
     }
   },
-  "main": "./dist/math-steps-expermental-fork.umd.cjs",
-  "module": "./dist/math-steps-expermental-fork.js",
+  "main": "dist/cjs/lib/index.js",
+  "module": "dist/es/lib/index.js",
+  "types": "dist/types/mathsteps-expermental-fork.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "dev": "vite --port 3333",
-    "build": "tsc && vite build",
+    "build": "NODE_ENV=production vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "preview-https": "serve dist",
@@ -40,15 +45,14 @@
     "cas",
     "computer",
     "algebra",
-    "system"
+    "system",
+    "assess",
+    "evaluate"
   ],
   "license": "Apache-2.0",
   "author": "Grayson Cordell",
   "dependencies": {
-    "fast-json-stringify": "^6.0.0",
-    "globals": "^15.9.0",
-    "mathjs": "^13.0.3",
-    "mutative": "^1.0.8"
+    "mathjs": "^13.0.3"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
@@ -79,6 +83,6 @@
     "vite-plugin-dts": "^4.0.1",
     "vite-plugin-inspect": "^0.8.5",
     "vitest": "^2.0.5",
-    "vue-tsc": "^2.0.29"
+    "type-fest": "^4.25.0"
   }
 }

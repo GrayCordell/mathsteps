@@ -2,7 +2,6 @@
   TODO: Similar tests for kemuEquation?
 
 const assert = require('assert')
-const math = require('mathjs')
 
 const TestUtil = require('./TestUtil')
 
