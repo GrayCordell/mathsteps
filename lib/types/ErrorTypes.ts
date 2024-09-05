@@ -20,6 +20,7 @@ export const MultiplicationErrors = {
   ADDED_INSTEAD_OF_MULTIPLIED,
   SUBTRACTED_INSTEAD_OF_MULTIPLIED,
   MULTIPLIED_INSTEAD_OF_ADDED,
+  MULTIPLIED_INSTEAD_OF_SUBTRACTED,
   MULTIPLIED_ONE_TOO_MANY,
   MULTIPLIED_ONE_TOO_FEW,
 } as const
@@ -51,13 +52,14 @@ export default MistakeTypes
 
 export const convertAdditionToSubtractionErrorType = (errorType: AMistakeType) => {
   switch (errorType) {
-    case ADDED_ONE_TOO_FEW: return SUBTRACTED_ONE_TOO_FEW
-    case ADDED_ONE_TOO_MANY: return SUBTRACTED_ONE_TOO_MANY
+    case ADDED_ONE_TOO_FEW: return SUBTRACTED_ONE_TOO_MANY
+    case ADDED_ONE_TOO_MANY: return SUBTRACTED_ONE_TOO_FEW
     case ADDED_INSTEAD_OF_MULTIPLIED: return SUBTRACTED_INSTEAD_OF_MULTIPLIED
     case MULTIPLIED_INSTEAD_OF_ADDED: return MULTIPLIED_INSTEAD_OF_SUBTRACTED
     case SUBTRACTED_INSTEAD_OF_ADDED: return ADDED_INSTEAD_OF_SUBTRACTED
     case null: return null
     default: {
+      // Kind of a hacky way to convert the errorType from addition to subtraction.
       const newErrorType = errorType.replace('SUBTRACTED', 's0').replace('SUBTRACT', 's1').replace('ADDED', 'a0').replace('ADD', 'a1')
         .replace('s0', 'ADDED')
         .replace('s1', 'ADD')
