@@ -142,7 +142,6 @@ function _kemuNormalizeMultiplyDivision(node: MathNode): MathNode {
   }
   return node
 }
-
 function _parseTextInternal(text: string): MathNode {
   // Preprocess text before passing in to mathjs parser if needed.
   ARRAY_OF_PREPROCESS_FUNCTIONS_BEFORE_PARSE.forEach((preprocessFct) => {
@@ -152,7 +151,7 @@ function _parseTextInternal(text: string): MathNode {
   let rv = math.parse(text) as MathNode
   // Make sure we store all constant nodes as bignumber to avoid fake unequals.
   rv = kemuNormalizeConstantNodes(rv)
-  rv = _kemuNormalizeMultiplyDivision(rv)
+  // rv = _kemuNormalizeMultiplyDivision(rv)
   // Preprocess just generated node tree if needed.
   ARRAY_OF_PREPROCESS_FUNCTIONS_AFTER_PARSE.forEach((preprocessFct) => {
     rv = preprocessFct(rv)
@@ -257,7 +256,7 @@ function normalizeExpression(text: string): string {
   try {
     rv = print(parseText(text))
   }
-  // eslint-disable-next-line unused-imports/no-unused-vars
+
   catch (err) {
     rv = '[error]'
   }
