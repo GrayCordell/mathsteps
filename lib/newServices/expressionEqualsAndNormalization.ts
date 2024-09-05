@@ -6,11 +6,11 @@ import { kemuNormalizeConstantNodes } from '~/simplifyExpression/kemuSimplifyCom
 import { removeImplicitMultiplicationFromNode } from '~/newServices/treeUtil'
 import type { MathNode } from 'mathjs'
 import type { EqualityCache } from '~/util/equalityCache'
+import { makePlusMinusMinus } from '~/newServices/nodeServices/removeUnnecessaryMultiplications'
 
-export function veryNormalizeNode(node: MathNode | string): MathNode {
-  if (typeof node === 'string')
-    node = parseText(node)
-  node = kemuSortArgs(kemuNormalizeConstantNodes(removeImplicitMultiplicationFromNode(node)), true)
+export function veryNormalizeNode(node_: MathNode | string): MathNode {
+  let node = (typeof node_ === 'string') ? parseText(node_) : node_
+  node = kemuSortArgs(kemuNormalizeConstantNodes(makePlusMinusMinus(removeImplicitMultiplicationFromNode(node))), true)
   return <MathNode>node
 }
 
@@ -19,10 +19,14 @@ export function areExpressionEqual(exp0: string | MathNode, exp1: string | MathN
     return false
   if (exp0 === exp1) // same object reference. Or also same exact string but we will check "cleaned" strings later.
     return true
-  if (typeof exp0 === 'object')
+  if (typeof exp0 === 'object') {
     exp0 = removeImplicitMultiplicationFromNode(exp0)
-  if (typeof exp1 === 'object')
+    exp0 = makePlusMinusMinus(exp0)
+  }
+  if (typeof exp1 === 'object') {
     exp1 = removeImplicitMultiplicationFromNode(exp1)
+    exp1 = makePlusMinusMinus(exp1)
+  }
 
   const strExp0 = typeof exp0 === 'string' ? exp0 : myNodeToString(exp0)
   const strExp1 = typeof exp1 === 'string' ? exp1 : myNodeToString(exp1)
