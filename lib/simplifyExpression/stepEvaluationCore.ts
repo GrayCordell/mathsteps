@@ -1,26 +1,30 @@
-import mathsteps from '~/index'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { LogLevel, logger } from '~/util/logger'
 import { cleanString } from '~/util/stringUtils'
 import { EqualityCache } from '~/util/equalityCache'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
-import { mistakeSearches } from '~/simplifyExpression/mistakes/regexPemdasMistakes.js'
 import type { AChangeType } from '~/types/ChangeTypes'
-import { UNKNOWN } from '~/types/ChangeTypes'
-import type { AMistakeType } from '~/types/ErrorTypes'
-import { NO_CHANGE } from '~/types/ErrorTypes'
+import { SIMPLIFY_ARITHMETIC__SUBTRACT, UNKNOWN } from '~/types/ChangeTypes'
 
-interface RawStep {
+import type { AMistakeType } from '~/types/ErrorTypes'
+import { NO_CHANGE, convertAdditionToSubtractionErrorType, isAdditionError } from '~/types/ErrorTypes'
+import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
+
+export interface RawStep {
   from: string
   to: string[]
   changeType: AMistakeType & AChangeType
   isMistake: boolean // the entire step is a mistake
   mTo?: { to: string, changeType: AMistakeType }[]
 }
-type ProcessedStep = Omit<RawStep, 'to'> & { to: string, availableChangeTypes: (AMistakeType & AChangeType)[] } // to is a string instead of an array of strings. We flattend it.
 
-type CoreAssessUserStepResult = {
+/**
+ * The processed step is the same as the raw step, but the 'to' is a string instead of an array of strings. We flattend it. TODO make a better name for this. IntermediateStep?
+ */
+export type ProcessedStep = Omit<RawStep, 'to'> & { to: string, availableChangeTypes: (AMistakeType & AChangeType)[] } // to is a string instead of an array of strings. We flattend it.
+
+export type CoreAssessUserStepResult = {
   history: ProcessedStep[]
   isFoundStepAMistake: boolean
   mToStep?: string
@@ -28,6 +32,9 @@ type CoreAssessUserStepResult = {
 } | { history: [], isFoundStepAMistake: false }
 | { history: ProcessedStep[], isFoundStepAMistake: false }
 
+/**
+ * The final step info object that is returned to the user.
+ */
 export interface StepInfo {
   isValid: boolean // Whether the step is valid from the previous step.
   reachesOriginalAnswer: boolean // Whether the step leads to the original answer of the expression.
@@ -40,85 +47,13 @@ export interface StepInfo {
 }
 
 const validStepEqCache = new EqualityCache()
+export const getValidStepEqCache = () => validStepEqCache
 const expressionEquals = (exp0: string, exp1: string): boolean => areExpressionEqual(exp0, exp1, validStepEqCache)
 
-function findAllNextStepOptions(userStep: string): ProcessedStep[] {
-  userStep = cleanString(userStep)
-  const potentialSteps: RawStep[] = []
-  mathsteps.simplifyExpression({
-    expressionAsText: userStep,
-    // @ts-expect-error ---
-    isDebugMode: false,
-    isDryRun: true,
-    getMistakes: true,
-    isWithAlternativeRun: true,
-    getAllNextStepPossibilities: true,
-    onStepCb: (step: RawStep) => potentialSteps.push(step),
-  })
-
-  function processSteps(steps: RawStep[]): ProcessedStep[] {
-    const availableChangeTypes = filterUniqueValues(steps.filter(step => !step?.isMistake).map(step => step?.changeType))
-
-    const processedStepsSet = new Set<string>()
-    return steps
-      .filter(step => step.to)
-      .flatMap(step => step.to.map(toStr => ({
-        ...step,
-        availableChangeTypes,
-        to: cleanString(toStr),
-        from: cleanString(step.from),
-      })))
-      .filter(step => !processedStepsSet.has(step.to) && processedStepsSet.add(step.to))
-      .filter(step => step.to !== step.from)
-  }
-
-  function correctStepInfo(filteredSteps: ProcessedStep[]) {
-    for (const step of filteredSteps) {
-      if (step.changeType === 'SIMPLIFY_ARITHMETIC__ADD') {
-        const from = userStep
-        const to = step.to
-        if (!from.includes('-') || to.length > from.length)
-          continue
-
-        const numbersBeingSubtracted = [...from.matchAll(/(\d+)-(\d+)/g)].map(match => match[2])
-        if (numbersBeingSubtracted.length === 0)
-          continue
-
-        const occurrencesMap = filterUniqueValues(
-          numbersBeingSubtracted.map(number => ({ number, count: [...from.matchAll(new RegExp(number, 'g'))].length })),
-          (a, b) => a.number === b.number,
-        )
-
-        const missing: string[] = []
-        for (const numberAndCountObj of occurrencesMap) {
-          const toNumberCount = [...to.matchAll(new RegExp(numberAndCountObj.number, 'g'))].length
-          if (toNumberCount < numberAndCountObj.count)
-            missing.push(numberAndCountObj.number)
-        }
-        if (missing.length === 1)
-          step.changeType = 'SIMPLIFY_ARITHMETIC__SUBTRACT'
-      }
-    }
-  }
-
-  const filteredSteps = filterUniqueValues(processSteps(potentialSteps), (item1, item2) => expressionEquals(item1.to, item2.to))
-  correctStepInfo(filteredSteps)
-
-  // Mistake Steps that are not caught by the simplification engine.
-  const manualMistakes = mistakeSearches(userStep)
-  filteredSteps.push(...manualMistakes)
-
-  // Add all possible change types for each step.
-  const availableChangeTypes = filteredSteps.filter(step => !step?.isMistake).map(step => step?.changeType)
-  const filteredSteps2 = filteredSteps.map((step) => {
-    step.availableChangeTypes = availableChangeTypes
-    return step
-  })
-
-  return filteredSteps2
-}
-
 const MAX_STEP_DEPTH = 100
+/**
+ * Creates a history of steps found from the previous step to get to the user's step. Requires processStepInfo to convert the history into the final StepInfo[] form.
+ */
 function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AMistakeType & AChangeType)[] = []): CoreAssessUserStepResult {
   const valueToFind = lastTwoUserSteps[1]
   const stepQueue: { start: string, history: ProcessedStep[] }[] = []
@@ -177,6 +112,26 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
 
   return { history: [], isFoundStepAMistake: false }
 }
+
+/**
+ * @description Fixes the mistakenChangeType if the changeType is SIMPLIFY_ARITHMETIC__SUBTRACT and the mistakenChangeType is an addition error. TODO do this earlier?
+ * @param changeType
+ * @param mistakenChangeType
+ */
+function correctChangeTypeSubtractToAddFix(changeType: AChangeType, mistakenChangeType: AMistakeType): AMistakeType {
+  return (mistakenChangeType && changeType === SIMPLIFY_ARITHMETIC__SUBTRACT && isAdditionError(mistakenChangeType))
+    ? convertAdditionToSubtractionErrorType(mistakenChangeType)
+    : mistakenChangeType
+}
+
+/**
+ * @description Processes CoreAssessUserStepResult into the final StepInfo[] form
+ * @param res - The result from _coreAssessUserStep
+ * @param previousStep - The previous step before the user's step. ex. '2x + 2x + 2x'
+ * @param userStep - The users step moving from the previous step to the current step. ex. '2x + 4x'
+ * @param startingStepAnswer - The actual answer of the equation.
+ * @param firstChangeTypesLog - The first change types logged from the first step, for unknown and no change cases.
+ */
 function processStepInfo(
   res: CoreAssessUserStepResult,
   previousStep: string,
@@ -214,11 +169,13 @@ function processStepInfo(
       const attemptedToGetTo = cleanString(step.to)
       const from = history.length === 1 ? cleanString(previousStep) : step.from
       const isLastStep = index === history.length - 1
-      const availableChangeTypes = filterUniqueValues([...step.availableChangeTypes, ...firstAvailableChangeTypes])
+      const availableChangeTypes = filterUniqueValues(step.availableChangeTypes)
       const attemptedChangeType = step.changeType
+      const fixedMistakeType = correctChangeTypeSubtractToAddFix(attemptedChangeType, mistakenChangeType)
+
       // uses mistakenChangeType if the step is the last mistake.
       if (isLastStep && isFoundStepAMistake) { // Technically we could have a reachesOriginalAnswer check here, but it might generally be unnecessary.
-        return { isValid: false, reachesOriginalAnswer: false, from, to: res.mToStep!, attemptedToGetTo, attemptedChangeType, mistakenChangeType, availableChangeTypes }
+        return { isValid: false, reachesOriginalAnswer: false, from, to: res.mToStep!, attemptedToGetTo, attemptedChangeType, mistakenChangeType: fixedMistakeType, availableChangeTypes }
       }
       // else
 
@@ -253,6 +210,7 @@ function processStepInfo(
  * }
  */
 export function assessUserStep(previousUserStep: string, userStep: string, startingStepAnswer: string = getAnswerFromStep(previousUserStep)): StepInfo[] {
+  // const userStep = myNodeToString(parseText(userStep_))
   const firstChangeTypesLog: AChangeType[] = []
   const rawAssessedStepOptionsRes = _coreAssessUserStep([previousUserStep, userStep], firstChangeTypesLog)
   return processStepInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, startingStepAnswer, firstChangeTypesLog)
@@ -261,8 +219,7 @@ export function assessUserStep(previousUserStep: string, userStep: string, start
 /**
  * Evaluates the sequence of steps a user took to simplify an expression and returns a detailed breakdown of each step.
  *
- * @param problem
- * @param userSteps_ - An array of strings representing the steps the user took to simplify the expression, in order.
+ * @param userSteps - An array of strings representing the steps the user took to simplify the expression, in order.
  * @example
  * const userSteps = [
  *   '2x + 3x', // Initial expression
@@ -286,11 +243,11 @@ export function assessUserStep(previousUserStep: string, userStep: string, start
  *   const userProvidedStep = stepSequence[stepSequence.length - 1];      // The step provided by the user (6x)
  * }
  */
-export function assessUserSteps(userSteps_: string[]): StepInfo[][] {
-  if (userSteps_.length === 0)
+export function assessUserSteps(userSteps: string[]): StepInfo[][] {
+  if (userSteps.length === 0)
     return []
+  // const userSteps = userSteps_.map(step => myNodeToString(parseText(step)))
 
-  const userSteps = userSteps_.map(step => step.replace(/\s/g, ''))
   const assessedSteps: StepInfo[][] = []
   let previousStep: string | undefined
   const startingStepAnswer = getAnswerFromStep(userSteps[0])
