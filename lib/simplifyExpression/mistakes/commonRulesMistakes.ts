@@ -60,6 +60,7 @@ const additionMistakes = [
   createAdditionMistake(ADDED_ONE_TOO_MANY, (node, { c1, c2 }) => makeConstant(add(toNum(c1) + 1, c2))),
   createAdditionMistake(ADDED_ONE_TOO_FEW, (node, { c1, c2 }) => makeConstant(add(toNum(c1) - 1, c2))),
 ] as const
+// IDS THAT ALSO WILL "MAP" TO THE ABOVE ADDED_INSTEAD_OF_SUBTRACTED, MULTIPLIED_INSTEAD_OF_SUBTRACTED, SUBTRACTED_ONE_TOO_MANY, SUBTRACTED_ONE_TOO_FEW
 
 // Multiplication Mistakes
 const createMultiplicationMistake = createMistake(OperationIds.MULTIPLY)
