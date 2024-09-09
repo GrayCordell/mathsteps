@@ -9,6 +9,7 @@ import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalizati
 describe('equalityTest', () => {
   const testCases: { input: string, expected: string }[] = [
     { input: '8 + 4 * (2/4)', expected: '8+4*2/4' },
+    { input: '-18 + 3 - 2', expected: '3 - 18 - 2' },
   ]
 
   testCases.forEach(({ input, expected }) => {
