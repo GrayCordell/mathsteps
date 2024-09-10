@@ -9,7 +9,7 @@ import { assessUserSteps } from '~/simplifyExpression/stepEvaluationCore'
 import { assertSpecifiedValues } from './util/assertHelpers'
 
 const { CANCEL_TERMS, COLLECT_AND_COMBINE_LIKE_TERMS, KEMU_DECIMAL_TO_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, REARRANGE_COEFF, REMOVE_ADDING_ZERO, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
-const { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_INSTEAD_OF_SUBTRACTED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_ONE_TOO_FEW, SUBTRACTED_ONE_TOO_MANY } = ErrorTypes
+const { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_INSTEAD_OF_SUBTRACTED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_ONE_TOO_FEW, PEMDAS__ADD_INSTEAD_OF_MULTIPLY, SUBTRACTED_ONE_TOO_MANY } = ErrorTypes
 
 const cleanMath = (str: string) => str?.replace('_', '').replace(' ', '').replace('[', '').replace(']', '').replace('\'', '').replace(`"`, '').replace('`', '')
 
@@ -84,7 +84,7 @@ function makeCorrectSteps(correctStepStepsArr: Partial<StepInfo & { fromTo?: str
         step.to = step.fromTo.split('->')[1]
       }
 
-      if (!step.attemptedChangeType && step.availableChangeTypes && step.availableChangeTypes.length === 1) // for convenience.
+      if (requiresAvailableChangeTypes && !step.attemptedChangeType && step.availableChangeTypes && step.availableChangeTypes.length === 1) // for convenience.
         step.attemptedChangeType = step.availableChangeTypes[0]
 
       if (requiresAvailableChangeTypes && !step.availableChangeTypes)
@@ -750,4 +750,42 @@ describe('multiplication Mistakes', () => {
     },
   ]
   multiplicationMistakeCases.forEach((test, index) => testStepEvaluation(test, index))
+})
+
+describe('random issues i\'ve had in the past', () => {
+  const randomIssues: Test[] = [
+    // Test 1
+    {
+      description: 'Addition with multiple terms including negative numbers',
+      steps: ['10 - 2 * (4 + 3)', '10 - 10'],
+      expectedAnalysis: [
+        [
+          { // implicit in step 1, it had to be done to get to the next step.
+            attemptedChangeType: 'KEMU_DISTRIBUTE_MUL_OVER_ADD',
+            to: '10 - (2 * 4 + 2 * 3)',
+          },
+          {
+            attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
+            to: '10 - (2 * 4 + 6)',
+          },
+          {
+            attemptedChangeType: PEMDAS__ADD_INSTEAD_OF_MULTIPLY,
+            to: '10 - (2 * 10)',
+            isValid: false,
+            reachesOriginalAnswer: false,
+            attemptedToGetTo: 'UNKNOWN',
+            mistakenChangeType: PEMDAS__ADD_INSTEAD_OF_MULTIPLY,
+          },
+          {
+            attemptedChangeType: SIMPLIFY_ARITHMETIC__MULTIPLY,
+            to: '10 - 10',
+            attemptedToGetTo: '10 - 20',
+            isValid: false,
+            mistakenChangeType: 'MULTIPLIED_ONE_TOO_FEW',
+          },
+        ],
+      ],
+    },
+  ]
+  randomIssues.forEach((test, index) => testStepEvaluation(test, index))
 })
