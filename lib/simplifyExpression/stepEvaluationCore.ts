@@ -24,15 +24,16 @@ export interface RawStep {
 /**
  * The processed step is the same as the raw step, but the 'to' is a string instead of an array of strings. We flattend it. TODO make a better name for this. IntermediateStep?
  */
-export type ProcessedStep = Omit<RawStep, 'to'> & { to: string, availableChangeTypes: (AMistakeType & AChangeType)[] } // to is a string instead of an array of strings. We flattend it.
+export type ProcessedStep = Omit<RawStep, 'to'> & {
+  to: string
+  availableChangeTypes: (AMistakeType & AChangeType)[]
+  attemptedToGetTo?: string
+  attemptedChangeType?: AMistakeType & AChangeType
+} // to is a string instead of an array of strings. We flattend it.
 
 export type CoreAssessUserStepResult = {
   history: ProcessedStep[]
-  isFoundStepAMistake: boolean
-  mToStep?: string
-  mistakenChangeType: AMistakeType
-} | { history: [], isFoundStepAMistake: false }
-| { history: ProcessedStep[], isFoundStepAMistake: false }
+} | { history: [] }
 
 /**
  * The final step info object that is returned to the user.
@@ -43,7 +44,7 @@ export interface StepInfo {
   from: string // The expression before the step
   to: string // The expression after the step
   attemptedToGetTo: string // The expression the user attempted to get to
-  attemptedChangeType: AChangeType // The type of change the user attempted
+  attemptedChangeType: AChangeType | AMistakeType // The type of change the user attempted
   mistakenChangeType: AMistakeType | null // The type of mistake the user made, if any
   availableChangeTypes: AChangeType[] // The types of changes the user could have made
 }
@@ -62,7 +63,7 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
   const triedSteps = new Set<string>()
 
   if (lastTwoUserSteps[0] === lastTwoUserSteps[1])
-    return { history: [], isFoundStepAMistake: false }
+    return { history: [] }
 
   stepQueue.push({ start: lastTwoUserSteps[0], history: [] })
 
@@ -90,11 +91,20 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
       // Record the step in history
       const updatedHistory = [...history, possibleStep]
 
+      // This handles normal step checks
       if (!possibleStep.isMistake && expressionEquals(possibleStep.to, valueToFind)) {
-        return { history: updatedHistory, isFoundStepAMistake: false }
+        return { history: updatedHistory }
       }
+      // Handles steps that are marked isMistake=true.
+      else if (possibleStep.isMistake && expressionEquals(possibleStep.to, valueToFind)) {
+        // The mistake found can be a correct step somehow later. So we have to ignore incorrect steps that can become the answer.
+        const isStillCorrect = expressionEquals(getAnswerFromStep(start), getAnswerFromStep(possibleStep.to))
+        if (!isStillCorrect)
+          return { history: updatedHistory }
+      }
+      // Handle/check attatched alternate mistake options. "mTo". (These are misakes like added 1 too many, etc.)
       for (const mToStep of possibleStep.mTo || []) {
-        if (!possibleStep.isMistake && possibleStep.to && mToStep.to === possibleStep.to)
+        if (possibleStep.to && mToStep.to === possibleStep.to)
           continue
 
         if (expressionEquals(mToStep.to, valueToFind)) {
@@ -102,7 +112,12 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
           const isStillCorrect = expressionEquals(getAnswerFromStep(start), getAnswerFromStep(mToStep.to))
           if (isStillCorrect)
             continue
-          return { history: updatedHistory, mToStep: mToStep.to, isFoundStepAMistake: true, mistakenChangeType: mToStep.changeType }
+          // If the mistake is the answer, then we need to add remove the last step in the history
+          updatedHistory.pop()
+          // add the mistake step to the history
+          // @ts-expect-error --- Not sure why this is an error for ChangeType
+          updatedHistory.push({ ...mToStep, ...possibleStep, from: possibleStep.from, to: mToStep.to, attemptedToGetTo: possibleStep.to, attemptedChangeType: possibleStep.changeType, changeType: mToStep.changeType, isMistake: true })
+          return { history: updatedHistory }
         }
       }
 
@@ -112,7 +127,7 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
     depth++
   }
 
-  return { history: [], isFoundStepAMistake: false }
+  return { history: [] }
 }
 
 /**
@@ -120,10 +135,10 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
  * @param changeType
  * @param mistakenChangeType
  */
-function correctChangeTypeSubtractToAddFix(changeType: AChangeType, mistakenChangeType: AMistakeType): AMistakeType {
+function correctChangeTypeSubtractToAddFix<T extends (AMistakeType | undefined | null)>(changeType: AChangeType, mistakenChangeType?: T): T {
   return (mistakenChangeType && changeType === SIMPLIFY_ARITHMETIC__SUBTRACT && isAdditionError(mistakenChangeType))
-    ? convertAdditionToSubtractionErrorType(mistakenChangeType)
-    : mistakenChangeType
+    ? convertAdditionToSubtractionErrorType(mistakenChangeType) as T
+    : mistakenChangeType as T
 }
 
 /**
@@ -146,8 +161,6 @@ function processStepInfo(
   //  availableChangeTypes.push(step.changeType)
 
   const history = res.history
-  const isFoundStepAMistake = res.isFoundStepAMistake
-  const mistakenChangeType = 'mistakenChangeType' in res ? res.mistakenChangeType : null
 
   let stepInfo: StepInfo[] = []
 
@@ -155,9 +168,9 @@ function processStepInfo(
 
   // Handle no history(unknown error type) or the user's step is the same as the starting step(No change).
   if (history.length === 0) {
-    const isStartingStepsSame = previousStep === userStep
     const startingFrom = cleanString(previousStep)
     const wentTo = cleanString(userStep)
+    const isStartingStepsSame = startingFrom === wentTo
 
     const sharedPart = { isValid: false, from: startingFrom, to: wentTo, attemptedToGetTo: UNKNOWN, attemptedChangeType: UNKNOWN, mistakenChangeType: null, availableChangeTypes: firstAvailableChangeTypes }
     stepInfo = isStartingStepsSame
@@ -166,21 +179,20 @@ function processStepInfo(
   }
   // Handle the history Path to the MistakeStep or Path to the CorrectStep.
   else {
-    stepInfo = history.map((step, index) => {
+    stepInfo = history.map((step) => {
       const to = cleanString(step.to)
-      const attemptedToGetTo = cleanString(step.to)
-      const from = history.length === 1 ? cleanString(previousStep) : step.from
-      const isLastStep = index === history.length - 1
+      const attemptedToGetTo = cleanString(step.attemptedToGetTo || step.to)
+      const attemptedChangeType = step.attemptedChangeType || step.changeType
+      const changeType = step.changeType || step.attemptedChangeType
+      const mistakenChangeType = changeType
+      const from = history.length === 1 ? cleanString(previousStep) : cleanString(step.from)
       const availableChangeTypes = filterUniqueValues(step.availableChangeTypes)
-      const attemptedChangeType = step.changeType
       const fixedMistakeType = correctChangeTypeSubtractToAddFix(attemptedChangeType, mistakenChangeType)
 
-      // uses mistakenChangeType if the step is the last mistake.
-      if (isLastStep && isFoundStepAMistake) { // Technically we could have a reachesOriginalAnswer check here, but it might generally be unnecessary.
-        return { isValid: false, reachesOriginalAnswer: false, from, to: res.mToStep!, attemptedToGetTo, attemptedChangeType, mistakenChangeType: fixedMistakeType, availableChangeTypes }
-      }
-      // else
+      if (step.isMistake)
+        return { isValid: false, reachesOriginalAnswer: false, from, to, attemptedToGetTo, attemptedChangeType, mistakenChangeType: fixedMistakeType, availableChangeTypes }
 
+      // else
       // Handle Valid. Since we have a history and its not a found mistake, then the step is going to just be one of the valid ones. Does not require sameEventualAnswer to be valid.
       const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(step.to), startingStepAnswer)
       return { isValid: true, reachesOriginalAnswer, from, to, attemptedToGetTo, attemptedChangeType, mistakenChangeType: null, availableChangeTypes }
