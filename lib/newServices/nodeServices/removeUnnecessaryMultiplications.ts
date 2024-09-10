@@ -82,7 +82,7 @@ export function makePlusMinusMinus(node: MathNode | string): MathNode {
   const replacePlusMinus = nodeStr.replace(/\+-/g, '-').replace(/-\+/g, '-')
   return parseText(replacePlusMinus)
 }
-export function makePlusMinusMinusAndReturnString(node: MathNode | string): MathNode {
+export function makePlusMinusMinusAndReturnString(node: MathNode | string): string {
   const nodeStr = typeof node === 'string' ? cleanString(node) : myNodeToString(node)
   const replacePlusMinus = nodeStr.replace(/\+-/g, '-').replace(/-\+/g, '-')
   return replacePlusMinus
