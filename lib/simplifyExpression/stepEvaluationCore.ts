@@ -5,11 +5,13 @@ import { EqualityCache } from '~/util/equalityCache'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
 import type { AChangeType } from '~/types/ChangeTypes'
-import { SIMPLIFY_ARITHMETIC__SUBTRACT, UNKNOWN } from '~/types/ChangeTypes'
-
+import ChangeTypes from '~/types/ChangeTypes'
 import type { AMistakeType } from '~/types/ErrorTypes'
-import { NO_CHANGE, convertAdditionToSubtractionErrorType, isAdditionError } from '~/types/ErrorTypes'
+import { MistakeTypes, convertAdditionToSubtractionErrorType, isAdditionError } from '~/types/ErrorTypes'
 import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
+
+const { SIMPLIFY_ARITHMETIC__SUBTRACT, UNKNOWN } = ChangeTypes
+const { NO_CHANGE } = MistakeTypes
 
 export interface RawStep {
   from: string
@@ -157,7 +159,7 @@ function processStepInfo(
     const startingFrom = cleanString(previousStep)
     const wentTo = cleanString(userStep)
 
-    const sharedPart = { isValid: false, from: startingFrom, to: wentTo, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: UNKNOWN, mistakenChangeType: null, availableChangeTypes: firstAvailableChangeTypes }
+    const sharedPart = { isValid: false, from: startingFrom, to: wentTo, attemptedToGetTo: UNKNOWN, attemptedChangeType: UNKNOWN, mistakenChangeType: null, availableChangeTypes: firstAvailableChangeTypes }
     stepInfo = isStartingStepsSame
       ? [{ ...sharedPart, reachesOriginalAnswer: true, mistakenChangeType: NO_CHANGE }]
       : [{ ...sharedPart, reachesOriginalAnswer: false, mistakenChangeType: UNKNOWN }]

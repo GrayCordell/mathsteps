@@ -6,7 +6,9 @@ import { cleanString } from '~/util/stringUtils'
 import { mistakeSearches } from '~/simplifyExpression/mistakes/regexPemdasMistakes'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import mathsteps, { parseText } from '~/index'
-import { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__SUBTRACT } from '~/types/ChangeTypes'
+import ChangeTypes from '~/types/ChangeTypes'
+
+const { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
 
 let cache: ReturnType<typeof getValidStepEqCache> | null = null
 const expressionEquals = (exp0: string, exp1: string): boolean => {
