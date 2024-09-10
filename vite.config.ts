@@ -48,6 +48,7 @@ export default defineConfig({
   plugins: [
     dts({
       outDir: 'dist/types',
+      tsconfigPath: 'tsconfig.json',
       include: 'lib',
       entryRoot: 'lib',
       insertTypesEntry: true,

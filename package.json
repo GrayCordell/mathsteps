@@ -1,7 +1,7 @@
 {
   "name": "mathsteps-expermental-fork",
   "description": "Step by step math solutions. Experimental Fork",
-  "version": "0.4.1",
+  "version": "0.4.3",
   "type": "module",
   "private": false,
   "packageManager": "pnpm@9.7.0",
@@ -77,12 +77,12 @@
     "pnpm": "^9.7.0",
     "rollup": "^4.20.0",
     "taze": "^0.16.3",
+    "type-fest": "^4.25.0",
     "typescript": "^5.5.4",
     "vite": "^5.4.0",
     "vite-bundle-visualizer": "^1.2.1",
-    "vite-plugin-dts": "^4.0.1",
+    "vite-plugin-dts": "^4.1.0",
     "vite-plugin-inspect": "^0.8.5",
-    "vitest": "^2.0.5",
-    "type-fest": "^4.25.0"
+    "vitest": "^2.0.5"
   }
 }

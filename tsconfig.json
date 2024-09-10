@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "ESNext",
     "jsx": "preserve",
     "lib": ["DOM", "ESNext"],
@@ -24,6 +25,6 @@
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "include": ["lib/**/*", "index.js", "index.ts", "test/**/*"],
+  "include": ["lib/**/*", "index.js", "index.ts", "test/**/*", "./lib/**/*", "src/**/*"],
   "exclude": ["dist", "node_modules", "cypress", "build", "coverage"]
 }
