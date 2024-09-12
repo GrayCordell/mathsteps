@@ -4,11 +4,12 @@ import { cleanString } from '~/util/stringUtils'
 import { EqualityCache } from '~/util/equalityCache'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
-import type { AChangeType } from '~/types/ChangeTypes'
-import ChangeTypes from '~/types/ChangeTypes'
-import type { AMistakeType } from '~/types/ErrorTypes'
-import { MistakeTypes, convertAdditionToSubtractionErrorType, isAdditionError } from '~/types/ErrorTypes'
+import type { AChangeType } from '~/types/changeType/ChangeTypes'
+import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
+import type { AMistakeType } from '~/types/changeType/ErrorTypes'
+import { MistakeTypes } from '~/types/changeType/ErrorTypes'
+import { convertAdditionToSubtractionErrorType, isAdditionError } from '~/types/changeType/changeAndMistakeUtils'
 
 const { SIMPLIFY_ARITHMETIC__SUBTRACT, UNKNOWN } = ChangeTypes
 const { NO_CHANGE } = MistakeTypes

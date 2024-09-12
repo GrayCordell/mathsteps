@@ -1,6 +1,6 @@
-import type { AChangeType } from '~/types/ChangeTypes'
-import ChangeTypes from '~/types/ChangeTypes'
-import ErrorTypes from '~/types/ErrorTypes'
+import type { AChangeType } from '~/types/changeType/ChangeTypes'
+import { ChangeTypes } from '~/types/changeType/ChangeTypes'
+import { MistakeTypes } from '~/types/changeType/ErrorTypes'
 import { describe, it } from 'vitest'
 import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { assessUserSteps } from '~/simplifyExpression/stepEvaluationCore'
@@ -9,7 +9,7 @@ import { assessUserSteps } from '~/simplifyExpression/stepEvaluationCore'
 import { assertSpecifiedValues } from './util/assertHelpers'
 
 const { CANCEL_TERMS, COLLECT_AND_COMBINE_LIKE_TERMS, KEMU_DECIMAL_TO_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, REARRANGE_COEFF, REMOVE_ADDING_ZERO, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
-const { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_INSTEAD_OF_SUBTRACTED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_ONE_TOO_FEW, PEMDAS__ADD_INSTEAD_OF_MULTIPLY, SUBTRACTED_ONE_TOO_MANY } = ErrorTypes
+const { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_INSTEAD_OF_SUBTRACTED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_ONE_TOO_FEW, PEMDAS__ADD_INSTEAD_OF_MULTIPLY, SUBTRACTED_ONE_TOO_MANY } = MistakeTypes
 
 const cleanMath = (str: string) => str?.replace('_', '').replace(' ', '').replace('[', '').replace(']', '').replace('\'', '').replace(`"`, '').replace('`', '')
 

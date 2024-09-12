@@ -1,17 +1,10 @@
 import { applyRules } from '~/simplifyExpression/kemuSimplifyCommonServices'
 import { makeKeyFromNode } from '~/newServices/nodeServices/nodeCacher'
-import type { AChangeType, AChangeTypeCore } from '~/types/ChangeTypes'
+import type { AChangeType, AChangeTypeCore } from '~/types/changeType/ChangeTypes'
 import type { MathNode } from 'mathjs'
 
 export function isRuleInList(rule: { id: string }, ruleList: { id: string }[]) {
   return ruleList.some(r => r.id === rule.id)
-}
-
-export function isSameRootChangeType(rootChangeType: string | AChangeType, changeType: string | AChangeType): boolean {
-  // remove __CASE_1, __CASE_2, etc.
-  const rootChangeTypeWithoutCase = rootChangeType.split('__CASE_')[0]
-  const changeTypeWithoutCase = changeType.split('__CASE_')[0]
-  return rootChangeTypeWithoutCase === changeTypeWithoutCase
 }
 
 export const removeCaseNumberFromRuleId = (ruleId: AChangeType | string): AChangeTypeCore => (ruleId.split('__CASE_')[0] as AChangeTypeCore)

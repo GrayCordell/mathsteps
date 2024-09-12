@@ -1,6 +1,5 @@
 /* eslint-disable no-throw-literal */
 import math, { isOperatorNode } from '~/config'
-import ChangeTypes from './types/ChangeTypes'
 import stepThrough from './simplifyExpression/index.js'
 import { ascii, latex } from './util/print.js'
 import clone from '~/newServices/nodeServices/clone.js'
@@ -9,9 +8,10 @@ import EquationSolver from './kemuEquation/EquationSolverCore.js'
 import { kemuNormalizeConstantNodes } from './simplifyExpression/kemuSimplifyCommonServices.js'
 import type { MathNode } from 'mathjs'
 import { assessUserStep, assessUserSteps } from './simplifyExpression/stepEvaluationCore'
-import type { AMistakeType } from './types/ErrorTypes'
-import MistakeTypes from './types/ErrorTypes'
-import type { AChangeType } from './types/ChangeTypes'
+import type { AMistakeType } from './types/changeType/ErrorTypes'
+import { MistakeTypes } from './types/changeType/ErrorTypes'
+import { ChangeTypes } from './types/changeType/ChangeTypes'
+import type { AChangeType } from './types/changeType/ChangeTypes'
 
 const print = ascii
 const printLatex = latex
@@ -257,7 +257,8 @@ function normalizeExpression(text: string): string {
     rv = print(parseText(text))
   }
 
-  catch (err) {
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  catch (_err: unknown) {
     rv = '[error]'
   }
   return rv

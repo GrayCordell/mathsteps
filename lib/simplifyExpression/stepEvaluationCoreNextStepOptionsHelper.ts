@@ -6,7 +6,7 @@ import { cleanString } from '~/util/stringUtils'
 import { mistakeSearches } from '~/simplifyExpression/mistakes/regexPemdasMistakes'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import mathsteps, { parseText } from '~/index'
-import ChangeTypes from '~/types/ChangeTypes'
+import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 
 const { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
 
