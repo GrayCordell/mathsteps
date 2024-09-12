@@ -1,18 +1,18 @@
 // function to determine the groups a changeType belongs to
 
-import { changeGroupMappings, mapWordsToGroups, mistakeGroupMappings } from './declareChangeTypesHere'
-import type { AMistakeType, AMistakeTypeGroup } from '~/types/changeType/ErrorTypes'
-import type { AChangeType, AChangeTypeGroup } from '~/types/changeType/ChangeTypes'
+import { changeGroupMappings, mapMistakeTypeToChangeTypeError, mapWordsToGroups, mistakeOnlyGroupMappings } from './declareChangeTypesHere'
+import type { AMistakeType, AMistakeTypeGroup, MistakeTypeGroups } from '~/types/changeType/ErrorTypes'
+import { mistakeGroupMappings } from '~/types/changeType/ErrorTypes'
+import type { AChangeType, AChangeTypeGroup, ChangeTypeGroups } from '~/types/changeType/ChangeTypes'
 
-// Utility function to check if an error is an AdditionError
-export const isAdditionError = (errorType: AMistakeType): boolean =>
-  Object.values(mistakeGroupMappings.AdditionRules).includes(errorType as any)
+export const getRootChangeType = <T extends { includes: any, split?: any } | null>(changeType_: T) =>
+  (changeType_ && changeType_?.includes('__CASE_'))
+    ? changeType_.split('__CASE_')[0] as T
+    : changeType_ as T
+export const getRootMistakeType = <T extends { includes: any, split?: any } | null>(changeType_: T) => getRootChangeType(changeType_)
 
-export const getErrorTypeGroups = (changeType_: AMistakeType | string): AMistakeTypeGroup[] => {
-  const changeType: AChangeType = changeType_?.includes('__CASE_')
-    ? changeType_.split('__CASE_')[0] as AChangeType
-    : changeType_ as AChangeType
-
+export const getErrorTypeGroups = (changeType_: AMistakeType): AMistakeTypeGroup[] => {
+  const changeType = getRootChangeType(changeType_)
   // Find which group(s) this changeType belongs to and return the tags
   const firstPass = Object.entries(mistakeGroupMappings) // @ts-expect-error ---
     .filter(([_, rules]) => rules.includes(changeType))
@@ -20,36 +20,15 @@ export const getErrorTypeGroups = (changeType_: AMistakeType | string): AMistake
 
   const secondPass = []
   if (!firstPass || firstPass.length === 0) {
-    if (changeType.includes('MULTIPLY'))
-      secondPass.push('MultiplicationRules')
-    if (changeType.includes('DIVIDE'))
-      secondPass.push('DivisionRules')
-    if (changeType.includes('ADD') || changeType.includes('SUBTRACT'))
-      secondPass.push('SimplifyArithmetic')
-    if (changeType.includes('POWER'))
-      secondPass.push('ExponentSimplificationRules')
-    if (changeType.includes('ROOT'))
-      secondPass.push('RootAndPowerRules')
-    if (changeType.includes('FRACTION'))
-      secondPass.push('FractionRules')
-    if (changeType.includes('COEFFICIENT'))
-      secondPass.push('CoefficientSimplificationRules')
-    if (changeType.includes('ABSOLUTE_VALUE'))
-      secondPass.push('AbsoluteValueRules')
-    if (changeType.includes('TRIGONOMETRIC'))
-      secondPass.push('TrigonometricRules')
-    if (changeType.includes('LOG'))
-      secondPass.push('LogarithmRules')
-    if (changeType.includes('PERCENT'))
-      secondPass.push('PercentageRules')
+    const changeTypeWords = changeType?.split('_') || []
+    const changeTypeGroups = changeTypeWords.map(word => mapWordsToGroups[word.toUpperCase() as keyof typeof mapWordsToGroups]).filter(Boolean)
+    secondPass.push(...changeTypeGroups)
   }
   return [...firstPass, ...secondPass] as AMistakeTypeGroup[]
 }
 
-export const getChangeTypeGroups = (changeType_: AChangeType | string): AChangeTypeGroup[] => {
-  const changeType: AChangeType = changeType_?.includes('__CASE_')
-    ? changeType_.split('__CASE_')[0] as AChangeType
-    : changeType_ as AChangeType
+export const getChangeTypeGroups = (changeType_: AChangeType): AChangeTypeGroup[] => {
+  const changeType = getRootChangeType(changeType_)
 
   // Find which group(s) this changeType belongs to and return the tags
   const firstPass = Object.entries(changeGroupMappings) // @ts-expect-error ---
@@ -58,14 +37,36 @@ export const getChangeTypeGroups = (changeType_: AChangeType | string): AChangeT
 
   const secondPass = []
   if (!firstPass || firstPass.length === 0) {
-    const changeTypeWords = changeType.split('_')
+    const changeTypeWords = changeType?.split('_') || []
     const changeTypeGroups = changeTypeWords.map(word => mapWordsToGroups[word.toUpperCase() as keyof typeof mapWordsToGroups]).filter(Boolean)
     secondPass.push(...changeTypeGroups)
   }
   return [...firstPass, ...secondPass] as AChangeTypeGroup[]
 }
+export const convertMistakeTypeToItsChangeType = (mistakeType_: AMistakeType): AChangeType | null => {
+  const mistakeType = getRootMistakeType(mistakeType_)
+
+  if (mistakeType === null)
+    return null
+  for (const [changeType, mistakeTypes] of Object.entries(mapMistakeTypeToChangeTypeError)) { // @ts-expect-error ---
+    if (mistakeTypes.includes(mistakeType))
+      return changeType as AChangeType
+  }
+  return null
+}
+
+export const getEveryChangeIdApplicable = (changeTypeOrMistakeType_: AMistakeType | AChangeType): [AChangeType, ...typeof ChangeTypeGroups] | [] => {
+  const changeTypeOrMistakeType = getRootMistakeType(changeTypeOrMistakeType_)
+  const tmpChangeTypeOnly = convertMistakeTypeToItsChangeType(changeTypeOrMistakeType) || changeTypeOrMistakeType || null
+  if (!tmpChangeTypeOnly)
+    return []
+  const changeTypeOnly: AChangeType = tmpChangeTypeOnly as AChangeType
+
+  return [changeTypeOnly, ...getChangeTypeGroups(changeTypeOnly)]
+}
+
 export const isChangeTypeInGroup = (changeType: AChangeType, group: AChangeTypeGroup): boolean => getChangeTypeGroups(changeType).includes(group)
-export function isSameRootChangeType(rootChangeType: string | AChangeType, changeType: string | AChangeType): boolean {
+export const isSameRootChangeType = (rootChangeType: string | AChangeType, changeType: string | AChangeType): boolean => {
   // remove __CASE_1, __CASE_2, etc.
   const rootChangeTypeWithoutCase = rootChangeType.split('__CASE_')[0]
   const changeTypeWithoutCase = changeType.split('__CASE_')[0]
@@ -96,4 +97,27 @@ export const convertAdditionToSubtractionErrorType = (errorType: AMistakeType): 
       return newErrorType
     }
   }
+}
+
+export const isInAGroup = (changeOrMistakeType_: AMistakeType | AChangeType, group: typeof MistakeTypeGroups[number]): boolean => {
+  const changeOrMistakeType = getRootMistakeType(changeOrMistakeType_)
+  return Object.values(mistakeGroupMappings[group]).includes(changeOrMistakeType as any) // MistakeGroupMappings also contain ChangeTypes too. So, we can use it for both
+}
+
+// Utility function to check if an error is an AdditionError
+export const isAddition = (changeOrMistakeType_: AMistakeType | AChangeType): boolean => isInAGroup(changeOrMistakeType_, 'AdditionRules')
+export const isSubtraction = (changeOrMistakeType_: AMistakeType | AChangeType): boolean => isInAGroup(changeOrMistakeType_, 'SubtractionRules')
+export const isMultiplication = (changeOrMistakeType_: AMistakeType | AChangeType): boolean => isInAGroup(changeOrMistakeType_, 'MultiplicationRules')
+export const isDivision = (changeOrMistakeType_: AMistakeType | AChangeType): boolean => isInAGroup(changeOrMistakeType_, 'DivisionRules')
+export const isMistakeType = (changeOrMistakeType_: AMistakeType | AChangeType): boolean => {
+  const changeOrMistakeType = getRootMistakeType(changeOrMistakeType_)
+  return Object.values(mistakeGroupMappings).flat().includes(changeOrMistakeType as any) // MistakeGroupMappings also contain ChangeTypes too. So, we can use it for both
+}
+export const isMistakeTypeOnly = (changeOrMistakeType_: AMistakeType | AChangeType): boolean => {
+  const changeOrMistakeType = getRootMistakeType(changeOrMistakeType_)
+  return Object.values(mistakeOnlyGroupMappings).flat().includes(changeOrMistakeType as any) // mistakeOnlyGroupMappings does not also contain mistake changetypes.
+}
+export const isAChangeType = (changeOrMistakeType_: AMistakeType | AChangeType): boolean => {
+  const changeOrMistakeType = getRootChangeType(changeOrMistakeType_)
+  return Object.values(changeGroupMappings).flat().includes(changeOrMistakeType as any)
 }

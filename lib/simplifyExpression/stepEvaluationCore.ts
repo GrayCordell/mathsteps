@@ -9,7 +9,7 @@ import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
 import type { AMistakeType } from '~/types/changeType/ErrorTypes'
 import { MistakeTypes } from '~/types/changeType/ErrorTypes'
-import { convertAdditionToSubtractionErrorType, isAdditionError } from '~/types/changeType/changeAndMistakeUtils'
+import { convertAdditionToSubtractionErrorType, isAddition } from '~/types/changeType/changeAndMistakeUtils'
 
 const { SIMPLIFY_ARITHMETIC__SUBTRACT, UNKNOWN } = ChangeTypes
 const { NO_CHANGE } = MistakeTypes
@@ -137,7 +137,7 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
  * @param mistakenChangeType
  */
 function correctChangeTypeSubtractToAddFix<T extends (AMistakeType | undefined | null)>(changeType: AChangeType, mistakenChangeType?: T): T {
-  return (mistakenChangeType && changeType === SIMPLIFY_ARITHMETIC__SUBTRACT && isAdditionError(mistakenChangeType))
+  return (mistakenChangeType && changeType === SIMPLIFY_ARITHMETIC__SUBTRACT && isAddition(mistakenChangeType))
     ? convertAdditionToSubtractionErrorType(mistakenChangeType) as T
     : mistakenChangeType as T
 }

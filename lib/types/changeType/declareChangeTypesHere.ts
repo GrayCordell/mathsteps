@@ -181,7 +181,7 @@ export type AChangeTypeGroup = keyof typeof changeGroupMappings // ex. 'Simplify
 const PEMDAS__ADD_INSTEAD_OF_MULTIPLY = 'PEMDAS__ADD_INSTEAD_OF_MULTIPLY' as const
 // endregion
 
-export const mistakeGroupMappings = {
+export const mistakeOnlyGroupMappings = {
   MultiplicationRules: ['ADDED_INSTEAD_OF_MULTIPLIED', 'SUBTRACTED_INSTEAD_OF_MULTIPLIED', 'MULTIPLIED_INSTEAD_OF_ADDED', 'MULTIPLIED_INSTEAD_OF_SUBTRACTED', 'MULTIPLIED_ONE_TOO_MANY', 'MULTIPLIED_ONE_TOO_FEW', PEMDAS__ADD_INSTEAD_OF_MULTIPLY],
   AdditionRules: ['ADDED_ONE_TOO_FEW', 'ADDED_ONE_TOO_MANY', 'SUBTRACTED_INSTEAD_OF_ADDED'],
   SubtractionRules: ['SUBTRACTED_ONE_TOO_FEW', 'SUBTRACTED_ONE_TOO_MANY', 'ADDED_INSTEAD_OF_SUBTRACTED'],
@@ -206,6 +206,7 @@ export const mapMistakeTypeToChangeTypeError = {
   SIMPLIFY_ARITHMETIC__SUBTRACT: ['SUBTRACTED_ONE_TOO_FEW', 'SUBTRACTED_ONE_TOO_MANY', 'ADDED_INSTEAD_OF_SUBTRACTED'],
   SIMPLIFY_ARITHMETIC__MULTIPLY: ['ADDED_INSTEAD_OF_MULTIPLIED', 'SUBTRACTED_INSTEAD_OF_MULTIPLIED', 'MULTIPLIED_ONE_TOO_MANY', 'MULTIPLIED_ONE_TOO_FEW'],
 } as const satisfies Record<Readonly<string>, Readonly<string[]>>
+
 // endregion
 
 export const mapWordsToGroups = {

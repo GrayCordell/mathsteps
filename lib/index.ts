@@ -12,6 +12,7 @@ import type { AMistakeType } from './types/changeType/ErrorTypes'
 import { MistakeTypes } from './types/changeType/ErrorTypes'
 import { ChangeTypes } from './types/changeType/ChangeTypes'
 import type { AChangeType } from './types/changeType/ChangeTypes'
+import { convertAdditionToSubtractionErrorType, convertMistakeTypeToItsChangeType, doesChangeTypeEqual, getChangeTypeGroups, getErrorTypeGroups, getEveryChangeIdApplicable, getRootChangeType, getRootMistakeType, isAChangeType, isAddition, isChangeTypeInGroup, isDivision, isInAGroup, isMistakeType, isMistakeTypeOnly, isMultiplication, isSameRootChangeType, isSubtraction } from './types/changeType/changeAndMistakeUtils.js'
 
 const print = ascii
 const printLatex = latex
@@ -294,6 +295,26 @@ export {
   isOkAsSymbolicExpression,
   registerPreprocessorBeforeParse,
   registerPreprocessorAfterParse,
+
+  // Change type utils
+  getRootChangeType,
+  getRootMistakeType,
+  getErrorTypeGroups,
+  getChangeTypeGroups,
+  convertMistakeTypeToItsChangeType,
+  getEveryChangeIdApplicable,
+  isChangeTypeInGroup,
+  isSameRootChangeType,
+  doesChangeTypeEqual,
+  convertAdditionToSubtractionErrorType,
+  isInAGroup,
+  isAddition,
+  isSubtraction,
+  isMultiplication,
+  isDivision,
+  isMistakeType,
+  isMistakeTypeOnly,
+  isAChangeType,
 }
 
 export default {
