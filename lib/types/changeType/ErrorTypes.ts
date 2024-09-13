@@ -1,7 +1,7 @@
 import type { SimplifyDeep } from 'type-fest'
-import { mergeObjArrays } from '~/types/mscTypeUtils'
 import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { changeGroupMappings, mistakeOnlyGroupMappings } from '~/types/changeType/declareChangeTypesHere'
+import { mergeObjArrays } from '~/types/mscTypeUtils'
 
 type LiteralUnion<T extends Record<string, readonly string[]>> = SimplifyDeep<T[keyof T][number]>
 

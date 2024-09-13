@@ -1,6 +1,6 @@
+import { describe } from 'vitest'
 import Node from '~/node/index.js'
 import TestUtil from '../TestUtil.js'
-import { describe } from 'vitest'
 
 function testIsPolynomialTerm(exprStr, isTerm) {
   TestUtil.testBooleanFunction(Node.Type.isPolynomialTerm, exprStr, isTerm)

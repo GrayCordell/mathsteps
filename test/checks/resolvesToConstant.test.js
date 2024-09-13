@@ -1,6 +1,6 @@
+import { describe } from 'vitest'
 import checks from '~/checks/index.js'
 import TestUtil from '../TestUtil.js'
-import { describe } from 'vitest'
 
 function testResolvesToConstant(exprString, resolves) {
   TestUtil.testBooleanFunction(checks.resolvesToConstant, exprString, resolves)

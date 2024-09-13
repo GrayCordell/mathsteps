@@ -42,3 +42,4 @@ test/Intermediate/*
 /test/**/*.csv
 
 
+/.tsbuildinfo

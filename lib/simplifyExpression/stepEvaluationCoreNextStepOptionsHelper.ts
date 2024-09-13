@@ -1,12 +1,12 @@
+import mathsteps, { parseText } from '~/index'
+import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
+import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
+import { mistakeSearches } from '~/simplifyExpression/mistakes/regexPemdasMistakes'
 import type { ProcessedStep, RawStep } from '~/simplifyExpression/stepEvaluationCore'
 import { getValidStepEqCache } from '~/simplifyExpression/stepEvaluationCore'
-import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
+import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { cleanString } from '~/util/stringUtils'
-import { mistakeSearches } from '~/simplifyExpression/mistakes/regexPemdasMistakes'
-import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
-import mathsteps, { parseText } from '~/index'
-import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 
 const { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
 

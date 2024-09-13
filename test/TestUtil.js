@@ -1,7 +1,7 @@
 import { assert, it } from 'vitest'
-import print from '../lib/util/print.js'
 import { parseText } from '~/index'
 import { kemuFlatten } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
+import print from '../lib/util/print.js'
 
 // TestUtil contains helper methods to share code across tests
 const TestUtil = {}

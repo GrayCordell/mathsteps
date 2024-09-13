@@ -1,7 +1,7 @@
 import { assert, describe, it } from 'vitest'
 
-import Equation from '../lib/kemuEquation/Equation.js'
 import EquationSolver from '~/kemuEquation/EquationSolver.js'
+import Equation from '../lib/kemuEquation/Equation.js'
 
 function testSolve(equationAsText, outputStr) {
   // Possible improvement: Better unknown variable detect.

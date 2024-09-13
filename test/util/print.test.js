@@ -1,8 +1,8 @@
+import { describe } from 'vitest'
+import { parseText } from '~/index'
 import { Creator } from '~/node/index.js'
 import print from '~/util/print.js'
-import { parseText } from '~/index'
 import TestUtil from '../TestUtil.js'
-import { describe } from 'vitest'
 
 // to create nodes, for testing
 const opNode = Creator.operator

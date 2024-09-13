@@ -1,8 +1,8 @@
-import { ConstantNode, OperatorNode, isConstantNode, isOperatorNode } from '~/config'
 import type { MathNode } from 'mathjs'
+import { ConstantNode, isConstantNode, isOperatorNode, OperatorNode } from '~/config'
+import { parseText } from '~/index'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { cleanString } from '~/util/stringUtils'
-import { parseText } from '~/index'
 
 /**
  * Recursively removes unnecessary *1 from a MathJS expression node.

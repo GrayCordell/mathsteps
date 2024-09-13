@@ -1,15 +1,15 @@
-import { filterUniqueValues } from '~/util/arrayUtils'
-import { LogLevel, logger } from '~/util/logger'
-import { cleanString } from '~/util/stringUtils'
-import { EqualityCache } from '~/util/equalityCache'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
+import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
+import { convertAdditionToSubtractionErrorType, isAddition } from '~/types/changeType/changeAndMistakeUtils'
 import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
-import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
 import type { AMistakeType } from '~/types/changeType/ErrorTypes'
 import { MistakeTypes } from '~/types/changeType/ErrorTypes'
-import { convertAdditionToSubtractionErrorType, isAddition } from '~/types/changeType/changeAndMistakeUtils'
+import { filterUniqueValues } from '~/util/arrayUtils'
+import { EqualityCache } from '~/util/equalityCache'
+import { logger, LogLevel } from '~/util/logger'
+import { cleanString } from '~/util/stringUtils'
 
 const { SIMPLIFY_ARITHMETIC__SUBTRACT, UNKNOWN } = ChangeTypes
 const { NO_CHANGE } = MistakeTypes
@@ -82,7 +82,7 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
 
     const allPossibleNextStep = findAllNextStepOptions(start)
 
-    if (!allPossibleNextStep || allPossibleNextStep.length === 0)
+    if (allPossibleNextStep.length === 0)
       continue
     if (depth === 0) { // @ts-expect-error ---
       firstChangeTypesLog.push(allPossibleNextStep.filter(step => !step?.isMistake).map(step => step?.changeType))
@@ -183,7 +183,9 @@ function processStepInfo(
     stepInfo = history.map((step) => {
       const to = cleanString(step.to)
       const attemptedToGetTo = cleanString(step.attemptedToGetTo || step.to)
+      // eslint-disable-next-line ts/strict-boolean-expressions
       const attemptedChangeType = step.attemptedChangeType || step.changeType
+      // eslint-disable-next-line ts/strict-boolean-expressions
       const changeType = step.changeType || step.attemptedChangeType
       const mistakenChangeType = changeType
       const from = history.length === 1 ? cleanString(previousStep) : cleanString(step.from)

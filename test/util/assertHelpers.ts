@@ -1,12 +1,12 @@
 import { assert } from 'vitest'
-import { cleanString } from '~/util/stringUtils.js'
+import { parseText } from '~/index'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
+import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { removeCaseNumberFromRuleId } from '~/newServices/ruleHelper'
 import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { objectKeys } from '~/types/ObjectKeys'
 import { filterUniqueValues } from '~/util/arrayUtils'
-import { parseText } from '~/index'
-import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
+import { cleanString } from '~/util/stringUtils.js'
 
 /**
  * @param stepObject
@@ -26,6 +26,7 @@ function _normalizeRulesProcedure(stepObject: StepInfo, expectedObject: Partial<
 
   // remove COLLECT_AND_COMBINE_LIKE_TERMS from availableChangeTypes for now
   // Also lets remove the _CASE_1, _CASE_2, etc. from the ruleId.
+  // eslint-disable-next-line ts/strict-boolean-expressions
   if (stepObject.availableChangeTypes) {
     stepObject.availableChangeTypes = stepObject.availableChangeTypes.filter(changeType => changeType !== 'COLLECT_AND_COMBINE_LIKE_TERMS')
     stepObject.availableChangeTypes = stepObject.availableChangeTypes.map(changeType => removeCaseNumberFromRuleId(changeType))

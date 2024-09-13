@@ -27,6 +27,6 @@
     "incremental": true,
     "skipLibCheck": true
   },
-  "include": ["lib/**/*", "index.js", "index.ts", "test/**/*",  "src/**/*"],
+  "include": ["lib/**/*", "index.js", "index.ts", "test/**/*",  "src/**/*", "./vite.config.ts"],
   "exclude": ["**/dist","**/node_modules","**/.*/", ",cypress", "**/node_modules", "coverage"]
 }

@@ -1,7 +1,7 @@
-import { applyRules } from '~/simplifyExpression/kemuSimplifyCommonServices'
-import { makeKeyFromNode } from '~/newServices/nodeServices/nodeCacher'
-import type { AChangeType, AChangeTypeCore } from '~/types/changeType/ChangeTypes'
 import type { MathNode } from 'mathjs'
+import { makeKeyFromNode } from '~/newServices/nodeServices/nodeCacher'
+import { applyRules } from '~/simplifyExpression/kemuSimplifyCommonServices'
+import type { AChangeType, AChangeTypeCore } from '~/types/changeType/ChangeTypes'
 
 export function isRuleInList(rule: { id: string }, ruleList: { id: string }[]) {
   return ruleList.some(r => r.id === rule.id)

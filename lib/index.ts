@@ -1,18 +1,18 @@
+import type { MathNode } from 'mathjs'
+import type { AChangeType } from './types/changeType/ChangeTypes'
+import type { AMistakeType } from './types/changeType/ErrorTypes'
 /* eslint-disable no-throw-literal */
 import math, { isOperatorNode } from '~/config'
-import stepThrough from './simplifyExpression/index.js'
-import { ascii, latex } from './util/print.js'
 import clone from '~/newServices/nodeServices/clone.js'
 import Equation from './kemuEquation/Equation.js'
 import EquationSolver from './kemuEquation/EquationSolverCore.js'
+import stepThrough from './simplifyExpression/index.js'
 import { kemuNormalizeConstantNodes } from './simplifyExpression/kemuSimplifyCommonServices.js'
-import type { MathNode } from 'mathjs'
 import { assessUserStep, assessUserSteps } from './simplifyExpression/stepEvaluationCore'
-import type { AMistakeType } from './types/changeType/ErrorTypes'
-import { MistakeTypes } from './types/changeType/ErrorTypes'
-import { ChangeTypes } from './types/changeType/ChangeTypes'
-import type { AChangeType } from './types/changeType/ChangeTypes'
 import { convertAdditionToSubtractionErrorType, convertMistakeTypeToItsChangeType, doesChangeTypeEqual, getChangeTypeGroups, getErrorTypeGroups, getEveryChangeIdApplicable, getRootChangeType, getRootMistakeType, isAChangeType, isAddition, isChangeTypeInGroup, isDivision, isInAGroup, isMistakeType, isMistakeTypeOnly, isMultiplication, isSameRootChangeType, isSubtraction } from './types/changeType/changeAndMistakeUtils.js'
+import { ChangeTypes } from './types/changeType/ChangeTypes'
+import { MistakeTypes } from './types/changeType/ErrorTypes'
+import { ascii, latex } from './util/print.js'
 
 const print = ascii
 const printLatex = latex
@@ -135,8 +135,10 @@ function _kemuNormalizeMultiplyDivision(node: MathNode): MathNode {
       node.args[1] = nodeCd
     }
   }
+  // eslint-disable-next-line ts/strict-boolean-expressions
   if (isOperatorNode(node) && node.args) {
     node.args.forEach((oneArg, idx) => {
+      // eslint-disable-next-line ts/strict-boolean-expressions
       if (oneArg)
         node.args[idx] = _kemuNormalizeMultiplyDivision(oneArg)
     })
@@ -149,7 +151,7 @@ function _parseTextInternal(text: string): MathNode {
     text = preprocessFct(text)
   })
   // Process text into node.
-  let rv = math.parse(text) as MathNode
+  let rv = math.parse(text)
   // Make sure we store all constant nodes as bignumber to avoid fake unequals.
   rv = kemuNormalizeConstantNodes(rv)
   // rv = _kemuNormalizeMultiplyDivision(rv)
@@ -274,47 +276,47 @@ function registerPreprocessorAfterParse(cb: (node: MathNode) => MathNode): void 
 }
 
 export type{
-  AMistakeType,
   AChangeType,
+  AMistakeType,
 }
 export {
-  assessUserSteps,
   assessUserStep,
-  simplifyExpression,
-  solveEquation,
-  kemuSolveEquation,
+  assessUserSteps,
   ChangeTypes,
-  MistakeTypes,
-  normalizeExpression,
-  print,
-  printAsTeX,
   compareByText,
-  math,
+  convertAdditionToSubtractionErrorType,
+  convertMistakeTypeToItsChangeType,
   convertTextToTeX,
-  parseText,
-  isOkAsSymbolicExpression,
-  registerPreprocessorBeforeParse,
-  registerPreprocessorAfterParse,
-
+  doesChangeTypeEqual,
+  getChangeTypeGroups,
+  getErrorTypeGroups,
+  getEveryChangeIdApplicable,
   // Change type utils
   getRootChangeType,
   getRootMistakeType,
-  getErrorTypeGroups,
-  getChangeTypeGroups,
-  convertMistakeTypeToItsChangeType,
-  getEveryChangeIdApplicable,
-  isChangeTypeInGroup,
-  isSameRootChangeType,
-  doesChangeTypeEqual,
-  convertAdditionToSubtractionErrorType,
-  isInAGroup,
+  isAChangeType,
   isAddition,
-  isSubtraction,
-  isMultiplication,
+  isChangeTypeInGroup,
   isDivision,
+
+  isInAGroup,
   isMistakeType,
   isMistakeTypeOnly,
-  isAChangeType,
+  isMultiplication,
+  isOkAsSymbolicExpression,
+  isSameRootChangeType,
+  isSubtraction,
+  kemuSolveEquation,
+  math,
+  MistakeTypes,
+  normalizeExpression,
+  parseText,
+  print,
+  printAsTeX,
+  registerPreprocessorAfterParse,
+  registerPreprocessorBeforeParse,
+  simplifyExpression,
+  solveEquation,
 }
 
 export default {

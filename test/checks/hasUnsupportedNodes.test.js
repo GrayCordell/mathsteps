@@ -1,6 +1,6 @@
 import { assert, describe, it } from 'vitest'
-import mathsteps from '~/index'
 import checks from '~/checks/index.js'
+import mathsteps from '~/index'
 
 describe('arithmetic stepping', () => {
   it('4 + sqrt(16)', () => {

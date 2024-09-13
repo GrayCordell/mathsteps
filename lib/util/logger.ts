@@ -98,7 +98,7 @@ const devEnvirements = [
 let process_ = ''
 try {
   // @ts-expect-error ---
-  // eslint-disable-next-line node/prefer-global/process
+  // eslint-disable-next-line node/prefer-global/process,ts/strict-boolean-expressions
   process_ = process ? process?.env?.NODE_ENV : ''
 } // eslint-disable-next-line unused-imports/no-unused-vars
 catch (_e: any) { process_ = '' }

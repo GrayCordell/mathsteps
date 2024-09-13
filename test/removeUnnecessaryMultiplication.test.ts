@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest'
 import type { MathNode } from 'mathjs'
-import { removeUnnecessaryMultiplications } from '~/newServices/nodeServices/removeUnnecessaryMultiplications'
+import { describe, expect, it } from 'vitest'
 import { parseText } from '~/index'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
+import { removeUnnecessaryMultiplications } from '~/newServices/nodeServices/removeUnnecessaryMultiplications'
 import { cleanString } from '~/util/stringUtils'
 
 describe('removeUnnecessaryMultiplications', () => {

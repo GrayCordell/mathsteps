@@ -1,8 +1,8 @@
+import math from '~/config'
 /* eslint-disable unused-imports/no-unused-vars,no-unused-vars */
 import Node from '~/node/index.js'
-import math from '~/config'
-import { MistakeTypes } from '~/types/changeType/ErrorTypes'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
+import { MistakeTypes } from '~/types/changeType/ErrorTypes'
 
 const { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY } = ChangeTypes
 

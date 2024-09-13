@@ -40,3 +40,4 @@ test/*
 !.vscode/extensions.json
 *.sw?
 
+/.tsbuildinfo

@@ -1,14 +1,14 @@
 // function to determine the groups a changeType belongs to
 
-import { changeGroupMappings, mapMistakeTypeToChangeTypeError, mapWordsToGroups, mistakeOnlyGroupMappings } from './declareChangeTypesHere'
+import type { AChangeType, AChangeTypeGroup, ChangeTypeGroups } from '~/types/changeType/ChangeTypes'
 import type { AMistakeType, AMistakeTypeGroup, MistakeTypeGroups } from '~/types/changeType/ErrorTypes'
 import { mistakeGroupMappings } from '~/types/changeType/ErrorTypes'
-import type { AChangeType, AChangeTypeGroup, ChangeTypeGroups } from '~/types/changeType/ChangeTypes'
+import { changeGroupMappings, mapMistakeTypeToChangeTypeError, mapWordsToGroups, mistakeOnlyGroupMappings } from './declareChangeTypesHere'
 
 export const getRootChangeType = <T extends { includes: any, split?: any } | null>(changeType_: T) =>
   (changeType_ && changeType_?.includes('__CASE_'))
     ? changeType_.split('__CASE_')[0] as T
-    : changeType_ as T
+    : changeType_
 export const getRootMistakeType = <T extends { includes: any, split?: any } | null>(changeType_: T) => getRootChangeType(changeType_)
 
 export const getErrorTypeGroups = (changeType_: AMistakeType): AMistakeTypeGroup[] => {
@@ -19,7 +19,7 @@ export const getErrorTypeGroups = (changeType_: AMistakeType): AMistakeTypeGroup
     .map(([tag]) => tag as AMistakeTypeGroup)
 
   const secondPass = []
-  if (!firstPass || firstPass.length === 0) {
+  if (firstPass.length === 0) {
     const changeTypeWords = changeType?.split('_') || []
     const changeTypeGroups = changeTypeWords.map(word => mapWordsToGroups[word.toUpperCase() as keyof typeof mapWordsToGroups]).filter(Boolean)
     secondPass.push(...changeTypeGroups)
@@ -33,11 +33,12 @@ export const getChangeTypeGroups = (changeType_: AChangeType): AChangeTypeGroup[
   // Find which group(s) this changeType belongs to and return the tags
   const firstPass = Object.entries(changeGroupMappings) // @ts-expect-error ---
     .filter(([_, rules]) => rules.includes(changeType))
-    .map(([tag]) => tag).filter(Boolean)
+    .map(([tag]) => tag)
+    .filter(Boolean)
 
   const secondPass = []
-  if (!firstPass || firstPass.length === 0) {
-    const changeTypeWords = changeType?.split('_') || []
+  if (firstPass.length === 0) {
+    const changeTypeWords = changeType.split('_')
     const changeTypeGroups = changeTypeWords.map(word => mapWordsToGroups[word.toUpperCase() as keyof typeof mapWordsToGroups]).filter(Boolean)
     secondPass.push(...changeTypeGroups)
   }

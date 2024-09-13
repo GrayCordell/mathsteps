@@ -1,8 +1,8 @@
-import { simplifyExpression } from '../lib/index'
-import print from '../lib/util/print.js'
-import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
-
 import { assert, describe, it } from 'vitest'
+import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
+import { simplifyExpression } from '../lib/index'
+
+import print from '../lib/util/print.js'
 
 function testSimplify(exprStr, outputStr, debug = false, ctx) {
   it(`${exprStr} -> ${outputStr}`, async () => {

@@ -18,7 +18,7 @@
 export function mergeObjArrays<T extends Record<string, readonly any[]>, U extends Record<string, readonly any[]>>(obj1: T, obj2: U): {
   [K in keyof T & keyof U]: [...T[K], ...U[K]]
 } {
-  const result = {} as any
+  const result: any = {}
 
   for (const key in obj1) {
     if (Object.prototype.hasOwnProperty.call(obj1, key) && Object.prototype.hasOwnProperty.call(obj2, key)) {

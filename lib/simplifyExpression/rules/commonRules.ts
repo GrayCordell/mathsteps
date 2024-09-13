@@ -1,11 +1,11 @@
-/* eslint-disable antfu/consistent-list-newline */
-import Node from '../../node/index.js'
 import math from '~/config'
 import { createFunctionForEveryRule } from '~/newServices/ruleHelper'
-import { applyRules } from '../kemuSimplifyCommonServices.js'
-import { cleanString } from '~/util/stringUtils'
 import { commonRuleMistakes } from '~/simplifyExpression/mistakes/commonRulesMistakes'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
+import { cleanString } from '~/util/stringUtils'
+/* eslint-disable antfu/consistent-list-newline */
+import Node from '../../node/index.js'
+import { applyRules } from '../kemuSimplifyCommonServices.js'
 
 const { ADD_FRACTIONS, COMMON_DENOMINATOR, DISTRIBUTE_NEGATIVE_ONE, DIVISION_BY_NEGATIVE_ONE, DIVISION_BY_ONE, KEMU_REMOVE_DOUBLE_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, PERCENTS_ADD, PERCENTS_CONVERT_TO_FRACTION, PERCENTS_SUB, REDUCE_EXPONENT_BY_ZERO, REDUCE_ZERO_NUMERATOR, REMOVE_ADDING_ZERO, REMOVE_EXPONENT_BASE_ONE, REMOVE_EXPONENT_BASE_ZERO, REMOVE_EXPONENT_BY_ONE, REMOVE_MULTIPLYING_BY_NEGATIVE_ONE, REMOVE_MULTIPLYING_BY_ONE, RESOLVE_DOUBLE_MINUS, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__POWER, SIMPLIFY_ARITHMETIC__SUBTRACT, SIMPLIFY_SIGNS } = ChangeTypes
 
@@ -144,11 +144,11 @@ const _commonPoolOfRules = [
       const { c1: num1, c2: denom1, c3: num2, c4: denom2 } = vars
       const lcm = makeConstant(math.lcm(denom1.value, denom2.value))
 
-      const newNum1 = math.equal(denom1.value, lcm.value)
+      const newNum1 = math.equal(denom1.value, lcm.value) as boolean
         ? num1
         : makeOp('*', [num1, makeConstant(math.divide(lcm.value, denom1.value))])
 
-      const newNum2 = math.equal(denom2.value, lcm.value)
+      const newNum2 = math.equal(denom2.value, lcm.value) as boolean
         ? num2
         : makeOp('*', [num2, makeConstant(math.divide(lcm.value, denom2.value))])
 
