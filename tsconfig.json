@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "tsBuildInfoFile": "./.tsbuildinfo",
     "baseUrl": ".",
     "target": "ESNext",
     "jsx": "preserve",
@@ -23,8 +24,9 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "incremental": true,
     "skipLibCheck": true
   },
-  "include": ["lib/**/*", "index.js", "index.ts", "test/**/*", "./lib/**/*", "src/**/*"],
-  "exclude": ["dist", "node_modules", "cypress", "build", "coverage"]
+  "include": ["lib/**/*", "index.js", "index.ts", "test/**/*",  "src/**/*"],
+  "exclude": ["**/dist","**/node_modules","**/.*/", ",cypress", "**/node_modules", "coverage"]
 }
