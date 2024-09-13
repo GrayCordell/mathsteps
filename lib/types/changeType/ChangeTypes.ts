@@ -9,7 +9,7 @@ export const ChangeTypes: { [K in LiteralUnion<typeof changeGroupMappings>]: K }
   ...Object.values(changeGroupMappings)
     .flatMap(rules => rules.map(rule => ({ [rule]: rule })))
     .reduce((acc, curr) => ({ ...acc, ...curr }), {}),
-} as { [K in LiteralUnion<typeof changeGroupMappings>]: K }
+} as const as { [K in LiteralUnion<typeof changeGroupMappings>]: K }
 
 export type AChangeTypeCore = typeof ChangeTypes[keyof typeof ChangeTypes] // ex. 'SIMPLIFY_ARITHMETIC__OP'
 export type AChangeTypeWithCase = `${AChangeTypeCore}__CASE_${number}` // ex. 'SIMPLIFY_ARITHMETIC__OP__CASE_1'

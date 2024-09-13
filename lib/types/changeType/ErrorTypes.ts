@@ -11,7 +11,7 @@ export const MistakeTypes: { [K in LiteralUnion<typeof mistakeGroupMappings>]: K
   ...Object.values(mistakeGroupMappings)
     .flatMap(rules => rules.map(rule => ({ [rule]: rule })))
     .reduce((acc, curr) => ({ ...acc, ...curr }), {}),
-} as { [K in LiteralUnion<typeof mistakeGroupMappings>]: K }
+} as const as { [K in LiteralUnion<typeof mistakeGroupMappings>]: K }
 
 export type AMistakeType = typeof MistakeTypes[keyof typeof MistakeTypes] | AChangeType | null
 export type AMistakeTypeGroup = keyof typeof mistakeGroupMappings
