@@ -53,3 +53,4 @@ test/Intermediate/*
 
 .idea/*
 .env
+/.tsbuildinfo
