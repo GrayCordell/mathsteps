@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "tsBuildInfoFile": "./.tsbuildinfo",
     "baseUrl": ".",
     "target": "ESNext",
     "jsx": "preserve",
@@ -20,7 +19,7 @@
     "strictNullChecks": true,
     "noUnusedLocals": false,
     "noEmit": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
@@ -28,5 +27,5 @@
     "skipLibCheck": true
   },
   "include": ["lib/**/*", "index.js", "index.ts", "test/**/*",  "src/**/*", "./vite.config.ts"],
-  "exclude": ["**/dist","**/node_modules","**/.*/", ",cypress", "**/node_modules", "coverage"]
+  "exclude": ["**/dist","dist","**/node_modules","**/.*/", ",cypress", "**/node_modules", "coverage"]
 }
