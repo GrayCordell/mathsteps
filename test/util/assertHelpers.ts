@@ -26,7 +26,6 @@ function _normalizeRulesProcedure(stepObject: StepInfo, expectedObject: Partial<
 
   // remove COLLECT_AND_COMBINE_LIKE_TERMS from availableChangeTypes for now
   // Also lets remove the _CASE_1, _CASE_2, etc. from the ruleId.
-  // eslint-disable-next-line ts/strict-boolean-expressions
   if (stepObject.availableChangeTypes) {
     stepObject.availableChangeTypes = stepObject.availableChangeTypes.filter(changeType => changeType !== 'COLLECT_AND_COMBINE_LIKE_TERMS')
     stepObject.availableChangeTypes = stepObject.availableChangeTypes.map(changeType => removeCaseNumberFromRuleId(changeType))
