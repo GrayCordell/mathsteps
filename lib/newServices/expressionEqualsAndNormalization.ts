@@ -15,7 +15,6 @@ export function veryNormalizeNode(node_: MathNode | string): MathNode {
 }
 
 export function areExpressionEqual(exp0: string | MathNode, exp1: string | MathNode, equalityCache: EqualityCache | null = null): boolean {
-  // eslint-disable-next-line ts/strict-boolean-expressions
   if (!exp0 || !exp1) // if either is null or undefined, we aren't going to compare them.
     return false
   if (exp0 === exp1) // same object reference. Or also same exact string but we will check "cleaned" strings later.
@@ -35,7 +34,6 @@ export function areExpressionEqual(exp0: string | MathNode, exp1: string | MathN
 }
 
 function areExpressionEqualCore(exp0?: string | MathNode | null, exp1?: string | MathNode | null): boolean {
-  // eslint-disable-next-line ts/strict-boolean-expressions
   if (!exp0 || !exp1) // if either is null or undefined, we aren't going to compare them.
     return false
   if (exp0 === exp1) // same object reference. Or also same exact string but we will check "cleaned" strings later.
