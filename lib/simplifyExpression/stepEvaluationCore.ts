@@ -25,6 +25,7 @@ export type ProcessedStep = Omit<RawStep, 'to'> & {
   availableChangeTypes: AChangeType[]
   attemptedToGetTo?: string
   attemptedChangeType?: AChangeType
+  allPossibleCorrectTos?: string[]
 } // to is a string instead of an array of strings. We flattened it.
 
 export type CoreAssessUserStepResult = {
@@ -43,6 +44,7 @@ export interface StepInfo {
   attemptedChangeType: AChangeType // The type of change the user attempted
   mistakenChangeType: AChangeType | null // The type of mistake the user made, if any
   availableChangeTypes: AChangeType[] // The types of changes the user could have made
+  allPossibleCorrectTos?: string[] // All possible correct steps the user could have made
 }
 
 const validStepEqCache = new EqualityCache()
@@ -53,7 +55,7 @@ const MAX_STEP_DEPTH = 100
 /**
  * Creates a history of steps found from the previous step to get to the user's step. Requires processStepInfo to convert the history into the final StepInfo[] form.
  */
-function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AChangeType)[] = []): CoreAssessUserStepResult {
+function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AChangeType)[] = [], firstFoundToLog: string[] = []): CoreAssessUserStepResult {
   const valueToFind = lastTwoUserSteps[1]
   const stepQueue: { start: string, history: ProcessedStep[] }[] = []
   const triedSteps = new Set<string>()
@@ -79,11 +81,16 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
 
     if (allPossibleNextStep.length === 0)
       continue
-    if (depth === 0)
+
+    const allPossibleCorrectTos = allPossibleNextStep.filter(step => !step.isMistake).map(step => step.to)
+    if (depth === 0) {
       firstChangeTypesLog.push(...allPossibleNextStep.filter(step => !step?.isMistake).map(step => step?.changeType))
-
-
+      firstFoundToLog.push(...allPossibleCorrectTos)
+    }
     for (const possibleStep of allPossibleNextStep) {
+      // kind of wasteful but i need to attach the possibleCorrectTos to the step.
+      possibleStep.allPossibleCorrectTos = allPossibleCorrectTos
+
       // Record the step in history
       const updatedHistory = [...history, possibleStep]
 
@@ -154,6 +161,7 @@ function processStepInfo(
   userStep: string,
   startingStepAnswer: string,
   firstChangeTypesLog: (AChangeType)[],
+  firstFoundToLog: string[],
 ): StepInfo[] {
   const history = res.history
   userStep = cleanString(userStep)
@@ -166,15 +174,17 @@ function processStepInfo(
 
   let stepInfo: StepInfo[]
 
-  // Handle no history(unknown error type) or the user's step is the same as the starting step(No change).
   if (history.length === 0) {
     const firstAvailableChangeTypes = filterUniqueValues(firstChangeTypesLog.flat())
-    const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(userStep), startingStepAnswer)
-    const startingFrom = (previousStep)
-    const wentTo = (userStep)
-    const isStartingStepsSame = startingFrom === wentTo
+    const to = userStep // The user's step is the only step we have.
+    const from = previousStep // The previous step is the only step we have.
+    const isStartingStepsSame = from === to
 
-    const sharedPart = { isValid: false, from: startingFrom, to: wentTo, attemptedToGetTo: 'UNKNOWN' as const, attemptedChangeType: 'UNKNOWN' as const, mistakenChangeType: null, availableChangeTypes: firstAvailableChangeTypes }
+    const attemptedChangeType = firstAvailableChangeTypes.length === 1 ? firstAvailableChangeTypes[0] : 'UNKNOWN' as const
+    const attemptedToGetTo = firstFoundToLog.length === 1 ? firstFoundToLog[0] : 'UNKNOWN' as const
+    const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(userStep), startingStepAnswer)
+
+    const sharedPart = { isValid: false, from, to, attemptedToGetTo, attemptedChangeType, mistakenChangeType: null, availableChangeTypes: firstAvailableChangeTypes, allPossibleCorrectTos: firstFoundToLog }
     stepInfo = isStartingStepsSame
       ? [{ ...sharedPart, reachesOriginalAnswer: true, mistakenChangeType: 'NO_CHANGE' }]
       : [{ ...sharedPart, reachesOriginalAnswer, mistakenChangeType: 'UNKNOWN' }]
@@ -185,21 +195,18 @@ function processStepInfo(
       const to = step.to
       const from = history.length === 1 ? (previousStep) : (step.from)
 
-      const __onlyAvailableChangeType = step.availableChangeTypes.length === 1 ? step.availableChangeTypes[0] : null
-      const attemptedChangeType = isUnknownOrNilDefaultTo(step.attemptedChangeType || step.changeType, __onlyAvailableChangeType)!
+      const attemptedChangeType = step.attemptedChangeType || step.changeType
+      const fixedMistakeType = correctChangeTypeSubtractToAddFix(attemptedChangeType, step.changeType || step.attemptedChangeType)
 
-      const __mistakenChangeType = isUnknownOrNilDefaultTo(step.changeType || step.attemptedChangeType, __onlyAvailableChangeType)
-      const fixedMistakeType = correctChangeTypeSubtractToAddFix(attemptedChangeType, __mistakenChangeType)
-
-      const attemptedToGetTo = (step.attemptedToGetTo || to)
+      const attemptedToGetTo = step.attemptedToGetTo || to
       const availableChangeTypes = filterUniqueValues(step.availableChangeTypes)
       const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(to), startingStepAnswer)
       if (step.isMistake)
-        return { isValid: false, reachesOriginalAnswer, from, to, attemptedToGetTo, attemptedChangeType, mistakenChangeType: fixedMistakeType, availableChangeTypes }
+        return { isValid: false, reachesOriginalAnswer, from, to, attemptedToGetTo, attemptedChangeType, mistakenChangeType: fixedMistakeType, availableChangeTypes, allPossibleCorrectTos: step.allPossibleCorrectTos }
 
       // else
       // Handle Valid. Since we have a history and its not a found mistake, then the step is going to just be one of the valid ones.
-      return { isValid: true, reachesOriginalAnswer, from, to, attemptedToGetTo, attemptedChangeType, mistakenChangeType: null, availableChangeTypes }
+      return { isValid: true, reachesOriginalAnswer, from, to, attemptedToGetTo, attemptedChangeType, mistakenChangeType: null, availableChangeTypes, allPossibleCorrectTos: step.allPossibleCorrectTos }
     })
   }
 
@@ -230,8 +237,9 @@ function processStepInfo(
 export function assessUserStep(previousUserStep: string, userStep: string, startingStepAnswer: string = getAnswerFromStep(previousUserStep)): StepInfo[] {
   // const userStep = myNodeToString(parseText(userStep_))
   const firstChangeTypesLog: AChangeType[] = []
-  const rawAssessedStepOptionsRes = _coreAssessUserStep([previousUserStep, userStep], firstChangeTypesLog)
-  return processStepInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, startingStepAnswer, firstChangeTypesLog)
+  const firstFoundToLog: string[] = []
+  const rawAssessedStepOptionsRes = _coreAssessUserStep([previousUserStep, userStep], firstChangeTypesLog, firstFoundToLog)
+  return processStepInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, startingStepAnswer, firstChangeTypesLog, firstFoundToLog)
 }
 
 

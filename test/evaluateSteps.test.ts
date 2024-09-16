@@ -187,17 +187,7 @@ describe('addition Success', () => {
         ],
       ]),
     },
-    // { // Test 8
-    //  description: 'Addition with mistake implied by being only possible step',
-    //  steps: ['500 + 300', '600'],
-    //  expectedAnalysis: makeCorrectSteps([
-    //    [
-    //      { from: '500 + 300 + 200', to: '800 + 200', availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD], attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD },
-    //      { to: '1000', availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD], attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD },
-    //    ],
-    //  ]),
-    // },
-    // Test 9
+    // Test 8
     makeOneCorrectStep('Addition with decimal numbers', '5.5 + 3.5 -> 9', [SIMPLIFY_ARITHMETIC__ADD, KEMU_DECIMAL_TO_FRACTION], SIMPLIFY_ARITHMETIC__ADD),
   ]
 
@@ -385,13 +375,23 @@ describe('addition Mistakes', () => {
       ],
       expectedAnalysis: ([[{
         availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
-        attemptedChangeType: 'UNKNOWN',
+        attemptedChangeType: 'SIMPLIFY_ARITHMETIC__ADD',
         from: '2 + 3',
         to: '200',
-        attemptedToGetTo: 'UNKNOWN',
+        attemptedToGetTo: '5',
         mistakenChangeType: 'UNKNOWN',
         isValid: false,
       }]]),
+    },
+
+    { // Test 10
+      description: 'Addition with mistake being found by being the only possible availableChangeType',
+      steps: ['500 + 300', '600'],
+      expectedAnalysis: ([
+        [
+          { from: '500 + 300', to: '600', availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD], attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD, isValid: false },
+        ],
+      ]),
     },
 
   ]
@@ -750,10 +750,10 @@ describe('multiplication Mistakes', () => {
       ],
       expectedAnalysis: ([[{
         availableChangeTypes: [SIMPLIFY_ARITHMETIC__MULTIPLY],
-        attemptedChangeType: 'UNKNOWN',
+        attemptedChangeType: 'SIMPLIFY_ARITHMETIC__MULTIPLY',
         from: '2 * 3',
         to: '200',
-        attemptedToGetTo: 'UNKNOWN',
+        attemptedToGetTo: '6',
         mistakenChangeType: 'UNKNOWN',
         isValid: false,
       }]]),
@@ -803,7 +803,7 @@ describe('random issues i\'ve had in the past', () => {
       expectedAnalysis: [
         [
           {
-            attemptedChangeType: 'UNKNOWN',
+            attemptedChangeType: 'SIMPLIFY_ARITHMETIC__ADD',
             from: '8 + 2',
             to: '12 - 2',
             isValid: false,
