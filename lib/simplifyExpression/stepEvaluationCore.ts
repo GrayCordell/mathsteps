@@ -144,16 +144,15 @@ function correctChangeTypeSubtractToAddFix<T extends (AChangeType | undefined | 
     ? convertAdditionToSubtractionErrorType(mistakenChangeType) as T
     : mistakenChangeType as T
 }
-function isUnknownOrNilDefaultTo<T, T2>(a: T, b: T2): T | T2 {
-  return a === 'UNKNOWN' || a === null || a === undefined ? b : a
-}
+
 /**
  * @description Processes CoreAssessUserStepResult into the final StepInfo[] form
  * @param res - The result from _coreAssessUserStep
  * @param previousStep - The previous step before the user's step. ex. '2x + 2x + 2x'
  * @param userStep - The users step moving from the previous step to the current step. ex. '2x + 4x'
  * @param startingStepAnswer - The actual answer of the equation.
- * @param firstChangeTypesLog - The first change types logged from the first step, for unknown and no change cases.
+ * @param firstChangeTypesLog - The first change types logged from the first step, for unknown and no change cases. TODO remove/refactor to not need this.
+ * @param firstFoundToLog - The first found to logged from the first step, for unknown and no change cases.  TODO remove/refactor to not need this.
  */
 function processStepInfo(
   res: CoreAssessUserStepResult,
