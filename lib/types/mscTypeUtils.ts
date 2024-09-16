@@ -28,3 +28,12 @@ export function mergeObjArrays<T extends Record<string, readonly any[]>, U exten
 
   return result
 }
+
+
+/**
+ * @PartialRecord<K, T> is a utility type that allows you to create a type with a subset of properties from another type.
+ */
+export type PartialRecord<K extends keyof any, T> = {
+  // eslint-disable-next-line no-unused-vars
+  [P in K]?: T;
+}
