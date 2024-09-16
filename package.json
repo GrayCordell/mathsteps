@@ -1,5 +1,5 @@
 {
-  "name": "mathsteps-expermental-fork",
+  "name": "mathsteps-experimental-fork",
   "description": "Step by step math solutions. Experimental Fork",
   "version": "0.4.5",
   "type": "module",
@@ -7,14 +7,14 @@
   "packageManager": "pnpm@9.7.0",
   "exports": {
     ".": {
-      "types": "./dist/types/mathsteps-expermental-fork.d.ts",
+      "types": "./dist/types/mathsteps-experimental-fork.d.ts",
       "import": "./dist/es/lib/index.js",
       "require": "./dist/cjs/lib/index.js"
     }
   },
   "main": "dist/cjs/lib/index.js",
   "module": "dist/es/lib/index.js",
-  "types": "dist/types/mathsteps-expermental-fork.d.ts",
+  "types": "dist/types/mathsteps-experimental-fork.d.ts",
   "files": [
     "dist",
     "LICENSE",
