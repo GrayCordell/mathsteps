@@ -3,13 +3,13 @@ import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { assessUserSteps } from '~/simplifyExpression/stepEvaluationCore'
 import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
-import { MistakeTypes } from '~/types/changeType/ErrorTypes'
+
 // eslint-disable-next-line ts/ban-ts-comment
 // @ts-ignore --- I don't know why this needs to be ignored.
 import { assertSpecifiedValues } from './util/assertHelpers'
 
 const { CANCEL_TERMS, COLLECT_AND_COMBINE_LIKE_TERMS, KEMU_DECIMAL_TO_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, REARRANGE_COEFF, REMOVE_ADDING_ZERO, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
-const { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_INSTEAD_OF_SUBTRACTED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_ONE_TOO_FEW, PEMDAS__ADD_INSTEAD_OF_MULTIPLY, SUBTRACTED_ONE_TOO_MANY } = MistakeTypes
+const { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_INSTEAD_OF_SUBTRACTED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_ONE_TOO_FEW, PEMDAS__ADD_INSTEAD_OF_MULTIPLY, SUBTRACTED_ONE_TOO_MANY } = ChangeTypes
 
 const cleanMath = (str: string) => str?.replace('_', '').replace(' ', '').replace('[', '').replace(']', '').replace('\'', '').replace(`"`, '').replace('`', '')
 interface Test {
@@ -17,6 +17,7 @@ interface Test {
   steps: string[] // The steps the user took. ['startingEquation', 'step1', 'step2', ...]
   expectedAnalysis: Partial<StepInfo>[][] // Partial so we don't have to specify all the values for each step.
 }
+
 function testStepEvaluation(test: Test, index: number) {
   it(`test ${index + 1}: ${test.description}`, () => {
     let { steps, expectedAnalysis } = test
@@ -186,7 +187,17 @@ describe('addition Success', () => {
         ],
       ]),
     },
-    // Test 8
+    // { // Test 8
+    //  description: 'Addition with mistake implied by being only possible step',
+    //  steps: ['500 + 300', '600'],
+    //  expectedAnalysis: makeCorrectSteps([
+    //    [
+    //      { from: '500 + 300 + 200', to: '800 + 200', availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD], attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD },
+    //      { to: '1000', availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD], attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD },
+    //    ],
+    //  ]),
+    // },
+    // Test 9
     makeOneCorrectStep('Addition with decimal numbers', '5.5 + 3.5 -> 9', [SIMPLIFY_ARITHMETIC__ADD, KEMU_DECIMAL_TO_FRACTION], SIMPLIFY_ARITHMETIC__ADD),
   ]
 
@@ -781,6 +792,22 @@ describe('random issues i\'ve had in the past', () => {
             attemptedToGetTo: '10 - 20',
             isValid: false,
             mistakenChangeType: 'MULTIPLIED_ONE_TOO_FEW',
+          },
+        ],
+      ],
+    },
+    // Test 2
+    {
+      description: 'Reaches original answer but is invalid',
+      steps: ['8 + 2', '12 - 2'],
+      expectedAnalysis: [
+        [
+          {
+            attemptedChangeType: 'UNKNOWN',
+            from: '8 + 2',
+            to: '12 - 2',
+            isValid: false,
+            reachesOriginalAnswer: true,
           },
         ],
       ],

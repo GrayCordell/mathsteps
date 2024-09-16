@@ -1,17 +1,16 @@
-import type { MathNode } from 'mathjs'
-import type { AChangeType } from './types/changeType/ChangeTypes'
-import type { AMistakeType } from './types/changeType/ErrorTypes'
 /* eslint-disable no-throw-literal */
-import math, { isOperatorNode } from '~/config'
+import type { MathNode } from 'mathjs'
+import type { AChangeType, AChangeTypeCore, AChangeTypeGroup, AChangeTypeOnly, AChangeTypeWithCase, AMistakeTypeOnly } from './types/changeType/ChangeTypes'
+import math from '~/config'
 import clone from '~/newServices/nodeServices/clone.js'
 import Equation from './kemuEquation/Equation.js'
 import EquationSolver from './kemuEquation/EquationSolverCore.js'
 import stepThrough from './simplifyExpression/index.js'
 import { kemuNormalizeConstantNodes } from './simplifyExpression/kemuSimplifyCommonServices.js'
 import { assessUserStep, assessUserSteps } from './simplifyExpression/stepEvaluationCore'
-import { convertAdditionToSubtractionErrorType, convertMistakeTypeToItsChangeType, doesChangeTypeEqual, getChangeTypeGroups, getErrorTypeGroups, getEveryChangeIdApplicable, getRootChangeType, getRootMistakeType, isAChangeType, isAddition, isChangeTypeInGroup, isDivision, isInAGroup, isMistakeType, isMistakeTypeOnly, isMultiplication, isSameRootChangeType, isSubtraction } from './types/changeType/changeAndMistakeUtils.js'
+import { changeTypeIsInGroup, convertAdditionToSubtractionErrorType, convertMistakeOnlyTypeToItsChangeType, doesChangeTypeEqual, getChangeTypeGroups, getEveryChangeIdApplicable, getRootChangeType, isChangeTypeInGroup, isMistakeTypeOnly, isSameRootChangeType } from './types/changeType/changeAndMistakeUtils.js'
 import { ChangeTypes } from './types/changeType/ChangeTypes'
-import { MistakeTypes } from './types/changeType/ErrorTypes'
+
 import { ascii, latex } from './util/print.js'
 
 const print = ascii
@@ -117,6 +116,7 @@ function convertTextToTeX(text: string): string {
   return rv
 }
 
+/*
 function _kemuNormalizeMultiplyDivision(node: MathNode): MathNode {
   if (isOperatorNode(node) && node.op === '/') {
     const nodeTop = node.args[0]
@@ -135,7 +135,6 @@ function _kemuNormalizeMultiplyDivision(node: MathNode): MathNode {
       node.args[1] = nodeCd
     }
   }
-  // eslint-disable-next-line ts/strict-boolean-expressions
   if (isOperatorNode(node) && node.args) {
     node.args.forEach((oneArg, idx) => {
       // eslint-disable-next-line ts/strict-boolean-expressions
@@ -145,6 +144,7 @@ function _kemuNormalizeMultiplyDivision(node: MathNode): MathNode {
   }
   return node
 }
+*/
 function _parseTextInternal(text: string): MathNode {
   // Preprocess text before passing in to mathjs parser if needed.
   ARRAY_OF_PREPROCESS_FUNCTIONS_BEFORE_PARSE.forEach((preprocessFct) => {
@@ -277,38 +277,33 @@ function registerPreprocessorAfterParse(cb: (node: MathNode) => MathNode): void 
 
 export type{
   AChangeType,
-  AMistakeType,
+  AChangeTypeCore,
+  AChangeTypeGroup,
+  AChangeTypeOnly,
+  AChangeTypeWithCase,
+  AMistakeTypeOnly,
 }
 export {
   assessUserStep,
   assessUserSteps,
+  changeTypeIsInGroup,
   ChangeTypes,
   compareByText,
   convertAdditionToSubtractionErrorType,
-  convertMistakeTypeToItsChangeType,
+  convertMistakeOnlyTypeToItsChangeType,
   convertTextToTeX,
   doesChangeTypeEqual,
   getChangeTypeGroups,
-  getErrorTypeGroups,
   getEveryChangeIdApplicable,
   // Change type utils
   getRootChangeType,
-  getRootMistakeType,
-  isAChangeType,
-  isAddition,
   isChangeTypeInGroup,
-  isDivision,
-
-  isInAGroup,
-  isMistakeType,
   isMistakeTypeOnly,
-  isMultiplication,
+  //
   isOkAsSymbolicExpression,
   isSameRootChangeType,
-  isSubtraction,
   kemuSolveEquation,
   math,
-  MistakeTypes,
   normalizeExpression,
   parseText,
   print,

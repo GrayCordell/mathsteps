@@ -2,11 +2,10 @@ import math from '~/config'
 /* eslint-disable unused-imports/no-unused-vars,no-unused-vars */
 import Node from '~/node/index.js'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
-import { MistakeTypes } from '~/types/changeType/ErrorTypes'
+
 
 const { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY } = ChangeTypes
-
-const { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_FEW, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_INSTEAD_OF_ADDED } = MistakeTypes
+const { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_ONE_TOO_FEW, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_FEW, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_INSTEAD_OF_ADDED } = ChangeTypes
 
 // Utilities for making nodes faster and more readable
 const makeConstant = (value: any) => Node.Creator.constant(value)
