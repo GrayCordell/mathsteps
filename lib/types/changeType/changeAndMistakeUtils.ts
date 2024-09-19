@@ -69,19 +69,24 @@ export const convertAdditionToSubtractionErrorType = (errorType: AChangeType): A
     default: {
     // Convert addition-related terms to their subtraction counterparts using replacements
       const newErrorType = errorType
-        ?.replace('SUBTRACTED', 's0')
-        ?.replace('SUBTRACT', 's1')
-        ?.replace('ADDED', 'a0')
-        ?.replace('ADD', 'a1')
-        ?.replace('s0', 'ADDED')
-        ?.replace('s1', 'ADD')
-        ?.replace('a0', 'SUBTRACTED')
-        ?.replace('a1', 'SUBTRACT')
+        ?.replaceAll('SUBTRACTED', 's0')
+        ?.replaceAll('SUBTRACT', 's1')
+        ?.replaceAll('ADDED', 'a0')
+        ?.replaceAll('ADD', 'a1')
+        ?.replaceAll('s0', 'ADDED')
+        ?.replaceAll('s1', 'ADD')
+        ?.replaceAll('a0', 'SUBTRACTED')
+        ?.replaceAll('a1', 'SUBTRACT')
       return newErrorType as AChangeType
     }
   }
 }
-
+export const changeTypeBasedOnOperatorMap: Record<string, AChangeType> = {
+  '+': 'SIMPLIFY_ARITHMETIC__ADD',
+  '-': 'SIMPLIFY_ARITHMETIC__SUBTRACT',
+  '*': 'SIMPLIFY_ARITHMETIC__MULTIPLY',
+  '/': 'SIMPLIFY_ARITHMETIC__DIVIDE',
+}
 export const changeTypeIsInGroup = (change: AChangeType, group: typeof CHANGE_TYPE_GROUPS[number]): boolean => {
   const changeOrMistakeType = getRootChangeType(change)
   return Object.values(changeGroupMappings[group as keyof typeof changeGroupMappings] || []).includes(changeOrMistakeType as any) // MistakeGroupMappings also contain ChangeTypes too. So, we can use it for both
