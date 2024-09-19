@@ -27,7 +27,6 @@ export default antfu(
     // https://eslint.org/
     javascript: {
       overrides: {
-
       },
     },
 
@@ -61,6 +60,7 @@ export default antfu(
       'style/eol-last': 'warn',
       'no-prototype-builtins': 'warn',
       'jsdoc/require-returns-description': 'off',
+      'unused-imports/no-unused-vars': 'off', // already warned via no-unused-vars
     },
     ignores: [
       '**/build',
