@@ -57,6 +57,7 @@ export const MISTAKE_ONLY = {
 export type AMistakeTypeOnly = typeof MISTAKE_ONLY[keyof typeof MISTAKE_ONLY]
 export const CHANGE_TYPE_ONLY = [
   ...Object.values(_SHARED_CHANGE),
+  'SIMPLIFY_ARITHMETIC__DIVIDE', // <-- THIS IS A UNIQUE CASE NOT USED IN THE RULES ENGINE. Its not actually used in a rule like the other SIMPLIFY_ARITHMETIC__* types
   'SIMPLIFY_ARITHMETIC__POWER',
   'DIVISION_BY_NEGATIVE_ONE',
   'DIVISION_BY_ONE',
@@ -142,6 +143,7 @@ export type AChangeTypeGroup = typeof CHANGE_TYPE_GROUPS[number]
 export const changeGroupMappings: Record<AChangeTypeGroup, AChangeTypeCore[]> = {
   SimplifyArithmetic: [
     'SIMPLIFY_ARITHMETIC__ADD',
+    'SIMPLIFY_ARITHMETIC__DIVIDE', // <-- THIS IS A UNIQUE CASE NOT USED IN THE RULES ENGINE. Its not actually used in a rule like the other SIMPLIFY_ARITHMETIC__* types
     'SIMPLIFY_ARITHMETIC__SUBTRACT',
     _SHARED_CHANGE.SIMPLIFY_ARITHMETIC_MULTIPLY,
     'SIMPLIFY_ARITHMETIC__POWER',
@@ -171,6 +173,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeTypeCore[]> = 
   ],
 
   DivisionRules: [
+    'SIMPLIFY_ARITHMETIC__DIVIDE', // <-- THIS IS A UNIQUE CASE NOT USED IN THE RULES ENGINE. Its not actually used in a rule like the other SIMPLIFY_ARITHMETIC__* types
     'DIVISION_BY_NEGATIVE_ONE',
     'DIVISION_BY_ONE',
     _SHARED_CHANGE.KEMU_DIVIDE_POWERS_WITH_COMMON_BASE,
