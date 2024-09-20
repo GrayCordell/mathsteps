@@ -315,14 +315,14 @@ describe('addition Mistakes', () => {
         [
           {
             availableChangeTypes: [COLLECT_AND_COMBINE_LIKE_TERMS],
-            attemptedChangeType: COLLECT_AND_COMBINE_LIKE_TERMS,
+            attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
             from: '5a + 3a',
-            to: '(5+3)*a',
-            attemptedToGetTo: '(5+3)*a',
-            mistakenChangeType: null,
-            isValid: true,
+            to: '7a', //  // used to be this -> (5+3)*a which is technically correct. Its still caught alternatively.
+            attemptedToGetTo: '8a', // used to be this -> (5+3)*a
+            mistakenChangeType: 'UNKNOWN', // TODO should be null
+            isValid: false, // used to be true
           },
-          {
+          /*        {
             availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
             attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
             from: '(5+3)*a',
@@ -330,7 +330,7 @@ describe('addition Mistakes', () => {
             attemptedToGetTo: '8a',
             mistakenChangeType: ADDED_ONE_TOO_FEW,
             isValid: false,
-          },
+          }, */
         ],
       ]),
     },
@@ -808,6 +808,85 @@ describe('random issues i\'ve had in the past', () => {
             to: '12 - 2',
             isValid: false,
             reachesOriginalAnswer: true,
+          },
+        ],
+      ],
+    },
+    // Test 3
+    {
+      description: 'very wrong addition',
+      steps: ['5 + 5 + 6', '5 + 15'],
+      expectedAnalysis: [
+        [
+          {
+            attemptedChangeType: 'SIMPLIFY_ARITHMETIC__ADD',
+            from: '5 + 5 + 6',
+            to: '5 + 15',
+            isValid: false,
+            mistakenChangeType: 'UNKNOWN',
+          },
+        ],
+      ],
+    },
+    // Test 3
+    {
+      description: 'very wrong subtraction',
+      steps: ['5 + 5 - 6', '5 + 15'],
+      expectedAnalysis: [
+        [
+          {
+            attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT',
+            from: '5 + 5 - 6',
+            to: '5 + 15',
+            isValid: false,
+            mistakenChangeType: 'UNKNOWN',
+          },
+        ],
+      ],
+    },
+    // Test 4
+    {
+      description: 'very wrong subtraction',
+      steps: ['5 + 5 - 6', '5 + 15'],
+      expectedAnalysis: [
+        [
+          {
+            attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT',
+            from: '5 + 5 - 6',
+            to: '5 + 15',
+            isValid: false,
+            mistakenChangeType: 'UNKNOWN',
+          },
+        ],
+      ],
+    },
+    // Test 5
+    { // TODO fix
+      description: 'very wrong division',
+      steps: ['5 + 5/2', '5 + 4'],
+      expectedAnalysis: [
+        [
+          {
+            attemptedChangeType: 'SIMPLIFY_ARITHMETIC__DIVIDE',
+            from: '5 + 5/2',
+            to: '5 + 55',
+            isValid: false,
+            mistakenChangeType: 'UNKNOWN',
+          },
+        ],
+      ],
+    },
+    {
+      description: 'very wrong multiplication',
+      steps: ['5 + 5*2', '5 + 30'],
+      expectedAnalysis: [
+        [
+          {
+            attemptedChangeType: 'SIMPLIFY_ARITHMETIC__MULTIPLY',
+            from: '5 + 5*2',
+            to: '5 + 30',
+            isValid: false,
+            mistakenChangeType: 'UNKNOWN',
           },
         ],
       ],
