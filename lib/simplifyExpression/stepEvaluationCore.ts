@@ -1,4 +1,5 @@
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
+import { findAttemptedOperationUse } from '~/simplifyExpression/rules/stepEvaluationOnly/findAttemptedOperationUse'
 import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
 import { convertAdditionToSubtractionErrorType, isAnAdditionChangeType } from '~/types/changeType/changeAndMistakeUtils'
@@ -59,6 +60,7 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
   const valueToFind = lastTwoUserSteps[1]
   const stepQueue: { start: string, history: ProcessedStep[] }[] = []
   const triedSteps = new Set<string>()
+  const theProblem = lastTwoUserSteps[0]
 
   if (lastTwoUserSteps[0] === lastTwoUserSteps[1])
     return { history: [] }
@@ -82,7 +84,10 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
     if (allPossibleNextStep.length === 0)
       continue
 
+
     const allPossibleCorrectTos = allPossibleNextStep.filter(step => !step.isMistake).map(step => step.to)
+
+
     if (depth === 0) {
       firstChangeTypesLog.push(...allPossibleNextStep.filter(step => !step?.isMistake).map(step => step?.changeType))
       firstFoundToLog.push(...allPossibleCorrectTos)
@@ -102,7 +107,7 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
       // Handles steps that are marked isMistake=true.
       else if (possibleStep.isMistake && expressionEquals(possibleStep.to, valueToFind)) {
         // The mistake found can be a correct step somehow later. So we have to ignore incorrect steps that can become the answer.
-        const isStillCorrect = expressionEquals(getAnswerFromStep(start), getAnswerFromStep(possibleStep.to))
+        const isStillCorrect = expressionEquals(getAnswerFromStep(theProblem), getAnswerFromStep(possibleStep.to))
         if (!isStillCorrect)
           return { history: updatedHistory }
       }
@@ -115,7 +120,7 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
 
         if (expressionEquals(mToStep.to, valueToFind)) {
           // The mistake found can be a correct step somehow later. So we have to ignore incorrect steps that can become the answer.
-          const isStillCorrect = expressionEquals(getAnswerFromStep(start), getAnswerFromStep(mToStep.to))
+          const isStillCorrect = expressionEquals(getAnswerFromStep(theProblem), getAnswerFromStep(mToStep.to))
           if (isStillCorrect)
             continue
           // If the mistake is the answer, then we need to add remove the last step in the history
@@ -126,8 +131,18 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
         }
       }
 
+
       stepQueue.push({ start: possibleStep.to, history: updatedHistory })
     }
+
+
+    //
+    const opUseExtraCheck = findAttemptedOperationUse({ from: start, to: valueToFind, allPossibleNextStep, allPossibleCorrectTos, expressionEquals })
+    if (opUseExtraCheck) {
+      history.push(opUseExtraCheck)
+      return { history }
+    }
+
 
     depth++
   }
@@ -195,7 +210,16 @@ function processStepInfo(
       const from = history.length === 1 ? (previousStep) : (step.from)
 
       const attemptedChangeType = step.attemptedChangeType || step.changeType
-      const fixedMistakeType = correctChangeTypeSubtractToAddFix(attemptedChangeType, step.changeType || step.attemptedChangeType)
+      let fixedMistakeType = correctChangeTypeSubtractToAddFix(attemptedChangeType, step.changeType || step.attemptedChangeType)
+      // TODO temp fix
+      const removeIfOneOfTheseForNow = [
+        'SIMPLIFY_ARITHMETIC__ADD',
+        'SIMPLIFY_ARITHMETIC__DIVIDE',
+        'SIMPLIFY_ARITHMETIC__MULTIPLY',
+        'SIMPLIFY_ARITHMETIC__SUBTRACT',
+      ]
+      if (removeIfOneOfTheseForNow.includes(fixedMistakeType))
+        fixedMistakeType = 'UNKNOWN' as const
 
       const attemptedToGetTo = step.attemptedToGetTo || to
       const availableChangeTypes = filterUniqueValues(step.availableChangeTypes)
