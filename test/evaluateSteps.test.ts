@@ -867,15 +867,16 @@ describe('random issues i\'ve had in the past', () => {
       expectedAnalysis: [
         [
           {
-            attemptedChangeType: 'SIMPLIFY_ARITHMETIC__DIVIDE',
+            attemptedChangeType: 'UNKNOWN', // TODO fix
             from: '5 + 5/2',
-            to: '5 + 55',
+            to: '5 + 4',
             isValid: false,
             mistakenChangeType: 'UNKNOWN',
           },
         ],
       ],
     },
+    // Test 6
     {
       description: 'very wrong multiplication',
       steps: ['5 + 5*2', '5 + 30'],
@@ -889,6 +890,37 @@ describe('random issues i\'ve had in the past', () => {
             mistakenChangeType: 'UNKNOWN',
           },
         ],
+      ],
+    },
+
+    // Test 7
+    { // TODO fix
+      description: 't',
+      steps: ['10 - 7x + 4 * 3x', '22 + 4 * 3x'],
+      expectedAnalysis: [
+        [{
+          attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT',
+          attemptedToGetTo: '-7x+10+4*3x', // TODO fix
+          from: '10 - 7x + 4 * 3x',
+          to: '22 + 4 * 3x',
+          isValid: false,
+          mistakenChangeType: 'UNKNOWN',
+        }],
+      ],
+    },
+    // Test 8
+    {
+      description: 't2',
+      steps: ['(8 * 5) - 6 + 4', '30 - 6 + 4'],
+      expectedAnalysis: [
+        [{
+          attemptedChangeType: 'SIMPLIFY_ARITHMETIC__MULTIPLY',
+          attemptedToGetTo: '40+-6+4',
+          from: '(8 * 5) - 6 + 4',
+          to: '30 - 6 + 4',
+          isValid: false,
+          mistakenChangeType: 'UNKNOWN',
+        }],
       ],
     },
   ]

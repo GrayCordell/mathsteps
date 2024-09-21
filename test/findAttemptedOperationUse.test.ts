@@ -60,6 +60,12 @@ describe('findAttemptedOperationUse', () => {
       expected: { opResult: '10', changeType: 'SIMPLIFY_ARITHMETIC__ADD' },
     },
     {
+      description: 'when an subtration operation is simplified. Has Addition & Subtraction & variable. ',
+      from: '10 - 7x + 4 * 3x',
+      to: '22 + 4 * 3x',
+      expected: { opResult: '22', changeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
+    },
+    {
       description: 'when an addition operation is simplified. Has Addition & Subtraction. 2',
       from: '5 + 3 - 2',
       to: '5 + 1',

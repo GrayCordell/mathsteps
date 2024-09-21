@@ -220,8 +220,13 @@ export function findAttemptedOperationUseCore(
   // if the values removed are unique(1 occurrence in from) then we know the two terms that were removed.
   const simpleCompareFn = (a: Term[], b: Term[]) => {
     // First find the terms that were removed
-    let removedTerms = a.filter(item => (item.count === 1 && !b.some(bItem => bItem.value === item.value)))
-    const addedTerms = b.filter(item => item.count === 1 && !a.some(aItem => aItem.value === item.value))
+    let removedTerms = a
+      .filter(item => (item.count === 1 && !b.some(bItem => bItem.value === item.value)))
+      .filter(item => item.type === 'term')
+    const addedTerms = b
+      .filter(item => item.count === 1 && !a.some(aItem => aItem.value === item.value))
+      .filter(item => item.type === 'term')
+
     if (removedTerms.length !== 2 || addedTerms.length !== 1)
       return null
     const opIndex = removedTerms[0].index + 1

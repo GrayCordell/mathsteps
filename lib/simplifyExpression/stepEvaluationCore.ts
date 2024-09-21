@@ -6,7 +6,7 @@ import { convertAdditionToSubtractionErrorType, isAnAdditionChangeType } from '~
 import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { EqualityCache } from '~/util/equalityCache'
-import { logger, LogLevel } from '~/util/logger'
+import { LogLevel, logger } from '~/util/logger'
 import { cleanString } from '~/util/stringUtils'
 
 export interface RawStep {
@@ -136,11 +136,13 @@ function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (A
     }
 
 
-    //
-    const opUseExtraCheck = findAttemptedOperationUse({ from: start, to: valueToFind, allPossibleNextStep, allPossibleCorrectTos, expressionEquals })
-    if (opUseExtraCheck) {
-      history.push(opUseExtraCheck)
-      return { history }
+    // TODO handle more depth..?
+    if (depth < 1) {
+      const opUseExtraCheck = findAttemptedOperationUse({ from: start, to: valueToFind, allPossibleNextStep, allPossibleCorrectTos, expressionEquals })
+      if (opUseExtraCheck) {
+        history.push(opUseExtraCheck)
+        return { history }
+      }
     }
 
 
