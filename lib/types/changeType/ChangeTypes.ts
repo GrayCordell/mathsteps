@@ -109,6 +109,9 @@ export const CHANGE_TYPE_ONLY = [
   'KEMU_SQRT_FROM_POW',
   'KEMU_SQRT_FROM_CONST',
   'KEMU_ROOT_FROM_CONST',
+  'SWAP_SIDES', // algebra only.
+  // 'REMOVE_TERM', // EquationType only now
+  // 'ADD_TERM', // EquationType only now
 ] as const
 export type AChangeTypeOnly = typeof CHANGE_TYPE_ONLY[number]
 export const ALL_CHANGE_TYPES = [
@@ -138,6 +141,7 @@ export const CHANGE_TYPE_GROUPS = [
   'OrderOfOperations',
   'UNKNOWN',
   'NO_CHANGE',
+  'ALGEBRA_ONLY',
 ] as const
 export type AChangeTypeGroup = typeof CHANGE_TYPE_GROUPS[number]
 export const changeGroupMappings: Record<AChangeTypeGroup, AChangeTypeCore[]> = {
@@ -288,6 +292,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeTypeCore[]> = 
     _SHARED_CHANGE.KEMU_POWER_TO_NEGATIVE_EXPONENT,
   ],
   OrderOfOperations: [_SHARED_MISTAKE.PEMDAS__ADD_INSTEAD_OF_MULTIPLY],
+  ALGEBRA_ONLY: ['SWAP_SIDES'], /* 'REMOVE_TERM' */
 } as const
 
 // Map words to groups without
@@ -331,3 +336,13 @@ export const mapMistakeTypeToChangeTypeError: Record<AMistakeTypeOnly, AChangeTy
   ADDED_INSTEAD_OF_SUBTRACTED: 'SIMPLIFY_ARITHMETIC__SUBTRACT',
   SUBTRACTED_INSTEAD_OF_ADDED: 'SIMPLIFY_ARITHMETIC__ADD',
 } as const
+
+
+export const EQUATION_ACTION_TYPES = [
+  'REMOVE_TERM',
+  'SWAP_SIDES',
+  'ADD_TERM',
+] as const
+export type AEquationActionType = typeof EQUATION_ACTION_TYPES[number]
+export const EquationActionTypes: { [K in AEquationActionType]: K } = Object.fromEntries(EQUATION_ACTION_TYPES.map(k => [k, k])) as { [K in AEquationActionType]: K }
+
