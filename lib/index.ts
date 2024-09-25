@@ -4,7 +4,7 @@ import type { AChangeType, AChangeTypeCore, AChangeTypeGroup, AChangeTypeOnly, A
 import math from '~/config'
 import clone from '~/newServices/nodeServices/clone.js'
 import Equation from './kemuEquation/Equation.js'
-import EquationSolver from './kemuEquation/EquationSolverCore.js'
+import EquationSolver from './kemuEquation/EquationSolver.js'
 import stepThrough from './simplifyExpression/index.js'
 import { kemuNormalizeConstantNodes } from './simplifyExpression/kemuSimplifyCommonServices.js'
 import { assessUserStep, assessUserSteps } from './simplifyExpression/stepEvaluationCore'
@@ -31,7 +31,7 @@ function _compareByTextInternal(x: string, y: string): number {
   try {
     return <number>math.compare(x, y)
   }
-  // eslint-disable-next-line unused-imports/no-unused-vars
+
   catch (err) {
     return Number.NaN
   }
@@ -232,7 +232,7 @@ function isOkAsSymbolicExpression(expressionAsText: string): boolean {
       const steps = stepThrough.oldApi(expressionNode)
       rv = steps.length > 0
     }
-    // eslint-disable-next-line unused-imports/no-unused-vars
+
     catch (e) {
       // Hide exceptions.
     }
@@ -242,7 +242,6 @@ function isOkAsSymbolicExpression(expressionAsText: string): boolean {
 
 function kemuSolveEquation(options: any): Equation {
   const equation = new Equation(options)
-  // @ts-expect-error ---
   EquationSolver.solveEquation(equation)
   return equation
 }
@@ -260,7 +259,7 @@ function normalizeExpression(text: string): string {
     rv = print(parseText(text))
   }
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
+
   catch (_err: unknown) {
     rv = '[error]'
   }
