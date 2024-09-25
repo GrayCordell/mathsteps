@@ -61,6 +61,10 @@ function convertAllSimpleFractionsToDecimals(node: MathNode): MathNode {
       const leftValue = node.args[0].value
       const rightValue = node.args[1].value
 
+      if (leftValue % rightValue === 0) { // If the division is a whole number, return the node. We only really care about this for cases where division could be simplified to a number.
+        return node
+      }
+
       // Return the decimal result of the division
       return new ConstantNode(leftValue / rightValue)
     }
