@@ -3,6 +3,7 @@
 
 import type { AChangeType, AChangeTypeGroup, CHANGE_TYPE_GROUPS } from '~/types/changeType/ChangeTypes'
 import { changeGroupMappings, mapMistakeTypeToChangeTypeError, mapWordsToGroups, MISTAKE_ONLY } from '~/types/changeType/ChangeTypes'
+import { cleanString } from '~/util/stringUtils'
 
 export const getRootChangeType = <T extends { includes: any, split?: any } | null>(changeType_: T) =>
   (changeType_ && changeType_?.includes('__CASE_'))
@@ -58,6 +59,10 @@ export const isSameRootChangeType = (rootChangeType: string | AChangeType, chang
 }
 export const doesChangeTypeEqual = (a: AChangeType, b: AChangeType): boolean => a === b || isSameRootChangeType(a, b)
 
+
+export const OPERATORS = ['+', '-', '*', '/', '--', '+-'] as const
+export type AOperator = typeof OPERATORS[number]
+
 // Function to convert addition errors to subtraction errors
 export const convertAdditionToSubtractionErrorType = (errorType: AChangeType): AChangeType => {
   switch (errorType) {
@@ -81,12 +86,35 @@ export const convertAdditionToSubtractionErrorType = (errorType: AChangeType): A
     }
   }
 }
-export const changeTypeBasedOnOperatorMap: Record<string, AChangeType> = {
+export const changeTypeBasedOnOperatorMap: Record<AOperator, AChangeType> = {
+  '+-': 'SIMPLIFY_ARITHMETIC__SUBTRACT',
+  '--': 'SIMPLIFY_ARITHMETIC__ADD',
   '+': 'SIMPLIFY_ARITHMETIC__ADD',
   '-': 'SIMPLIFY_ARITHMETIC__SUBTRACT',
   '*': 'SIMPLIFY_ARITHMETIC__MULTIPLY',
   '/': 'SIMPLIFY_ARITHMETIC__DIVIDE',
 }
+export const reverseOp: Record<AOperator, AOperator> = {
+  '+-': '+', // +- -> - so reverse: +
+  '--': '-', // -- -> + so reverse: -
+  '+': '-',
+  '-': '+',
+  '*': '/',
+  '/': '*',
+}
+/**
+ * Get the change type (addition, subtraction, multiplication, etc.).
+ * @param op The operator used in the operation.
+ * Operator can be '+', '-', '*', '/', '--', '+-'
+ */
+export const getReverseOp = (op: string | AOperator): AOperator => reverseOp[cleanString(op) as AOperator]
+
+/**
+ * Get the change type (addition, subtraction, multiplication, etc.).
+ * @param op
+ * Operator can be '+', '-', '*', '/', '--', '+-'
+ */
+export const getSimplifyChangeTypeByOp = (op: AOperator): AChangeType => changeTypeBasedOnOperatorMap[cleanString(op) as AOperator]
 export const changeTypeIsInGroup = (change: AChangeType, group: typeof CHANGE_TYPE_GROUPS[number]): boolean => {
   const changeOrMistakeType = getRootChangeType(change)
   return Object.values(changeGroupMappings[group as keyof typeof changeGroupMappings] || []).includes(changeOrMistakeType as any) // MistakeGroupMappings also contain ChangeTypes too. So, we can use it for both
