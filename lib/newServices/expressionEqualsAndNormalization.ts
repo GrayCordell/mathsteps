@@ -9,9 +9,14 @@ import type { EqualityCache } from '~/util/equalityCache'
 import { cleanString } from '~/util/stringUtils.js'
 import kemuSortArgs from '../simplifyExpression/kemuSortArgs.js'
 
+
 export function veryNormalizeNode(node_: MathNode | string): MathNode {
   let node = (typeof node_ === 'string') ? parseText(node_) : node_
-  node = kemuSortArgs(kemuNormalizeConstantNodes(convertAllSimpleFractionsToDecimals(removeImplicitMultiplicationFromNode(kemuFlatten(node)))), true) // TODO Its possible there could be issues if we don't remove +- here too. (We can't right now because it requires a parse)
+  node = kemuFlatten(node)
+  node = removeImplicitMultiplicationFromNode(node)
+  node = convertAllSimpleFractionsToDecimals(node)
+  node = kemuNormalizeConstantNodes(node)
+  node = kemuSortArgs(node, true)
   return node
 }
 
@@ -81,3 +86,4 @@ function convertAllSimpleFractionsToDecimals(node: MathNode): MathNode {
   // Return the modified expression as a node
   return convertFractions(node)
 }
+
