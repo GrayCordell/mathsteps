@@ -23,13 +23,12 @@ function testStepEvaluation(test: Test, index: number) {
     for (let i = 0; i < expectedAnalysis.length; i++) {
       const leftExpected = expectedAnalysis[i][0]
       const rightExpected = expectedAnalysis[i][1]
-      const left = evaluatedSteps[i][0]
-      const right = evaluatedSteps[i][1]
+      const leftAndRight = evaluatedSteps[i]
       for (let j = 0; j < leftExpected.length; j++) {
         const leftStepExpected = leftExpected[j]
         const rightStepExpected = rightExpected[j]
-        const leftStep = left[j]
-        const rightStep = right[j]
+        const leftStep = leftAndRight.left[j]
+        const rightStep = leftAndRight.right[j]
         assertSpecifiedValues(leftStep, leftStepExpected)
         assertSpecifiedValues(rightStep, rightStepExpected)
       }

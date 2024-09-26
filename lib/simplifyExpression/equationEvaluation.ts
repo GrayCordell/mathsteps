@@ -13,7 +13,7 @@ function processEquationInfo(
   userStep: string,
   startingStepAnswer: string,
   logs: any,
-): [StepInfo[], StepInfo[]] {
+): { left: StepInfo[], right: StepInfo[], equationChangeType: any } {
   const leftPrevious = cleanString(previousStep.split('=')[0])
   const rightPrevious = cleanString(previousStep.split('=')[1])
   const userLeft = cleanString(userStep.split('=')[0])
@@ -23,64 +23,62 @@ function processEquationInfo(
   if (res.equationChangeType === 'NO_CHANGE') {
     const rightRes = processNoHistoryStep(rightPrevious, userRight, startingStepAnswer, logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog)
     const leftRes = processNoHistoryStep(leftPrevious, userLeft, startingStepAnswer, logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog)
-    return [leftRes, rightRes]
+    return { left: leftRes, right: rightRes, equationChangeType: res.equationChangeType }
   }
   if (res.rhs.history.length === 0) {
     const leftHistory = res.lhs.history.map(step => processStep(step, leftPrevious, startingStepAnswer, res.lhs.history.length))
 
-    const stayedSameValue: StepInfo = processNoHistoryStep(rightPrevious, userRight, startingStepAnswer, logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog)[0]
+    const rightStayedSameHistory: StepInfo = processNoHistoryStep(rightPrevious, userRight, startingStepAnswer, logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog)[0]
     // make same amount of steps as left
-    const rightRes: StepInfo[] = []
+    const rightHistory: StepInfo[] = []
     for (let i = 0; i < leftHistory.length; i++)
-      rightRes.push(stayedSameValue)
+      rightHistory.push(rightStayedSameHistory)
 
-    return [leftHistory, rightRes]
+    return { left: leftHistory, right: rightHistory, equationChangeType: res.equationChangeType }
   }
   if (res.lhs.history.length === 0) {
     const rightHistory = res.rhs.history.map(step => processStep(step, rightPrevious, startingStepAnswer, res.rhs.history.length))
-    const stayedSameValue = processNoHistoryStep(leftPrevious, userLeft, startingStepAnswer, logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog)[0]
+    const leftStayedSameHistory = processNoHistoryStep(leftPrevious, userLeft, startingStepAnswer, logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog)[0]
     // make same amount of steps as right
     const leftRes: StepInfo[] = []
     for (let i = 0; i < rightHistory.length; i++)
-      leftRes.push(stayedSameValue)
-    return [leftRes, rightHistory]
+      leftRes.push(leftStayedSameHistory)
+    return { left: leftRes, right: rightHistory, equationChangeType: res.equationChangeType }
   }
   if (res.equationChangeType === 'SWAP_SIDES') {
-    const leftRes = res.lhs.history.map(step => processStep(step, leftPrevious, startingStepAnswer, res.lhs.history.length))
-    const rightRes = res.rhs.history.map(step => processStep(step, rightPrevious, startingStepAnswer, res.rhs.history.length))
+    const leftHistory = res.lhs.history.map(step => processStep(step, leftPrevious, startingStepAnswer, res.lhs.history.length))
+    const rightHistory = res.rhs.history.map(step => processStep(step, rightPrevious, startingStepAnswer, res.rhs.history.length))
     // make changeType SWAP_SIDES
-    leftRes[0].attemptedChangeType = 'SWAP_SIDES'
-    leftRes[0].equationActionType = 'SWAP_SIDES'
-    rightRes[0].attemptedChangeType = 'SWAP_SIDES'
-    rightRes[0].equationActionType = 'SWAP_SIDES'
+    leftHistory[0].attemptedChangeType = 'SWAP_SIDES'
+    leftHistory[0].equationActionType = 'SWAP_SIDES'
+    rightHistory[0].attemptedChangeType = 'SWAP_SIDES'
+    rightHistory[0].equationActionType = 'SWAP_SIDES'
     // make isValid true
-    leftRes[0].isValid = true
-    rightRes[0].isValid = true
+    leftHistory[0].isValid = true
+    rightHistory[0].isValid = true
 
-    return [leftRes, rightRes]
+    return { left: leftHistory, right: rightHistory, equationChangeType: res.equationChangeType }
   }
 
+  //
+
+
+  // check what was added or removed from each side
   const rRemovedFrom = { lhs: false, rhs: false }
   const lRemovedFrom = { lhs: false, rhs: false }
   const rAddedTo = { lhs: false, rhs: false }
   const lAddedTo = { lhs: false, rhs: false }
   res.lhs.history.forEach((step) => {
-    // const left = processStep(step, leftPrevious, startingStepAnswer)
-    if (step.sideCheckNumOp) {
+    if (step.sideCheckNumOp)
       rAddedTo.lhs = true
-    }
-    else if (step.equationActionType === 'REMOVE_TERM') {
+    else if (step.equationActionType === 'REMOVE_TERM')
       rRemovedFrom.lhs = true
-    }
   })
   res.rhs.history.forEach((step) => {
-    // const right = processStep(step, rightPrevious, startingStepAnswer)
-    if (step.sideCheckNumOp) {
+    if (step.sideCheckNumOp)
       lAddedTo.rhs = true
-    }
-    else if (step.equationActionType === 'REMOVE_TERM') {
+    else if (step.equationActionType === 'REMOVE_TERM')
       lRemovedFrom.rhs = true
-    }
   })
 
 
@@ -104,20 +102,20 @@ function processEquationInfo(
 
   // if both don't have any added or removed then just return it
   if (!rAddedTo.lhs && !rAddedTo.rhs && !rRemovedFrom.lhs && !rRemovedFrom.rhs) {
-    return [resLeft, resRight]
+    return { left: resLeft, right: resRight, equationChangeType: res.equationChangeType }
   }
 
   // if both removedFrom then make them both invalid
   if (lRemovedFrom.lhs && rRemovedFrom.rhs) {
-    const resleft2 = makeItemInvalidIfEquationActionType(resLeft, 'REMOVE_TERM')
-    const resRight2 = makeItemInvalidIfEquationActionType(resRight, 'REMOVE_TERM')
-    return [resleft2, resRight2]
+    const leftHistory = makeItemInvalidIfEquationActionType(resLeft, 'REMOVE_TERM')
+    const rightHistory = makeItemInvalidIfEquationActionType(resRight, 'REMOVE_TERM')
+    return { left: leftHistory, right: rightHistory, equationChangeType: res.equationChangeType }
   }
   // if both added to then make them both invalid
   if (lAddedTo.lhs && rAddedTo.rhs) {
-    const resleft2 = makeItemInvalidIfSideCheckNumOp(resLeft)
-    const resRight2 = makeItemInvalidIfSideCheckNumOp(resRight)
-    return [resleft2, resRight2]
+    const leftHistory = makeItemInvalidIfSideCheckNumOp(resLeft)
+    const rightHistory = makeItemInvalidIfSideCheckNumOp(resRight)
+    return { left: leftHistory, right: rightHistory, equationChangeType: res.equationChangeType }
   }
   // if one added and one removed then keep them both valid
   if ((lAddedTo.rhs && rRemovedFrom.lhs) || (lRemovedFrom.rhs && rAddedTo.lhs)) {
@@ -130,13 +128,13 @@ function processEquationInfo(
     // if (rFoundFirst && lFoundFirst && isTermEqual) {
     //  return [resLeft, resRight]
     // }
-    return [resLeft, resRight]
+    return { left: resLeft, right: resRight, equationChangeType: res.equationChangeType }
   }
   else {
     throw new Error('Invalid state')
   }
 }
-export function assessUserEquationStep(previousUserStep: string, userStep: string): [StepInfo[], StepInfo[]] {
+export function assessUserEquationStep(previousUserStep: string, userStep: string): { left: StepInfo[], right: StepInfo[], equationChangeType: any } {
   // const startingStepAnswer = getAnswerFromEquation(previousUserStep)
   const logs = {
     lhsFirstChangeTypesLog: [] as AChangeType[],
@@ -147,12 +145,12 @@ export function assessUserEquationStep(previousUserStep: string, userStep: strin
   const rawAssessedStepOptionsRes = coreAssessUserStepEquation([previousUserStep, userStep], logs)
   return processEquationInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, null, logs)
 }
-export function assessUserEquationSteps(userSteps: string[]): [StepInfo[], StepInfo[]][] {
+export function assessUserEquationSteps(userSteps: string[]): { left: StepInfo[], right: StepInfo[], equationChangeType: any }[] {
   if (userSteps.length === 0)
     return []
   // const userSteps = userSteps_.map(step => myNodeToString(parseText(step)))
 
-  const assessedSteps: [StepInfo[], StepInfo[]][] = []
+  const assessedSteps: { left: StepInfo[], right: StepInfo[], equationChangeType: any }[] = []
   let previousStep: string | undefined
   // const startingStepAnswer = getAnswerFromStep(userSteps[0])
 
@@ -170,6 +168,7 @@ export function assessUserEquationSteps(userSteps: string[]): [StepInfo[], StepI
 
   return assessedSteps
 }
+
 
 export function coreAssessUserStepEquation([previousEquationStr, userEquationStr]: [string, string], logs: any): {
   lhs: CoreAssessUserStepResult
