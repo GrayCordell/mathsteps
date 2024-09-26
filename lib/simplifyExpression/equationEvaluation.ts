@@ -19,6 +19,18 @@ function processEquationInfo(
   const userLeft = cleanString(userStep.split('=')[0])
   const userRight = cleanString(userStep.split('=')[1])
 
+  // function correctEQChangeType(rhsOrLhs: CoreAssessUserStepResult) {
+  //  rhsOrLhs.history = rhsOrLhs.history.map((step) => {
+  //    // TODO. This is a bit of a hack. Having a sideCheckNumOp means you are in the add_term path because its provided to all the steps in that path. So the first of every
+  //    if (!step.equationActionType && step.sideCheckNumOp) {
+  //      return { ...step }
+  //    }
+  //    return step
+  //  })
+  // }
+  // correctEQChangeType(res.rhs)
+  // correctEQChangeType(res.lhs)
+
 
   if (res.equationChangeType === 'NO_CHANGE') {
     const rightRes = processNoHistoryStep(rightPrevious, userRight, startingStepAnswer, logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog)
@@ -131,7 +143,9 @@ function processEquationInfo(
     return { left: resLeft, right: resRight, equationChangeType: res.equationChangeType }
   }
   else {
-    throw new Error('Invalid state')
+    console.warn('Invalid state', { lAddedTo, rAddedTo, lRemovedFrom, rRemovedFrom }, { previousStep, userStep, res }) // TODO add info for this in equation changeType or something
+    return { left: resLeft, right: resRight, equationChangeType: res.equationChangeType }
+    // throw new Error('Invalid state')
   }
 }
 export function assessUserEquationStep(previousUserStep: string, userStep: string): { left: StepInfo[], right: StepInfo[], equationChangeType: any } {
