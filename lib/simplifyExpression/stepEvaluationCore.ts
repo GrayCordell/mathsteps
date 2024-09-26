@@ -85,7 +85,11 @@ export function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypes
         return { history }
       }
 
+      // TODO make us get all simplify removal options. Don't know how that slipped my mind.
+
+
       const moreOptions = getOtherSideOptions(start, otherSide)
+
 
       const foundInMoreOptions = moreOptions.find(step => expressionEquals(step.start, valueToFind))
       if (foundInMoreOptions) {
