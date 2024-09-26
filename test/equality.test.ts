@@ -8,7 +8,13 @@ import { cleanString } from '~/util/stringUtils'
 
 describe('equalityTest', () => {
   const testCases: { input: string, expected: string }[] = [
+    // single x cases
+    { input: '1*x', expected: 'x' },
+    { input: '1x', expected: 'x' },
+    { input: 'x', expected: 'x' },
+    // doesn't divide equally. so we say its equal to its decimal form
     { input: '5/2', expected: '2.5' },
+
 
     // Simple cases with random + and -
     { input: '5 + 3 - 2', expected: '3 + 5 - 2' },
