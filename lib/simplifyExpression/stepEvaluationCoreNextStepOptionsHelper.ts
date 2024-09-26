@@ -1,20 +1,17 @@
 import mathsteps, { parseText } from '~/index'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
+import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import { mistakeSearches } from '~/simplifyExpression/mistakes/regexPemdasMistakes'
 import type { ProcessedStep, RawStep } from '~/simplifyExpression/stepEvaluationCore'
-import { getValidStepEqCache } from '~/simplifyExpression/stepEvaluationCore'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { cleanString } from '~/util/stringUtils'
 
 const { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
 
-let cache: ReturnType<typeof getValidStepEqCache> | null = null
-const expressionEquals = (exp0: string, exp1: string): boolean => {
-  cache = cache || getValidStepEqCache()
-  return areExpressionEqual(exp0, exp1, cache)
-}
+const expressionEquals = (exp0: string, exp1: string): boolean => areExpressionEqual(exp0, exp1, getValidStepEqCache())
+
 
 // Utility function to clean and normalize strings for comparison
 function _normalizeExpressionForCountingSubtractions(expr: string) {

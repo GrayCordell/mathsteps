@@ -1,12 +1,11 @@
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
+import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import type { CoreAssessUserStepResult, StepInfo } from '~/simplifyExpression/stepEvaluationCore'
-import { _coreAssessUserStep, getValidStepEqCache, processNoHistoryStep, processStep } from '~/simplifyExpression/stepEvaluationCore'
+import { _coreAssessUserStep, processNoHistoryStep, processStep } from '~/simplifyExpression/stepEvaluationCore'
 import type { AChangeType } from '~/types/changeType/ChangeTypes'
-import { EqualityCache } from '~/util/equalityCache'
 import { cleanString } from '~/util/stringUtils'
 
-const validStepEqCache = getValidStepEqCache() || new EqualityCache()
-const expressionEquals = (exp0: string, exp1: string): boolean => areExpressionEqual(exp0, exp1, validStepEqCache)
+const expressionEquals = (exp0: string, exp1: string): boolean => areExpressionEqual(exp0, exp1, getValidStepEqCache())
 
 function processEquationInfo(
   res: { lhs: CoreAssessUserStepResult, rhs: CoreAssessUserStepResult, equationChangeType: any },

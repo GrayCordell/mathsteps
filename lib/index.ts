@@ -1,17 +1,19 @@
 /* eslint-disable no-throw-literal */
 import type { MathNode } from 'mathjs'
-import type { AChangeType, AChangeTypeCore, AChangeTypeGroup, AChangeTypeOnly, AChangeTypeWithCase, AMistakeTypeOnly } from './types/changeType/ChangeTypes'
+import type { AChangeType, AChangeTypeCore, AChangeTypeGroup, AChangeTypeOnly, AChangeTypeWithCase, AEquationActionType, AMistakeTypeOnly, EQUATION_ACTION_TYPES, EquationActionTypes } from './types/changeType/ChangeTypes'
 import math from '~/config'
 import clone from '~/newServices/nodeServices/clone.js'
+import { assessUserEquationStep, assessUserEquationSteps } from '~/simplifyExpression/equationEvaluation'
 import Equation from './kemuEquation/Equation.js'
 import EquationSolver from './kemuEquation/EquationSolver.js'
 import stepThrough from './simplifyExpression/index.js'
 import { kemuNormalizeConstantNodes } from './simplifyExpression/kemuSimplifyCommonServices.js'
 import { assessUserStep, assessUserSteps } from './simplifyExpression/stepEvaluationCore'
+
 import { changeTypeIsInGroup, convertAdditionToSubtractionErrorType, convertMistakeOnlyTypeToItsChangeType, doesChangeTypeEqual, getChangeTypeGroups, getEveryChangeIdApplicable, getRootChangeType, isChangeTypeInGroup, isMistakeTypeOnly, isSameRootChangeType } from './types/changeType/changeAndMistakeUtils.js'
 import { ChangeTypes } from './types/changeType/ChangeTypes'
-
 import { ascii, latex } from './util/print.js'
+
 
 const print = ascii
 const printLatex = latex
@@ -280,9 +282,14 @@ export type{
   AChangeTypeGroup,
   AChangeTypeOnly,
   AChangeTypeWithCase,
+  AEquationActionType,
   AMistakeTypeOnly,
 }
 export {
+  // Equation evaluation
+  assessUserEquationStep,
+  assessUserEquationSteps,
+
   assessUserStep,
   assessUserSteps,
   changeTypeIsInGroup,
@@ -292,6 +299,8 @@ export {
   convertMistakeOnlyTypeToItsChangeType,
   convertTextToTeX,
   doesChangeTypeEqual,
+  EQUATION_ACTION_TYPES,
+  EquationActionTypes,
   getChangeTypeGroups,
   getEveryChangeIdApplicable,
   // Change type utils

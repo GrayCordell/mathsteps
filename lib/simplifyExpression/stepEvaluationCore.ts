@@ -1,6 +1,7 @@
 import type { MathNode } from 'mathjs'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { findTermRemovalOperation } from '~/newServices/nodeServices/termRemovalOperations'
+import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import { findAttemptedOperationUse } from '~/simplifyExpression/rules/stepEvaluationOnly/findAttemptedOperationUse'
 import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
 import { getOtherSideOptions } from '~/simplifyExpression/stepEvaluationEquationHelpers'
@@ -9,7 +10,6 @@ import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
 import { convertAdditionToSubtractionErrorType, getReverseOp, getSimplifyChangeTypeByOp, isAnAdditionChangeType } from '~/types/changeType/changeAndMistakeUtils'
 import type { AChangeType, AEquationActionType } from '~/types/changeType/ChangeTypes'
 import { filterUniqueValues } from '~/util/arrayUtils'
-import { EqualityCache } from '~/util/equalityCache'
 import { logger, LogLevel } from '~/util/logger'
 import { cleanString } from '~/util/stringUtils'
 
@@ -57,9 +57,7 @@ export interface StepInfo {
 }
 
 
-const validStepEqCache = new EqualityCache()
-export const getValidStepEqCache = () => validStepEqCache // TODO place somewhere else / refactor where we handle cache.
-const expressionEquals = (exp0: string | MathNode, exp1: string | MathNode) => areExpressionEqual(exp0, exp1, validStepEqCache)
+const expressionEquals = (exp0: string | MathNode, exp1: string | MathNode) => areExpressionEqual(exp0, exp1, getValidStepEqCache())
 
 // Change to have it search further down the tree.
 const MAX_STEP_DEPTH = 100
