@@ -253,6 +253,61 @@ describe('assessUserEquationStep', () => {
         ],
       ],
     },
+    /* { // Test 6 TODO
+      description: '6',
+      steps: [
+        '3x + 5 = 11',
+        '3x/3 = 6/3',
+      ],
+      expectedAnalysis: [
+        // Step 1: Subtract 5 from both sides & divide both sides by 3
+        [
+          // Left side changes
+          [
+            // part 1: subtract 5
+            {
+              from: '3x + 5',
+              to: '3x',
+              isValid: true,
+              attemptedToGetTo: '3x',
+              attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT',
+              equationActionType: 'REMOVE_TERM',
+            },
+            // part 2: divide by 3
+            {
+              from: '3x',
+              to: '3x/3',
+              isValid: true,
+              attemptedToGetTo: '3x/3',
+              attemptedChangeType: 'SIMPLIFY_ARITHMETIC__DIVIDE',
+              equationActionType: 'REMOVE_TERM',
+            },
+          ],
+          // Right side changes
+          [
+            // part 1: subtract 5
+            {
+              from: '11',
+              to: '6',
+              isValid: true,
+              attemptedToGetTo: '6',
+              attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT',
+            },
+            // part 2: divide by 3
+            {
+              from: '6',
+              to: '6/3',
+              isValid: true,
+              attemptedToGetTo: '6/3',
+              attemptedChangeType: 'SIMPLIFY_ARITHMETIC__DIVIDE',
+            },
+          ],
+        ],
+
+      ],
+    }, */
+
+
   ]
   testCases.forEach((test, index) => testStepEvaluation(test, index))
 })
