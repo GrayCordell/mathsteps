@@ -64,11 +64,7 @@ export function getOtherSideOptions(start: string, otherSide: string): { start: 
       collectQueue.push({ start: newStep, sideCheckNumOp: { op: reverseOp!, number: num } })
     })
   }
-  // handle where there are not any operations in the other side
-  if (opNumberMap.size === 0) {
-    const newStep = `${start}+-${otherSide}`
-    collectQueue.push({ start: newStep, sideCheckNumOp: { op: '+-', number: otherSide } })
-  }
+
   const rgNumberVars = /[-+ ]*\b[+-]?\d*\.?\d+(?:[eE][-+]?\d+)?\s*[a-zA-Z_][a-zA-Z0-9_]*\b/gmi
   const numberVars = otherSide.match(rgNumberVars)
   // remove the vars from the numberVars
