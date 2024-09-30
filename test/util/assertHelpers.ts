@@ -48,6 +48,10 @@ function _normalizeRulesProcedure(stepObject: StepInfo, expectedObject: Partial<
  * @mutates stepObject & expectedObject
  */
 export function assertSpecifiedValues(stepObject: StepInfo, expectedObject: Partial<StepInfo>) {
+  if (!stepObject && !expectedObject) {
+    assert.equal(stepObject, expectedObject)
+    return
+  }
   // remove COLLECT_AND_COMBINE_LIKE_TERMS from availableChangeTypes for now
   // Also lets remove the _CASE_1, _CASE_2, etc. from the ruleId.
   _normalizeRulesProcedure(stepObject, expectedObject)
