@@ -152,6 +152,10 @@ function _parseTextInternal(text: string): MathNode {
   ARRAY_OF_PREPROCESS_FUNCTIONS_BEFORE_PARSE.forEach((preprocessFct) => {
     text = preprocessFct(text)
   })
+
+  ///  QUICK_FIX. This is a quick fix to make occurrences of 0x to 0. It was breaking parsing.
+  text.replaceAll('0x', '0')
+
   // Process text into node.
   let rv = math.parse(text)
   // Make sure we store all constant nodes as bignumber to avoid fake unequals.
