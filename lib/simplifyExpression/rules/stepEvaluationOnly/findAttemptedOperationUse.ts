@@ -3,7 +3,7 @@ import type { AChangeType } from '~/index'
 import { parseText } from '~/index'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import type { TermTypeAndIndex } from '~/newServices/nodeServices/nodeHelpers'
-import { combineMakeMinusNegativeTerms, combineNumberVarTimesTerms, flattenAndIndexTrackAST, getTermDifferences, makeCountTerms, multiOpMakeNewOp, simpleCompareTerms } from '~/newServices/nodeServices/nodeHelpers'
+import { combineMakeMinusNegativeTerms, combineNumberVarTimesTerms, flattenAndIndexTrackAST, getAddedAndRemovedTerms, makeCountTerms } from '~/newServices/nodeServices/nodeHelpers'
 
 
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
@@ -12,35 +12,97 @@ import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
 import { getSimplifyChangeTypeByOp } from '~/types/changeType/changeAndMistakeUtils'
 
 
-function getAddedAndRemovedTerms(fromTerms: any, toTerms: any) {
-  const simpleCompared = simpleCompareTerms(fromTerms, toTerms)
-  let removed: { term: TermTypeAndIndex }[] = []
-  let added: { term: TermTypeAndIndex }[] = []
-  if (simpleCompared.added.length > 0 && simpleCompared.removed.length > 0 && simpleCompared.issues.length === 0) {
-    removed = simpleCompared.removed
-    added = simpleCompared.added
-  }
-  else {
-    const { removed: tempRemoved, added: tempAdded } = getTermDifferences(fromTerms, toTerms)
-    if (tempRemoved.length && tempAdded.length) {
-      removed = tempRemoved
-      added = tempAdded
-    }
-    else {
-      return null
-    }
-  }
-  added = added.sort((a, b) => a.term.index - b.term.index)
-  removed = removed.sort((a, b) => a.term.index - b.term.index)
-  return { removed, added }
+/**
+ * Correct operation signs based on the removed terms and the operator found. Required because of the way we handle subtraction throughout the system.(+- -> -)
+ * @param removed1 First removed term.
+ * @param removed2 Second removed term.
+ * @param removedOp The operator that was used.
+ */
+function applyOpFixBasedOnTermRemovals(removed1: string, removed2: string, removedOp: AOperator): AOperator {
+  const is1Negative = removed1.includes('-')
+  const is2Negative = removed2.includes('-')
+  const isNeitherNegative = !is1Negative && !is2Negative
+  const isBothNegative = is1Negative && is2Negative
+  const isOnly1Negative = (is1Negative && !is2Negative) || (!is1Negative && is2Negative)
+
+  let opPerformed: string | null = null
+  if (removedOp === '*' || removedOp === '/' || isNeitherNegative)
+    opPerformed = removedOp
+  else if (removedOp === '+' && isBothNegative)
+    opPerformed = '+'
+  else if (removedOp === '+' && isOnly1Negative)
+    opPerformed = '-'
+  else
+    throw new Error(`Unexpected state. Operator: ${removedOp}`)
+
+  return opPerformed as AOperator
 }
 
+/**
+ * Parses an expression string into an array of normalized terms.
+ * @param expr - The expression string to parse.
+ * @returns An array of normalized terms with indices.
+ */
+function _parseExpression(expr: string): (TermTypeAndIndex & { count: number })[] {
+  const ast = parseText(expr)
+  const flattenedTerms = flattenAndIndexTrackAST(ast).sort((a, b) => a.index! - b.index!)
+  const combinedTerms = combineNumberVarTimesTerms(flattenedTerms)
+  const normalizedTerms = combineMakeMinusNegativeTerms(combinedTerms)
+  return makeCountTerms(normalizedTerms)
+}
+
+
+function earlyIsValidOperation(fromTerms: TermTypeAndIndex[], toTerms: TermTypeAndIndex[]): boolean {
+  const fromHasDivisionOp = fromTerms.some(term => term.type === 'operator' && term.value === '/')
+  const toHasDivisionOp = toTerms.some(term => term.type === 'operator' && term.value === '/')
+  const fromHasMultOp = fromTerms.some(term => term.type === 'operator' && term.value === '*')
+  const toHasMultOp = toTerms.some(term => term.type === 'operator' && term.value === '*')
+
+  if (!fromHasDivisionOp && toHasDivisionOp) // can't invent a new division out of nowhere.. I think?
+    return false
+  if (!fromHasMultOp && toHasMultOp) // can't invent a new multiplication out of nowhere.. I think?
+    return false
+
+  const fromNoOps = fromTerms.filter(term => term.type === 'term')
+  const toNoOps = toTerms.filter(term => term.type === 'term')
+
+  if (fromNoOps.length !== toNoOps.length + 1)
+    return false
+
+  return true
+}
+
+/**
+ * Validates whether the found results are allowed based on terms and operator.
+ */
+function isValidOperation(useOperators: { term: TermTypeAndIndex }[], removedNoOpTerms: { term: TermTypeAndIndex }[], addedNoOpTerms: { term: TermTypeAndIndex }[], removedOperators: { term: TermTypeAndIndex }[]): boolean {
+  // Check for division operators and variables
+  const hasDivisionOp = useOperators.some(op => op.term.value === '/')
+  const hasVariables = removedNoOpTerms.some(term => /[a-zA-Z]/.test(term.term.value))
+  const hasDivisionOrVariables = hasDivisionOp || hasVariables
+
+
+  if (((hasVariables && addedNoOpTerms.length > 2) // TODO: Should be 1, currently breaking on variables
+    || (!hasVariables && addedNoOpTerms.length > 1) // No variables, only 1 term should be added
+    || (removedOperators.length > 1 && !hasDivisionOrVariables) // More than 1 operator without division/variables
+    || (removedOperators.length > 2 && hasDivisionOrVariables) // More than 2 operators with division/variables
+    || (hasVariables && removedNoOpTerms.length > 3) // TODO: Should be 2, currently breaking on variables
+    || (!hasVariables && removedNoOpTerms.length > 2) // No variables, only 2 terms should be removed
+    || removedNoOpTerms.length === 0 // At least 1 term must be removed
+  )) {
+    return false
+  }
+  else {
+    return true
+  }
+}
 
 /**
  * @description Find what operation (Add, Subtract, Multiply, or Divide) was attempted by the user and construct the full attempted operation result.
  * This function is fairly naive. It still does not handle moved around terms. Its mostly just positional or if the removed&added terms are unique. I wanted it to be simply based on removing of terms but it was having issues. TODO: IMPROVE
  * @param from The previous step or expression that the user started with. ex. '5 + 3'
  * @param to The next step or expression that the user tried to perform. ex. '8'
+ * TODO. This function is not perfect. It is a work in progress.. I am having a hard time figuring out how to do this. I also am handling edge cases a little too directly.
  */
 export function findAttemptedOperationUseCore(
   from: MathNode | string,
@@ -49,66 +111,42 @@ export function findAttemptedOperationUseCore(
   const fromStr = typeof from === 'string' ? from : myNodeToString(from)
   const toStr = typeof to === 'string' ? to : myNodeToString(to)
 
+  // Parse expressions into "terms" (operators and numbers/numberVariables/negativeNumbers). Each term has an index and a count of how many times that value appears.
+  const fromTerms = _parseExpression(fromStr)
+  const toTerms = _parseExpression(toStr)
 
-  const fromAST: MathNode = typeof from === 'string' ? parseText(from) : parseText(fromStr!)
-  const toAST: MathNode = typeof to === 'string' ? parseText(to) : parseText(toStr!)
-
-
-  const fromTerms: TermTypeAndIndex[] = makeCountTerms(combineMakeMinusNegativeTerms(combineNumberVarTimesTerms(flattenAndIndexTrackAST(fromAST).sort((a, b) => a.index! - b.index!))))
-  const toTerms: TermTypeAndIndex[] = makeCountTerms(combineMakeMinusNegativeTerms(combineNumberVarTimesTerms(flattenAndIndexTrackAST(toAST).sort((a, b) => a.index! - b.index!))))
-  const fromNoOps = fromTerms.filter(term => term.type === 'term')
-  const toNoOps = toTerms.filter(term => term.type === 'term')
-
-
-  if (fromNoOps.length !== toNoOps.length + 1)
+  if (!earlyIsValidOperation(fromTerms, toTerms))
     return null
 
-  const res = getAddedAndRemovedTerms(fromTerms, toTerms)
+  const { removed, added, opFound = null } = getAddedAndRemovedTerms(fromTerms, toTerms)
 
-  const removedTerms = res?.removed.filter(item => item.term.type === 'term').sort((a, b) => a.term.index - b.term.index) || []
-  const removedOperators = res?.removed.filter(item => item.term.type === 'operator').sort((a, b) => a.term.index - b.term.index) || []
-  const addedTerms = res?.added.filter(item => item.term.type === 'term').sort((a, b) => a.term.index - b.term.index) || []
+  const removedNoOpTerms = removed.filter(item => item.term.type === 'term').sort((a, b) => a.term.index - b.term.index) || []
+  const addedNoOpTerms = added?.filter(item => item.term.type === 'term').sort((a, b) => a.term.index - b.term.index) || []
+  const removedOperators = removed?.filter(item => item.term.type === 'operator').sort((a, b) => a.term.index - b.term.index) || []
+  const useOperators = [opFound, ...removedOperators].filter(op => op) as { term: TermTypeAndIndex }[] // Utilizes the found operator first.
 
-  // Check for division operators and variables
-  const hasDivisionOp = removedOperators.some(op => op.term.value === '/')
-  const hasVariables = removedTerms.some(term => /[a-zA-Z]/.test(term.term.value))
-  const hasDivisionOrVariables = hasDivisionOp || hasVariables
-
-  if (((hasVariables && addedTerms.length > 2) // TODO: Should be 1, currently breaking on variables
-    || (!hasVariables && addedTerms.length > 1) // No variables, only 1 term should be added
-    || (removedOperators.length > 1 && !hasDivisionOrVariables) // More than 1 operator without division/variables
-    || (removedOperators.length > 2 && hasDivisionOrVariables) // More than 2 operators with division/variables
-    || (hasVariables && removedTerms.length > 3) // TODO: Should be 2, currently breaking on variables
-    || (!hasVariables && removedTerms.length > 2) // No variables, only 2 terms should be removed
-    || removedTerms.length === 0 // At least 1 term must be removed
-  )) {
+  if (!isValidOperation(useOperators, removedNoOpTerms, addedNoOpTerms, removedOperators))
     return null
-  }
 
-  const term1 = removedTerms[0].term
-  const term2 = removedTerms[1]?.term ?? term1
-  const resultTerm = addedTerms[0].term
-  const removedOp = removedOperators[0].term
+  const removedTerm1 = removedNoOpTerms[0].term
+  const removedTerm2 = removedNoOpTerms[1]?.term ?? removedTerm1
+  const resultTerm = addedNoOpTerms[0].term
+  const useOp = useOperators[0].term
 
-
-  // Replace the first occurrence of term1 and term2 with the resultTerm in the original string
-
-
-  const actuallyCorrectTerm = getAnswerFromStep(`${term1.value} ${removedOp.value} ${term2.value}`)
+  // Get the actual "correct" result of the operation had they done it correctly. Currently this includes incorrect things like 5/2 + 3 -> 5 + 5 -> op performed is seen as + so the correct result is 2 + 3-> 5 + 5
+  const termOperationFromSystem = getAnswerFromStep(`${removedTerm1.value} ${useOp.value} ${removedTerm2.value}`)
   const fullAttemptedOpResult = toTerms.map((term) => {
-    if (term.type === 'term' && term.value === resultTerm.value && resultTerm.index === term.index)
-      return { ...term, value: actuallyCorrectTerm }
-    return term
+    return term.type === 'term' && term.value === resultTerm.value && resultTerm.index === term.index
+      ? { ...term, value: termOperationFromSystem }
+      : term
   }).map(term => term.value).join('')
-
-  const correctedOp = multiOpMakeNewOp(term1.value, term2.value, removedOp.value)
-
 
   return {
     opResult: resultTerm.value,
-    removedTerms: [term1.value, term2.value],
-    changeType: getSimplifyChangeTypeByOp(correctedOp as AOperator),
+    removedTerms: [removedTerm1.value, removedTerm2.value],
     fullAttemptedOpResult,
+    // Fix operators we use based on num + - num specifically for getting the changeType.
+    changeType: getSimplifyChangeTypeByOp(applyOpFixBasedOnTermRemovals(removedTerm1.value, removedTerm2.value, useOp.value as AOperator)),
   }
 }
 
@@ -120,7 +158,8 @@ interface findAttemptedOperationUseArgs {
   allPossibleNextStep: { changeType: AChangeType }[]
   allPossibleCorrectTos: string[]
 }
-export function findAttemptedOperationUse({ from, to, expressionEquals, allPossibleNextStep, allPossibleCorrectTos }: findAttemptedOperationUseArgs): ProcessedStep | null {
+
+export function findAttemptedOperationUse({ from, to, expressionEquals, allPossibleNextStep, allPossibleCorrectTos }: findAttemptedOperationUseArgs): ProcessedStep & { removedTerms: string[] } | null {
   const fromStr = typeof from === 'string' ? from : myNodeToString(from)
   const toStr = typeof to === 'string' ? to : myNodeToString(to)
   const findWhatOpRes = findAttemptedOperationUseCore(fromStr, toStr)
@@ -131,5 +170,5 @@ export function findAttemptedOperationUse({ from, to, expressionEquals, allPossi
   const isMistake = !expressionEquals(fullAttemptedOpResult, toStr)
 
   // TODO should mistakeType be unknown?
-  return { from: fromStr, to: toStr, changeType, attemptedToGetTo: fullAttemptedOpResult, /* mistakenChangeType: 'UNKNOWN', */ isMistake, mTo: [], availableChangeTypes: allPossibleNextStep.map(step => step.changeType), attemptedChangeType: changeType, allPossibleCorrectTos }
+  return { removedTerms: findWhatOpRes.removedTerms, from: fromStr, to: toStr, changeType, attemptedToGetTo: fullAttemptedOpResult, /* mistakenChangeType: 'UNKNOWN', */ isMistake, mTo: [], availableChangeTypes: allPossibleNextStep.map(step => step.changeType), attemptedChangeType: changeType, allPossibleCorrectTos }
 }

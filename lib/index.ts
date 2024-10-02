@@ -1,6 +1,6 @@
 /* eslint-disable no-throw-literal */
 import type { MathNode } from 'mathjs'
-import type { AChangeType, AChangeTypeCore, AChangeTypeGroup, AChangeTypeOnly, AChangeTypeWithCase, AEquationActionType, AMistakeTypeOnly, EQUATION_ACTION_TYPES, EquationActionTypes } from './types/changeType/ChangeTypes'
+import type { AChangeType, AChangeTypeCore, AChangeTypeGroup, AChangeTypeOnly, AChangeTypeWithCase, AEquationChangeType, AMistakeTypeOnly, EQUATION_CHANGE_TYPES, EquationChangeTypes } from './types/changeType/ChangeTypes'
 import math from '~/config'
 import clone from '~/newServices/nodeServices/clone.js'
 import { assessUserEquationStep, assessUserEquationSteps } from '~/simplifyExpression/equationEvaluation'
@@ -286,7 +286,7 @@ export type{
   AChangeTypeGroup,
   AChangeTypeOnly,
   AChangeTypeWithCase,
-  AEquationActionType,
+  AEquationChangeType,
   AMistakeTypeOnly,
 }
 export {
@@ -303,8 +303,8 @@ export {
   convertMistakeOnlyTypeToItsChangeType,
   convertTextToTeX,
   doesChangeTypeEqual,
-  EQUATION_ACTION_TYPES,
-  EquationActionTypes,
+  EQUATION_CHANGE_TYPES,
+  EquationChangeTypes,
   getChangeTypeGroups,
   getEveryChangeIdApplicable,
   // Change type utils

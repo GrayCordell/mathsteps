@@ -1,14 +1,13 @@
 import type { MathNode } from 'mathjs'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
-import { findTermRemovalOperation } from '~/newServices/nodeServices/termRemovalOperations'
 import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import { findAttemptedOperationUse } from '~/simplifyExpression/rules/stepEvaluationOnly/findAttemptedOperationUse'
 import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
-import { getOtherSideOptions } from '~/simplifyExpression/stepEvaluationEquationHelpers'
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
-import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
-import { convertAdditionToSubtractionErrorType, getReverseOp, getSimplifyChangeTypeByOp, isAnAdditionChangeType } from '~/types/changeType/changeAndMistakeUtils'
-import type { AChangeType, AEquationActionType } from '~/types/changeType/ChangeTypes'
+import { convertAdditionToSubtractionErrorType, isAnAdditionChangeType } from '~/types/changeType/changeAndMistakeUtils'
+import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
+import { changeGroupMappings } from '~/types/changeType/ChangeTypes'
+import type { NumberOp } from '~/types/NumberOp'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { logger, LogLevel } from '~/util/logger'
 import { cleanString } from '~/util/stringUtils'
@@ -30,9 +29,9 @@ export type ProcessedStep = Omit<RawStep, 'to'> & {
   attemptedToGetTo?: string
   attemptedChangeType?: AChangeType
   allPossibleCorrectTos?: string[]
-  sideCheckNumOp?: { op: string, number: string }
-  equationActionType?: AEquationActionType
-  removedTerm?: { op: AOperator, number: string }
+  equationActionType?: AEquationChangeType
+  addedNumOp?: NumberOp
+  removeNumberOp?: NumberOp
 }
 
 export type CoreAssessUserStepResult = {
@@ -52,85 +51,53 @@ export interface StepInfo {
   mistakenChangeType: AChangeType | null // The type of mistake the user made, if any
   availableChangeTypes: AChangeType[] // The types of changes the user could have made
   allPossibleCorrectTos?: string[] // All possible correct steps the user could have made
-  equationActionType?: AEquationActionType// The type of equation action the user performed
-  sideCheckNumOp?: { op: AOperator, number: string } // The operator and number the user could have used from the other side of the equation
+  equationActionType?: AEquationChangeType// The type of equation action the user performed
+  addedNumOp?: NumberOp // The operator and number the user could have used from the other side of the equation
+  removeNumberOp?: NumberOp // The operator and number the user could have removed from the current side of the equation
 }
 
 
 const expressionEquals = (exp0: string | MathNode, exp1: string | MathNode) => areExpressionEqual(exp0, exp1, getValidStepEqCache())
 
 // Change to have it search further down the tree.
-const MAX_STEP_DEPTH = 100
+const MAX_NEXT_STEPS = 190
+const MAX_STEP_DEPTH = 4
 /**
  * Creates a history of steps found from the previous step to get to the user's step. Requires processStepInfo to convert the history into the final StepInfo[] form.
  */
-export function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AChangeType)[] = [], firstFoundToLog: string[] = [], otherSide: string | null = null): CoreAssessUserStepResult {
+export function coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AChangeType)[] = [], firstFoundToLog: string[] = [], otherSide: string | null = null): CoreAssessUserStepResult {
   const valueToFind = lastTwoUserSteps[1]
-  const stepQueue: { start: string, history: ProcessedStep[], sideCheckNumOp?: { op: AOperator, number: string } }[] = []
+  const stepQueue: { start: string, history: ProcessedStep[], addedNumOp?: NumberOp, removeNumberOp?: NumberOp }[] = []
   const triedSteps = new Set<string>()
   const theProblem = lastTwoUserSteps[0]
-
-
-  // In case of equations we need to check if the side.
-  // 1. does something with the others sides available operations,
-  // or 2. if removing a term from this side can get us to the answer.
-  // or 3. we add all the other side operations to the queue, to check if solving down will lead to the answer.
-  function handleEquationChecksProcedure(start: string, sideCheckNumOp: any, depth: number, history: ProcessedStep[]) {
-    // Depth is arbitrary, but we don't want to go too deep.
-    if (otherSide && !sideCheckNumOp && depth < 3) {
-      const removedTerm = findTermRemovalOperation(start, valueToFind, expressionEquals)
-      if (removedTerm) {
-        const changeType = getSimplifyChangeTypeByOp(getReverseOp(removedTerm.op))
-        history.push({ from: start, to: valueToFind, changeType, equationActionType: 'REMOVE_TERM', isMistake: false, availableChangeTypes: [], attemptedToGetTo: valueToFind, attemptedChangeType: changeType, removedTerm, sideCheckNumOp })
-        return { history }
-      }
-
-      // TODO make us get all simplify removal options. Don't know how that slipped my mind.
-
-
-      const moreOptions = getOtherSideOptions(start, otherSide)
-
-
-      const foundInMoreOptions = moreOptions.find(step => expressionEquals(step.start, valueToFind))
-      if (foundInMoreOptions) {
-        const changeType = getSimplifyChangeTypeByOp(getReverseOp(foundInMoreOptions.sideCheckNumOp.op))
-        history.push({ from: start, to: valueToFind, changeType, equationActionType: 'ADD_TERM', isMistake: false, availableChangeTypes: [], attemptedToGetTo: valueToFind, attemptedChangeType: changeType, sideCheckNumOp })
-        return { history }
-      }
-
-      // if nothing was found, then add all the other side operations to the queue
-      moreOptions.forEach(step => stepQueue.push({ ...step, history }))
-    }
-    return null
-  }
-
 
   if (lastTwoUserSteps[0] === lastTwoUserSteps[1])
     return { history: [] }
 
   stepQueue.push({ start: lastTwoUserSteps[0], history: [] })
 
-  let depth = 0
-  while (stepQueue.length > 0 && depth < MAX_STEP_DEPTH) {
-    let { start, history, sideCheckNumOp = undefined } = stepQueue.shift()! // Use shift for BFS (queue)
+  let stepCount = 0
+  while (stepQueue.length > 0 && stepCount < MAX_NEXT_STEPS) {
+    let { start, history } = stepQueue.shift()! // Use shift for BFS (queue)
+    const depth = history.length
+    if (depth > MAX_STEP_DEPTH)
+      continue
+
 
     start = cleanString(start)
+    // TODO temp?
+    start = start.replaceAll('0x', '(0*1x)').replaceAll('0*x', '(0*1x)')
 
     if (triedSteps.has(start) || Array.from(triedSteps).some(step => expressionEquals(step, start)))
       continue
     triedSteps.add(start)
 
     logger.deferred('-------------------', LogLevel.DEBUG)
-    logger.deferred(`from:${start}, trying to find ${valueToFind}, depth:${depth}`, LogLevel.DEBUG)
-
-    const allPossibleNextStep = findAllNextStepOptions(start)
+    logger.deferred(`from:${start}, trying to find ${valueToFind}, depth:${depth} total step options checked:${stepCount}`, LogLevel.DEBUG)
+    const allPossibleNextStep = findAllNextStepOptions(start, { history, otherSide })
 
 
     if (allPossibleNextStep.length === 0) {
-      // Note: Will adds to queue if null is returned
-      const checkEquationRes = handleEquationChecksProcedure(start, sideCheckNumOp, depth, history)
-      if (checkEquationRes)
-        return checkEquationRes
       continue
     }
 
@@ -145,8 +112,6 @@ export function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypes
     for (const possibleStep of allPossibleNextStep) {
       // kind of wasteful but i need to attach the possibleCorrectTos to the step.
       possibleStep.allPossibleCorrectTos = allPossibleCorrectTos
-      if (sideCheckNumOp)
-        possibleStep.sideCheckNumOp = sideCheckNumOp
 
       // Record the step in history
       const updatedHistory = [...history, possibleStep]
@@ -170,6 +135,12 @@ export function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypes
         if (possibleStep.to && mToStep.to === possibleStep.to)
           continue
 
+        // if its an equation we can't check a lot of these anymore.
+        // @ts-expect-error ---
+        if (otherSide && changeGroupMappings.MistakeWrongOperationRules.includes(mToStep.changeType)) {
+          continue
+        }
+
         if (expressionEquals(mToStep.to, valueToFind)) {
           // The mistake found can be a correct step somehow later. So we have to ignore incorrect steps that can become the answer.
           const isStillCorrect = expressionEquals(getAnswerFromStep(theProblem), getAnswerFromStep(mToStep.to))
@@ -178,33 +149,36 @@ export function _coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypes
           // If the mistake is the answer, then we need to add remove the last step in the history
           updatedHistory.pop()
           // add the mistake step to the history
-          updatedHistory.push({ ...mToStep, ...possibleStep, from: possibleStep.from, to: mToStep.to, attemptedToGetTo: possibleStep.to, attemptedChangeType: possibleStep.changeType, changeType: mToStep.changeType, isMistake: true, sideCheckNumOp })
+          updatedHistory.push({ ...mToStep, ...possibleStep, from: possibleStep.from, to: mToStep.to, attemptedToGetTo: possibleStep.to, attemptedChangeType: possibleStep.changeType, changeType: mToStep.changeType, isMistake: true })
           return { history: updatedHistory }
         }
       }
 
-
-      stepQueue.push({ start: possibleStep.to, history: updatedHistory })
+      stepQueue.push({ ...possibleStep, start: possibleStep.to, history: updatedHistory })
+      // TODO ADD PRIORITY QUEUE!!!
+      // const queuePriority = ['REMOVE_ADDING_ZERO', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_ARITHMETIC__ADD', 'SIMPLIFY_ARITHMETIC__SUBTRACT']
+      // const priorityIndex = queuePriority.indexOf(possibleStep.changeType)
+      // if (priorityIndex === -1)
+      //  stepQueue.push({ ...possibleStep, start: possibleStep.to, history: updatedHistory })
+      // else
+      //  stepQueue.splice(priorityIndex, 0, { ...possibleStep, start: possibleStep.to, history: updatedHistory })
     }
 
 
-    // TODO handle more depth..?
-    if (depth < 1) {
+    // TODO handle more stepCount/depth..?
+    if (stepCount === 0) {
       const opUseExtraCheck = findAttemptedOperationUse({ from: start, to: valueToFind, allPossibleNextStep, allPossibleCorrectTos, expressionEquals })
-      const isMistakeAndIsSideCheckNumCase = opUseExtraCheck?.isMistake && sideCheckNumOp
-      if (opUseExtraCheck && !isMistakeAndIsSideCheckNumCase) {
-        history.push({ ...opUseExtraCheck, sideCheckNumOp })
+      if (opUseExtraCheck && (otherSide && !opUseExtraCheck?.isMistake)) {
+        history.push({ ...opUseExtraCheck })
+        return { history }
+      }
+      else if (opUseExtraCheck && !otherSide) {
+        history.push({ ...opUseExtraCheck })
         return { history }
       }
     }
 
-    // Note: Will add to queue if null is returned
-    const checkEquationRes = handleEquationChecksProcedure(start, sideCheckNumOp, depth, history)
-    if (checkEquationRes)
-      return checkEquationRes
-
-
-    depth++
+    stepCount++
   }
 
   return { history: [] }
@@ -224,21 +198,17 @@ function correctChangeTypeSubtractToAddFix<T extends (AChangeType | undefined | 
 
 
 // These two are also used in equationEvaluation. //TODO move to a shared file?
-export function processNoHistoryStep(userStep: string, previousStep: string, startingStepAnswer: string, firstChangeTypesLog: (AChangeType)[], firstFoundToLog: string[]): StepInfo[] {
+export function processNoHistoryStep({ from, to, startingStepAnswer, attemptedToGetTo, attemptedChangeType, firstChangeTypesLog, firstFoundToLog }: { from: string, to: string, attemptedToGetTo?: string | null, attemptedChangeType?: AChangeType | null, startingStepAnswer: string, firstChangeTypesLog: (AChangeType)[], firstFoundToLog: string[] }): StepInfo[] {
   const firstAvailableChangeTypes = filterUniqueValues(firstChangeTypesLog.flat())
-  const to = userStep // The user's step is the only step we have.
-  const from = previousStep // The previous step is the only step we have.
-  const isStartingStepsSame = from === to
 
-  const attemptedChangeType = firstAvailableChangeTypes.length === 1 ? firstAvailableChangeTypes[0] : 'UNKNOWN' as const
-  const attemptedToGetTo = firstFoundToLog.length === 1 ? firstFoundToLog[0] : 'UNKNOWN' as const
-  const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(userStep), startingStepAnswer)
+  const attemptedChangeTypeCorrected = attemptedChangeType || (firstAvailableChangeTypes.length === 1 ? firstAvailableChangeTypes[0] : 'UNKNOWN' as const)
+  const attemptedToGetToCorrected = attemptedToGetTo || (firstFoundToLog.length === 1 ? firstFoundToLog[0] : 'UNKNOWN' as const)
+  const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(from), startingStepAnswer)
 
-  const sharedPart = { isValid: false, from, to, attemptedToGetTo, attemptedChangeType, mistakenChangeType: null, availableChangeTypes: firstAvailableChangeTypes, allPossibleCorrectTos: firstFoundToLog } as const
-  const stepInfo = isStartingStepsSame
-    ? [{ ...sharedPart, reachesOriginalAnswer: true, mistakenChangeType: 'NO_CHANGE' as const }]
-    : [{ ...sharedPart, reachesOriginalAnswer, mistakenChangeType: 'UNKNOWN' as const }]
-  return stepInfo
+  const sharedPart = { isValid: false, from, to, attemptedToGetTo: attemptedToGetToCorrected, reachesOriginalAnswer, attemptedChangeType: attemptedChangeTypeCorrected, availableChangeTypes: firstAvailableChangeTypes, allPossibleCorrectTos: firstFoundToLog } as const
+  return expressionEquals(from, to)
+    ? [{ ...sharedPart, mistakenChangeType: 'NO_CHANGE', attemptedChangeType: 'NO_CHANGE' }]
+    : [{ ...sharedPart, mistakenChangeType: 'UNKNOWN' }]
 }
 export function processStep(step: ProcessedStep, previousStep: string, startingStepAnswer: string, historyLength: number): StepInfo & Partial<ProcessedStep> {
   const to = step.to
@@ -272,7 +242,7 @@ export function processStep(step: ProcessedStep, previousStep: string, startingS
 
 /**
  * @description Processes CoreAssessUserStepResult into the final StepInfo[] form
- * @param res - The result from _coreAssessUserStep
+ * @param res - The result from coreAssessUserStep
  * @param previousStep - The previous step before the user's step. ex. '2x + 2x + 2x'
  * @param userStep - The users step moving from the previous step to the current step. ex. '2x + 4x'
  * @param startingStepAnswer - The actual answer of the equation.
@@ -296,7 +266,7 @@ function processStepInfo(
   })
 
   return history.length === 0
-    ? processNoHistoryStep(userStep, previousStep, startingStepAnswer, firstChangeTypesLog, firstFoundToLog)
+    ? processNoHistoryStep({ from: previousStep, to: userStep, startingStepAnswer, firstChangeTypesLog, firstFoundToLog })
     : history.map(step => processStep(step, previousStep, startingStepAnswer, history.length))
 }
 
@@ -325,7 +295,7 @@ export function assessUserStep(previousUserStep: string, userStep: string, start
   // const userStep = myNodeToString(parseText(userStep_))
   const firstChangeTypesLog: AChangeType[] = []
   const firstFoundToLog: string[] = []
-  const rawAssessedStepOptionsRes = _coreAssessUserStep([previousUserStep, userStep], firstChangeTypesLog, firstFoundToLog)
+  const rawAssessedStepOptionsRes = coreAssessUserStep([previousUserStep, userStep], firstChangeTypesLog, firstFoundToLog)
   return processStepInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, startingStepAnswer, firstChangeTypesLog, firstFoundToLog)
 }
 

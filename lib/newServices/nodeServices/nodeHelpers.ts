@@ -62,6 +62,106 @@ export function makeCountTerms(terms: TermTypeAndIndex[]): (TermTypeAndIndex & {
 }
 
 
+export function combineNumberVarTimesTerms(terms: TermTypeAndIndex[]) {
+  // If we have a number times a variable term, we need to combine them, and fix the indexs after that
+  for (let i = 0; i < terms.length; i++) {
+    if (terms[i].type === 'term' && terms[i + 1]?.type === 'operator' && terms[i + 2]?.type === 'term' && terms[i + 2]?.value.match(/[a-zA-Z]/)) {
+      terms[i].value = terms[i].value + terms[i + 2].value
+      terms.splice(i + 1, 2)
+      // fix the indexes after
+      for (let j = i + 1; j < terms.length; j++) {
+        terms[j].index = j
+      }
+    }
+  }
+  return terms
+}
+
+export function combineMakeMinusNegativeTerms(terms: TermTypeAndIndex[]) {
+  // If we have a - number we need to make it -number
+  for (let i = 0; i < terms.length; i++) {
+    if (terms[i - 1]?.type === 'term' && (terms[i].type === 'operator' && terms[i].value === '-') && terms[i + 1]?.type === 'term' && !terms[i + 1]?.value.includes('-')) {
+      terms[i + 1].value = `${terms[i].value}${terms[i + 1].value}`
+      terms[i] = { type: 'operator', value: '+', index: terms[i].index }
+      // fix the indexes after
+      for (let j = i; j < terms.length; j++) {
+        terms[j].index = j
+      }
+    }
+  }
+  return terms
+}
+
+// if the values removed are unique(1 occurrence in from) then we know the two terms that were removed.
+interface TermDifferenceReturn {
+  removed: { term: TermTypeAndIndex }[]
+  added: { term: TermTypeAndIndex }[]
+  issues: ('NO_2_REMOVED_OR_NOT_1_ADDED' | 'NO_OP' | 'TOO_MANY_OPS')[]
+  opFound: { term: TermTypeAndIndex } | null
+}
+
+export function getTermDifferencesViaRemovals(a: TermTypeAndIndex[], b: TermTypeAndIndex[]): TermDifferenceReturn {
+  const issues: ('NO_2_REMOVED_OR_NOT_1_ADDED' | 'NO_OP' | 'TOO_MANY_OPS')[] = []
+
+  const combinedBA_B = [...b]
+  for (let i = 0; i < a.length; i++) {
+    if (!b.some(item => item.value === a[i].value))
+      combinedBA_B.push({ ...a[i], count: 0 })
+  }
+
+  const diffBA = combinedBA_B.map((item, index) => {
+    const aCount = a.find(aItem => aItem.value === item.value)?.count || 0
+    const bCount = b.find(bItem => bItem.value === item.value)?.count || 0
+    return {
+      ...item,
+      diff: bCount - aCount,
+    }
+  }).sort((a, b) => a.index - b.index)
+  const removedTermsFlattened = []
+  const addedTermsFlattened = []
+  for (let i = 0; i < diffBA.length; i++) {
+    if (diffBA[i].diff > 0) {
+      for (let j = 0; j < diffBA[i].diff; j++)
+        addedTermsFlattened.push(diffBA[i])
+    }
+    else if (diffBA[i].diff < 0) {
+      for (let j = 0; j < -diffBA[i].diff; j++)
+        removedTermsFlattened.push(diffBA[i])
+    }
+  }
+
+  const removedTermsFlattenedNoOp = removedTermsFlattened.filter(item => item.type !== 'operator')
+  const addedTermsFlattenedNoOp = addedTermsFlattened.filter(item => item.type !== 'operator')
+
+  if (removedTermsFlattenedNoOp.length !== 2 || addedTermsFlattenedNoOp.length !== 1) {
+    issues.push('NO_2_REMOVED_OR_NOT_1_ADDED' as const)
+  }
+  const removedOps = removedTermsFlattened.filter(item => item.type === 'operator')
+
+  function getRemovedTerm1Index() {
+    const removedTerm1Value = removedTermsFlattenedNoOp[0].value
+    return a.find(item =>
+      // We are getting the removed term1 from the original expression.
+      item.value === removedTerm1Value && !b.some(bItem => bItem.value === item.value && bItem.index === item.index)
+        ? item.index
+        : null,
+    )?.index ?? removedTermsFlattenedNoOp[0].index
+  }
+  const term1Index = getRemovedTerm1Index()
+
+  // Check if there is an operator after the first removed term in the original expression
+  const op = (term1Index + 1) ? a.find(item => item.index === (term1Index + 1) && item.type === 'operator') : null
+  if (!op || (removedOps.length === 0))
+    issues.push('NO_OP' as const)
+
+  // Make our added and removed type be of Type TermTypeAndIndex
+  const removed = removedTermsFlattened.map(term => ({ term })).sort((a, b) => a.term.index - b.term.index)
+  const added = addedTermsFlattened.map(term => ({ term })).sort((a, b) => a.term.index - b.term.index)
+  const opFound = op ? { term: op } : null
+  return { removed, added, issues, opFound }
+}
+
+
 /**
  * Calculate the differences between two sets of terms (removed/added terms),
  * handling index shifting due to removals and additions.
@@ -69,7 +169,7 @@ export function makeCountTerms(terms: TermTypeAndIndex[]): (TermTypeAndIndex & {
  * @param toTerms The updated set of terms.
  * @returns An object with the added and removed terms.
  */
-export function getTermDifferences(fromTerms: TermTypeAndIndex[], toTerms: TermTypeAndIndex[]) {
+export function getTermDifferencesViaIndexChanges(fromTerms: TermTypeAndIndex[], toTerms: TermTypeAndIndex[]) {
   const removedTerms: { term: TermTypeAndIndex }[] = []
   const addedTerms: { term: TermTypeAndIndex }[] = []
 
@@ -106,120 +206,19 @@ export function getTermDifferences(fromTerms: TermTypeAndIndex[], toTerms: TermT
 
 
 /**
- * Correct operation signs based on the removed terms and the operator found.
- * @param removed1 First removed term.
- * @param removed2 Second removed term.
- * @param removedOp The operator that was used.
+ * Attempts to use two different methods to find the added and removed terms between two sets of terms. If both methods fail, returns null.
+ * @param fromTerms
+ * @param toTerms
  */
-export function multiOpMakeNewOp(removed1: string, removed2: string, removedOp: string): string {
-  const is1Negative = removed1.includes('-')
-  const is2Negative = removed2.includes('-')
-  const isNeitherNegative = !is1Negative && !is2Negative
-  const isBothNegative = is1Negative && is2Negative
-  const isOnly1Negative = (is1Negative && !is2Negative) || (!is1Negative && is2Negative)
-
-  let opPerformed: string | null = null
-  if (removedOp === '*' || removedOp === '/' || isNeitherNegative) {
-    opPerformed = removedOp
-  }
-  else if (removedOp === '+' && isBothNegative) {
-    opPerformed = '+'
-  }
-  else if (removedOp === '+' && isOnly1Negative) {
-    opPerformed = '-'
+export function getAddedAndRemovedTerms(fromTerms: TermTypeAndIndex[], toTerms: TermTypeAndIndex[]): Omit<TermDifferenceReturn, 'issues'> {
+  const { removed, added, issues, opFound } = getTermDifferencesViaRemovals(fromTerms, toTerms)
+  if (added.length > 0 && removed.length > 0 && issues.length === 0) {
+    return { removed, added, opFound }
   }
   else {
-    throw new Error(`Unexpected state. Operator: ${removedOp}`)
+    const { removed: viaIndexRemoved, added: viaIndexAdded } = getTermDifferencesViaIndexChanges(fromTerms, toTerms)
+    return viaIndexRemoved?.length && viaIndexAdded?.length
+      ? { removed: viaIndexRemoved, added: viaIndexAdded, opFound: null }
+      : { removed: [], added: [], opFound: null }
   }
-
-  return opPerformed
-}
-
-
-export function combineNumberVarTimesTerms(terms: TermTypeAndIndex[]) {
-  // If we have a number times a variable term, we need to combine them, and fix the indexs after that
-  for (let i = 0; i < terms.length; i++) {
-    if (terms[i].type === 'term' && terms[i + 1]?.type === 'operator' && terms[i + 2]?.type === 'term' && terms[i + 2]?.value.match(/[a-zA-Z]/)) {
-      terms[i].value = terms[i].value + terms[i + 2].value
-      terms.splice(i + 1, 2)
-      // fix the indexes after
-      for (let j = i + 1; j < terms.length; j++) {
-        terms[j].index = j
-      }
-    }
-  }
-  return terms
-}
-
-export function combineMakeMinusNegativeTerms(terms: TermTypeAndIndex[]) {
-  // If we have a - number we need to make it -number
-  for (let i = 0; i < terms.length; i++) {
-    if (terms[i - 1]?.type === 'term' && (terms[i].type === 'operator' && terms[i].value === '-') && terms[i + 1]?.type === 'term' && !terms[i + 1]?.value.includes('-')) {
-      terms[i + 1].value = `${terms[i].value}${terms[i + 1].value}`
-      terms[i] = { type: 'operator', value: '+', index: terms[i].index }
-      // fix the indexes after
-      for (let j = i; j < terms.length; j++) {
-        terms[j].index = j
-      }
-    }
-  }
-  return terms
-}
-
-
-// if the values removed are unique(1 occurrence in from) then we know the two terms that were removed.
-/* export function simpleCompareTerms(a: TermTypeAndIndex[], b: TermTypeAndIndex[]) {
-  // First find the terms that were removed
-  let removedTerms = a
-    .filter(item => (item.count === 1 && !b.some(bItem => bItem.value === item.value)))
-    .filter(item => item.type === 'term')
-  const addedTerms = b
-    .filter(item => item.count === 1 && !a.some(aItem => aItem.value === item.value))
-    .filter(item => item.type === 'term')
-
-  if (removedTerms.length !== 2 || addedTerms.length !== 1)
-    return null
-  const opIndex = removedTerms[0].index + 1
-  const op = a.find(item => item.index === opIndex)
-  if (!op || op.type !== 'operator')
-    return null
-
-  // add the operator to the removed terms
-  removedTerms.push(op)
-  removedTerms = removedTerms.sort((a, b) => a.index - b.index)
-
-  // temp do this
-  const removed = removedTerms.map(term => ({ term }))
-  const added = addedTerms.map(term => ({ term }))
-  return { removed, added }
-} */
-// if the values removed are unique(1 occurrence in from) then we know the two terms that were removed.
-export function simpleCompareTerms(a: TermTypeAndIndex[], b: TermTypeAndIndex[]) {
-  const issues: ('NO_2_REMOVED_OR_NOT_1_ADDED' | 'NO_OP')[] = []
-  // First find the terms that were removed
-  const removedTerms = a
-    .filter(item => (item.count === 1 && !b.some(bItem => bItem.value === item.value)))
-    .filter(item => item.type === 'term')
-  const addedTerms = b
-    .filter(item => item.count === 1 && !a.some(aItem => aItem.value === item.value))
-    .filter(item => item.type === 'term')
-
-  if (removedTerms.length !== 2 || addedTerms.length !== 1) {
-    issues.push('NO_2_REMOVED_OR_NOT_1_ADDED' as const)
-  }
-  const opIndex = removedTerms[0].index + 1
-  const op = a.find(item => item.index === opIndex)
-  if (!op || op.type !== 'operator')
-    issues.push('NO_OP' as const)
-
-  // add the operator to the removed terms
-  if (op && op.type === 'operator') {
-    removedTerms.push(op)
-  }
-
-  // temp do this
-  const removed = removedTerms.map(term => ({ term })).sort((a, b) => a.term.index - b.term.index)
-  const added = addedTerms.map(term => ({ term })).sort((a, b) => a.term.index - b.term.index)
-  const theSingleOperatorFound = op ? { term: op } : null
-  return { removed, added, issues, theSingleOperatorFound }
 }

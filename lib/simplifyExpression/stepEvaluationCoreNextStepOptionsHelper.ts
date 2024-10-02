@@ -1,9 +1,11 @@
 import mathsteps, { parseText } from '~/index'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
+import { findAllOperationsThatCanBeRemoved } from '~/newServices/nodeServices/termRemovalOperations'
 import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import { mistakeSearches } from '~/simplifyExpression/mistakes/regexPemdasMistakes'
 import type { ProcessedStep, RawStep } from '~/simplifyExpression/stepEvaluationCore'
+import { getOtherSideOptions } from '~/simplifyExpression/stepEvaluationEquationHelpers'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { cleanString } from '~/util/stringUtils'
@@ -52,32 +54,45 @@ function _correctSimplifyAdditionToSubtraction(steps: ProcessedStep[]) {
  * @param steps "Raw" steps handed back from simplifyExpression
  */
 function _convertRawStepsToProcessedStep(steps: RawStep[]): ProcessedStep[] {
-  const availableChangeTypes = filterUniqueValues(steps.filter(step => !step?.isMistake).map(step => step?.changeType))
-
   const processedStepsSet = new Set<string>()
   return steps
     .filter(step => step.to)
     .flatMap(step => step.to.map(toStr => ({
       ...step,
-      availableChangeTypes,
+      availableChangeTypes: (steps.filter(step => !step?.isMistake).map(step => step?.changeType)), // TODO remove availableChangeTypes from here? We add it again in _addAllAvailableChangeTypesToEachStep
       to: cleanString(toStr),
       from: cleanString(step.from),
     })))
     .filter(step => !processedStepsSet.has(step.to) && processedStepsSet.add(step.to))
     .filter(step => step.to !== step.from)
 }
-function _addAllAvailbleChangeTypesToEachStep(steps: ProcessedStep[]) {
+function _addAllAvailableChangeTypesToEachStep(steps: ProcessedStep[]) {
   const availableChangeTypes = steps.filter(step => !step?.isMistake).map(step => step?.changeType)
   steps.forEach((step) => {
     step.availableChangeTypes = availableChangeTypes
   })
 }
+function _sortStepsByChangeType(steps: ProcessedStep[]) {
+  // (possibleStep.changeType === 'SIMPLIFY_ARITHMETIC__ADD' || possibleStep.changeType === 'SIMPLIFY_ARITHMETIC__SUBTRACT' || possibleStep.changeType === 'SIMPLIFY_ARITHMETIC__MULTIPLY' || possibleStep.changeType === 'KEMU_DISTRIBUTE_MUL_OVER_ADD' || possibleStep.changeType === 'REMOVE_ADDING_ZERO' || possibleStep.changeType === 'REMOVE_MULTIPLYING_BY_ONE' || possibleStep.changeType === 'SIMPLIFY_FRACTION') {
+  const priorityOrderFirstIsFirst = ['SIMPLIFY_ARITHMETIC__ADD', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'REMOVE_ADDING_ZERO', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_FRACTION']
+  return steps.toSorted((a, b) => {
+    const aIndex = priorityOrderFirstIsFirst.indexOf(a.changeType)
+    const bIndex = priorityOrderFirstIsFirst.indexOf(b.changeType)
+    return aIndex - bIndex
+  })
+}
 
+
+interface NeededForEquationChecks {
+  otherSide?: string | null | undefined
+  history: ProcessedStep[]
+}
 /**
  * @description Finds all possible next steps for a given user step. This includes steps from the simplifyExpression engine, as well as additional steps that are not caught/placed yet in the simplifyExpression engine. This is an internal procedure and should not be used directly.
  * @param userStep_ The user's step as a string
+ * @param neededForEquations Additional information needed for equation checks
  */
-export function findAllNextStepOptions(userStep_: string): ProcessedStep[] {
+export function findAllNextStepOptions(userStep_: string, neededForEquations?: NeededForEquationChecks | undefined | null): ProcessedStep[] {
   const userStep = myNodeToString(parseText(userStep_))
   const potentialSteps: RawStep[] = []
   mathsteps.simplifyExpression({
@@ -98,6 +113,19 @@ export function findAllNextStepOptions(userStep_: string): ProcessedStep[] {
   //  Add Additional Steps
   //
 
+  // Equation checks
+  if (neededForEquations?.otherSide && neededForEquations?.history) {
+    const removedDepth = neededForEquations.history.filter(step => step.removeNumberOp).map(step => step.removeNumberOp).length
+    const addedDepth = neededForEquations.history.filter(step => step.addedNumOp).map(step => step.addedNumOp).length
+    if (removedDepth < 2 && addedDepth < 1) {
+      processedSteps.push(...findAllOperationsThatCanBeRemoved(userStep_, neededForEquations.history))
+    }
+    if (removedDepth < 1 && addedDepth < 2) {
+      processedSteps.push(...getOtherSideOptions(userStep_, neededForEquations.otherSide, neededForEquations.history))
+    }
+  }
+
+
   // +Mistake Steps that ares not caught by the simplification engine.
   const manualMistakes = mistakeSearches(userStep)
   processedSteps.push(...manualMistakes)
@@ -108,9 +136,14 @@ export function findAllNextStepOptions(userStep_: string): ProcessedStep[] {
   //
 
   // availableChangeTypes should be the same for all steps
-  _addAllAvailbleChangeTypesToEachStep(processedSteps)
+  _addAllAvailableChangeTypesToEachStep(processedSteps)
   // Correct SIMPLIFY_ARITHMETIC__ADD to SIMPLIFY_ARITHMETIC__SUBTRACT if needed
   _correctSimplifyAdditionToSubtraction(processedSteps)
 
+
+  // _sortStepsByChangeType(processedSteps)
+
   return processedSteps
 }
+
+

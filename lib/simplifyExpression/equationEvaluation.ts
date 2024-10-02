@@ -1,154 +1,115 @@
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import type { CoreAssessUserStepResult, StepInfo } from '~/simplifyExpression/stepEvaluationCore'
-import { _coreAssessUserStep, processNoHistoryStep, processStep } from '~/simplifyExpression/stepEvaluationCore'
-import type { AChangeType } from '~/types/changeType/ChangeTypes'
+import { coreAssessUserStep, processNoHistoryStep, processStep } from '~/simplifyExpression/stepEvaluationCore'
+import { getReverseOp } from '~/types/changeType/changeAndMistakeUtils'
+import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
 import { cleanString } from '~/util/stringUtils'
 
 const expressionEquals = (exp0: string, exp1: string): boolean => areExpressionEqual(exp0, exp1, getValidStepEqCache())
 
 function processEquationInfo(
-  res: { lhs: CoreAssessUserStepResult, rhs: CoreAssessUserStepResult, equationChangeType: any },
+  equation: { lhs: CoreAssessUserStepResult, rhs: CoreAssessUserStepResult, equationChangeType: AEquationChangeType | undefined },
   previousStep: string,
   userStep: string,
   startingStepAnswer: string,
-  logs: any,
-): { left: StepInfo[], right: StepInfo[], equationChangeType: any } {
-  const leftPrevious = cleanString(previousStep.split('=')[0])
-  const rightPrevious = cleanString(previousStep.split('=')[1])
-  const userLeft = cleanString(userStep.split('=')[0])
-  const userRight = cleanString(userStep.split('=')[1])
+  logs: { lhsFirstChangeTypesLog: AChangeType[], rhsFirstChangeTypesLog: AChangeType[], lhsFirstFoundToLog: string[], rhsFirstFoundToLog: string[] },
+): { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType, equationErrorType?: AEquationChangeType } {
+  const leftFrom = cleanString(previousStep.split('=')[0])
+  const rightFrom = cleanString(previousStep.split('=')[1])
+  const leftTo = cleanString(userStep.split('=')[0])
+  const rightTo = cleanString(userStep.split('=')[1])
 
-  // function correctEQChangeType(rhsOrLhs: CoreAssessUserStepResult) {
-  //  rhsOrLhs.history = rhsOrLhs.history.map((step) => {
-  //    // TODO. This is a bit of a hack. Having a sideCheckNumOp means you are in the add_term path because its provided to all the steps in that path. So the first of every
-  //    if (!step.equationActionType && step.sideCheckNumOp) {
-  //      return { ...step }
-  //    }
-  //    return step
-  //  })
-  // }
-  // correctEQChangeType(res.rhs)
-  // correctEQChangeType(res.lhs)
-
-
-  if (res.equationChangeType === 'NO_CHANGE') {
-    const rightRes = processNoHistoryStep(rightPrevious, userRight, startingStepAnswer, logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog)
-    const leftRes = processNoHistoryStep(leftPrevious, userLeft, startingStepAnswer, logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog)
-    return { left: leftRes, right: rightRes, equationChangeType: res.equationChangeType }
-  }
-  if (res.rhs.history.length === 0) {
-    const leftHistory = res.lhs.history.map(step => processStep(step, leftPrevious, startingStepAnswer, res.lhs.history.length))
-
-    const rightStayedSameHistory: StepInfo = processNoHistoryStep(rightPrevious, userRight, startingStepAnswer, logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog)[0]
-    // make same amount of steps as left
-    const rightHistory: StepInfo[] = []
-    for (let i = 0; i < leftHistory.length; i++)
-      rightHistory.push(rightStayedSameHistory)
-
-    return { left: leftHistory, right: rightHistory, equationChangeType: res.equationChangeType }
-  }
-  if (res.lhs.history.length === 0) {
-    const rightHistory = res.rhs.history.map(step => processStep(step, rightPrevious, startingStepAnswer, res.rhs.history.length))
-    const leftStayedSameHistory = processNoHistoryStep(leftPrevious, userLeft, startingStepAnswer, logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog)[0]
-    // make same amount of steps as right
-    const leftRes: StepInfo[] = []
-    for (let i = 0; i < rightHistory.length; i++)
-      leftRes.push(leftStayedSameHistory)
-    return { left: leftRes, right: rightHistory, equationChangeType: res.equationChangeType }
-  }
-  if (res.equationChangeType === 'SWAP_SIDES') {
-    const leftHistory = res.lhs.history.map(step => processStep(step, leftPrevious, startingStepAnswer, res.lhs.history.length))
-    const rightHistory = res.rhs.history.map(step => processStep(step, rightPrevious, startingStepAnswer, res.rhs.history.length))
-    // make changeType SWAP_SIDES
-    leftHistory[0].attemptedChangeType = 'SWAP_SIDES'
-    leftHistory[0].equationActionType = 'SWAP_SIDES'
-    rightHistory[0].attemptedChangeType = 'SWAP_SIDES'
-    rightHistory[0].equationActionType = 'SWAP_SIDES'
+  if (equation.equationChangeType === 'EQ_SWAP_SIDES') {
+    // do regular processing and then we will fix the rest
+    const leftHistory = equation.lhs.history.map(step => processStep(step, leftFrom, startingStepAnswer, equation.lhs.history.length))
+    const rightHistory = equation.rhs.history.map(step => processStep(step, rightFrom, startingStepAnswer, equation.rhs.history.length))
+    // make changeType EQ_SWAP_SIDES
+    leftHistory[0].attemptedChangeType = 'EQ_SWAP_SIDES'
+    leftHistory[0].equationActionType = 'EQ_SWAP_SIDES'
+    rightHistory[0].attemptedChangeType = 'EQ_SWAP_SIDES'
+    rightHistory[0].equationActionType = 'EQ_SWAP_SIDES'
     // make isValid true
     leftHistory[0].isValid = true
     rightHistory[0].isValid = true
+    return { left: leftHistory, right: rightHistory, attemptedEquationChangeType: equation.equationChangeType }
+  }
+  const rightRes = (equation.rhs.history.length === 0 || equation.equationChangeType === 'EQ_NO_CHANGE' || equation.equationChangeType === 'EQ_SIMPLIFY_LHS')
+    ? processNoHistoryStep({ from: rightFrom, to: rightTo, startingStepAnswer, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: 'UNKNOWN', firstChangeTypesLog: logs.rhsFirstChangeTypesLog, firstFoundToLog: logs.rhsFirstFoundToLog })
+    : equation.rhs.history.map(step => processStep(step, rightFrom, startingStepAnswer, equation.rhs.history.length))
+  const leftRes = (equation.lhs.history.length === 0 || equation.equationChangeType === 'EQ_NO_CHANGE' || equation.equationChangeType === 'EQ_SIMPLIFY_RHS')
+    ? processNoHistoryStep({ from: leftFrom, to: leftTo, startingStepAnswer, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: 'UNKNOWN', firstChangeTypesLog: logs.lhsFirstChangeTypesLog, firstFoundToLog: logs.lhsFirstFoundToLog })
+    : equation.lhs.history.map(step => processStep(step, leftFrom, startingStepAnswer, equation.lhs.history.length))
 
-    return { left: leftHistory, right: rightHistory, equationChangeType: res.equationChangeType }
+
+  if (equation.equationChangeType === 'EQ_SIMPLIFY_BOTH' || equation.equationChangeType === 'EQ_SIMPLIFY_LHS' || equation.equationChangeType === 'EQ_SIMPLIFY_RHS') {
+    return { left: leftRes, right: rightRes, attemptedEquationChangeType: equation.equationChangeType }
   }
 
-  //
 
+  const allAddedLeft = leftRes.filter(step => step.addedNumOp)
+  const allRemovedLeft = leftRes.filter(step => step.removeNumberOp)
+  const allAddedRight = rightRes.filter(step => step.addedNumOp)
+  const allRemovedRight = rightRes.filter(step => step.removeNumberOp)
 
   // check what was added or removed from each side
-  const rRemovedFrom = { lhs: false, rhs: false }
-  const lRemovedFrom = { lhs: false, rhs: false }
-  const rAddedTo = { lhs: false, rhs: false }
-  const lAddedTo = { lhs: false, rhs: false }
-  res.lhs.history.forEach((step) => {
-    if (step.sideCheckNumOp)
-      rAddedTo.lhs = true
-    else if (step.equationActionType === 'REMOVE_TERM')
-      rRemovedFrom.lhs = true
-  })
-  res.rhs.history.forEach((step) => {
-    if (step.sideCheckNumOp)
-      lAddedTo.rhs = true
-    else if (step.equationActionType === 'REMOVE_TERM')
-      lRemovedFrom.rhs = true
-  })
+  const rRemovedFrom = { lhs: allRemovedLeft.length > 0, rhs: allRemovedRight.length > 0 }
+  const rAddedTo = { lhs: allAddedLeft.length > 0, rhs: allAddedRight.length > 0 }
+  const lRemovedFrom = { lhs: allRemovedLeft.length > 0, rhs: allRemovedRight.length > 0 }
+  const lAddedTo = { lhs: allAddedLeft.length > 0, rhs: allAddedRight.length > 0 }
 
 
-  const resLeft = res.lhs.history.map(step => processStep(step, leftPrevious, startingStepAnswer, res.lhs.history.length))
-  const resRight = res.rhs.history.map(step => processStep(step, rightPrevious, startingStepAnswer, res.rhs.history.length))
-
-  function makeItemInvalidIfEquationActionType(arr: StepInfo[], value: string) {
-    return arr.map((step) => {
-      if (step.equationActionType === value)
-        return { ...step, isValid: false }
-      return step
-    })
-  }
-  function makeItemInvalidIfSideCheckNumOp(arr: StepInfo[]) {
-    return arr.map((step) => {
-      if (step.sideCheckNumOp)
-        return { ...step, isValid: false }
-      return step
-    })
-  }
-
-  // if both don't have any added or removed then just return it
-  if (!rAddedTo.lhs && !rAddedTo.rhs && !rRemovedFrom.lhs && !rRemovedFrom.rhs) {
-    return { left: resLeft, right: resRight, equationChangeType: res.equationChangeType }
-  }
+  const makeItemInvalidIfHasAttemptedToRemoveNumberOp = (arr: StepInfo[]) => arr.map(step => step.removeNumberOp ? { ...step, isValid: false } : step)
+  const makeItemInvalidIfHasAttemptedToAddNumberOp = (arr: StepInfo[]) => arr.map(step => step.addedNumOp ? { ...step, isValid: false } : step)
 
   // if both removedFrom then make them both invalid
   if (lRemovedFrom.lhs && rRemovedFrom.rhs) {
-    const leftHistory = makeItemInvalidIfEquationActionType(resLeft, 'REMOVE_TERM')
-    const rightHistory = makeItemInvalidIfEquationActionType(resRight, 'REMOVE_TERM')
-    return { left: leftHistory, right: rightHistory, equationChangeType: res.equationChangeType }
+    const left = makeItemInvalidIfHasAttemptedToRemoveNumberOp(leftRes)
+    const right = makeItemInvalidIfHasAttemptedToRemoveNumberOp(rightRes)
+    return { left, right, attemptedEquationChangeType: 'EQ_ATMPT_REMOVAL_BOTH_SIDES', equationErrorType: 'EQ_ATMPT_REMOVAL_BOTH_SIDES' }
   }
+
   // if both added to then make them both invalid
   if (lAddedTo.lhs && rAddedTo.rhs) {
-    const leftHistory = makeItemInvalidIfSideCheckNumOp(resLeft)
-    const rightHistory = makeItemInvalidIfSideCheckNumOp(resRight)
-    return { left: leftHistory, right: rightHistory, equationChangeType: res.equationChangeType }
+    const left = makeItemInvalidIfHasAttemptedToAddNumberOp(leftRes)
+    const right = makeItemInvalidIfHasAttemptedToAddNumberOp(rightRes)
+    return { left, right, attemptedEquationChangeType: 'EQ_PLACED_BOTH_SIDES', equationErrorType: 'EQ_PLACED_BOTH_SIDES' }
   }
-  // if one added and one removed then keep them both valid
-  if ((lAddedTo.rhs && rRemovedFrom.lhs) || (lRemovedFrom.rhs && rAddedTo.lhs)) {
-    // check that the added to is the same
-    // const rFoundFirst = resRight.find(step => step.sideCheckNumOp || step.changeType === 'REMOVE_TERM')
-    // const lFoundFirst = resLeft.find(step => step.sideCheckNumOp || step.changeType === 'REMOVE_TERM')
-    // const lTermChange = lFoundFirst?.sideCheckNumOp || lFoundFirst?.removedTerm
-    // const rTermChange = rFoundFirst?.sideCheckNumOp || rFoundFirst?.removedTerm
-    // const isTermEqual = (lTermChange.op === rTermChange.op) && (lTermChange.number === rTermChange.number)
-    // if (rFoundFirst && lFoundFirst && isTermEqual) {
-    //  return [resLeft, resRight]
-    // }
-    return { left: resLeft, right: resRight, equationChangeType: res.equationChangeType }
+  // if added to one side and not removed from the other side then make them both invalid
+  if (lAddedTo.lhs && !rRemovedFrom.rhs) {
+    const left = makeItemInvalidIfHasAttemptedToAddNumberOp(leftRes)
+    const right = makeItemInvalidIfHasAttemptedToRemoveNumberOp(rightRes)
+    return { left, right, attemptedEquationChangeType: 'EQ_PLACED_LEFT_SIDE_ONLY', equationErrorType: 'EQ_PLACED_LEFT_SIDE_ONLY' }
   }
-  else {
-    console.warn('Invalid state', { lAddedTo, rAddedTo, lRemovedFrom, rRemovedFrom }, { previousStep, userStep, res }) // TODO add info for this in equation changeType or something
-    return { left: resLeft, right: resRight, equationChangeType: res.equationChangeType }
-    // throw new Error('Invalid state')
+  else if (lAddedTo.rhs && !rRemovedFrom.lhs) {
+    const left = makeItemInvalidIfHasAttemptedToRemoveNumberOp(leftRes)
+    const right = makeItemInvalidIfHasAttemptedToAddNumberOp(rightRes)
+    return { left, right, attemptedEquationChangeType: 'EQ_PLACED_RIGHT_SIDE_ONLY', equationErrorType: 'EQ_PLACED_RIGHT_SIDE_ONLY' }
   }
+
+
+  const hasLeftAddedAndRightRemoved = lAddedTo.lhs && rRemovedFrom.rhs
+  const hasRightAddedAndLeftRemoved = rAddedTo.rhs && lRemovedFrom.lhs
+  if ((hasLeftAddedAndRightRemoved && allAddedLeft.length !== allRemovedRight.length) || (hasRightAddedAndLeftRemoved && allAddedRight.length !== allRemovedLeft.length)) {
+    return { left: leftRes, right: rightRes, attemptedEquationChangeType: 'EQ_NOT_SAME_OP_PERFORMED', equationErrorType: 'EQ_NOT_SAME_OP_PERFORMED' }
+  }
+  else if (hasLeftAddedAndRightRemoved) {
+    for (let i = 0; i < allAddedLeft.length; i++) {
+      if (allAddedLeft[i].addedNumOp!.number !== allRemovedRight[i].removeNumberOp!.number && allAddedLeft[i].addedNumOp!.op !== getReverseOp(allRemovedRight[i].removeNumberOp!.op))
+        return { left: leftRes, right: rightRes, attemptedEquationChangeType: 'EQ_NOT_SAME_OP_PERFORMED', equationErrorType: 'EQ_NOT_SAME_OP_PERFORMED' }
+    }
+  }
+  else if (hasRightAddedAndLeftRemoved) {
+    for (let i = 0; i < allAddedRight.length; i++) {
+      if (allAddedRight[i].addedNumOp!.number !== allRemovedLeft[i].removeNumberOp!.number && allAddedRight[i].addedNumOp!.op !== getReverseOp(allRemovedLeft[i].removeNumberOp!.op))
+        return { left: leftRes, right: rightRes, attemptedEquationChangeType: 'EQ_NOT_SAME_OP_PERFORMED', equationErrorType: 'EQ_NOT_SAME_OP_PERFORMED' }
+    }
+  }
+
+
+  return { left: leftRes, right: rightRes, attemptedEquationChangeType: equation.equationChangeType || 'EQ_EQUATION_SOLVING' }
 }
-export function assessUserEquationStep(previousUserStep: string, userStep: string): { left: StepInfo[], right: StepInfo[], equationChangeType: any } {
+export function assessUserEquationStep(previousUserStep: string, userStep: string): { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType, equationErrorType?: AEquationChangeType } {
   // const startingStepAnswer = getAnswerFromEquation(previousUserStep)
   const logs = {
     lhsFirstChangeTypesLog: [] as AChangeType[],
@@ -157,14 +118,15 @@ export function assessUserEquationStep(previousUserStep: string, userStep: strin
     rhsFirstFoundToLog: [] as string[],
   }
   const rawAssessedStepOptionsRes = coreAssessUserStepEquation([previousUserStep, userStep], logs)
+  // @ts-expect-error --- TODO get starting answer instead of null
   return processEquationInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, null, logs)
 }
-export function assessUserEquationSteps(userSteps: string[]): { left: StepInfo[], right: StepInfo[], equationChangeType: any }[] {
+export function assessUserEquationSteps(userSteps: string[]): { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType, equationErrorType?: AEquationChangeType }[] {
   if (userSteps.length === 0)
     return []
   // const userSteps = userSteps_.map(step => myNodeToString(parseText(step)))
 
-  const assessedSteps: { left: StepInfo[], right: StepInfo[], equationChangeType: any }[] = []
+  const assessedSteps: { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType }[] = []
   let previousStep: string | undefined
   // const startingStepAnswer = getAnswerFromStep(userSteps[0])
 
@@ -187,7 +149,7 @@ export function assessUserEquationSteps(userSteps: string[]): { left: StepInfo[]
 export function coreAssessUserStepEquation([previousEquationStr, userEquationStr]: [string, string], logs: any): {
   lhs: CoreAssessUserStepResult
   rhs: CoreAssessUserStepResult
-  equationChangeType: any
+  equationChangeType: AEquationChangeType | undefined
 } {
   const previousEquation = { lhs: cleanString(previousEquationStr.split('=')[0]), rhs: cleanString(previousEquationStr.split('=')[1]) }
   const userEquation = { lhs: cleanString(userEquationStr.split('=')[0]), rhs: cleanString(userEquationStr.split('=')[1]) }
@@ -196,31 +158,31 @@ export function coreAssessUserStepEquation([previousEquationStr, userEquationStr
   const lhsUnchanged = expressionEquals(previousEquation.lhs, userEquation.lhs)
   const rhsUnchanged = expressionEquals(previousEquation.rhs, userEquation.rhs)
 
+  // Case 0 - No changes
   if (lhsUnchanged && rhsUnchanged) {
     return {
       lhs: { history: [] },
       rhs: { history: [] },
-      equationChangeType: 'NO_CHANGE',
+      equationChangeType: 'EQ_NO_CHANGE',
     }
   }
 
   // Case 1: Swapping sides
   if (
-    expressionEquals(previousEquation.lhs, userEquation.rhs)
+    (!lhsUnchanged && !rhsUnchanged)
+    && expressionEquals(previousEquation.lhs, userEquation.rhs)
     && expressionEquals(previousEquation.rhs, userEquation.lhs)
   ) {
     return {
-      // @ts-expect-error ---
-      lhs: { history: [{ to: previousEquation.rhs, from: previousEquation.lhs, isMistake: false, availableChangeTypes: [], attemptedToGetTo: previousEquation.rhs, attemptedChangeType: 'SWAP_SIDES', allPossibleCorrectTos: [] }] },
-      // @ts-expect-error ---
-      rhs: { history: [{ to: previousEquation.lhs, from: previousEquation.rhs, isMistake: false, availableChangeTypes: [], attemptedToGetTo: previousEquation.lhs, attemptedChangeType: 'SWAP_SIDES', allPossibleCorrectTos: [] }] },
-      equationChangeType: 'SWAP_SIDES',
+      lhs: { history: [{ to: previousEquation.rhs, from: previousEquation.lhs, changeType: 'EQ_SWAP_SIDES', attemptedChangeType: 'EQ_SWAP_SIDES', isMistake: false, availableChangeTypes: [], attemptedToGetTo: previousEquation.rhs, allPossibleCorrectTos: [] }] },
+      rhs: { history: [{ to: previousEquation.lhs, from: previousEquation.rhs, changeType: 'EQ_SWAP_SIDES', attemptedChangeType: 'EQ_SWAP_SIDES', isMistake: false, availableChangeTypes: [], attemptedToGetTo: previousEquation.lhs, allPossibleCorrectTos: [] }] },
+      equationChangeType: 'EQ_SWAP_SIDES',
     }
   }
 
-  function simplifySideCases(equationChangeType: 'SIMPLIFY_LHS' | 'SIMPLIFY_RHS') {
-    const rhsRes = _coreAssessUserStep([previousEquation.rhs, userEquation.rhs], logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog)
-    const lhsRes = _coreAssessUserStep([previousEquation.lhs, userEquation.lhs], logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog)
+  function simplifySideCases(equationChangeType: 'EQ_SIMPLIFY_LHS' | 'EQ_SIMPLIFY_RHS') {
+    const rhsRes = coreAssessUserStep([previousEquation.rhs, userEquation.rhs], logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog)
+    const lhsRes = coreAssessUserStep([previousEquation.lhs, userEquation.lhs], logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog)
     return {
       lhs: lhsRes,
       rhs: rhsRes,
@@ -230,39 +192,30 @@ export function coreAssessUserStepEquation([previousEquationStr, userEquationStr
 
   // Case 2 & 3: Simplifying one side
   if (!lhsUnchanged && rhsUnchanged) {
-    return simplifySideCases('SIMPLIFY_LHS')
+    return simplifySideCases('EQ_SIMPLIFY_LHS')
   }
   else if (lhsUnchanged && !rhsUnchanged) {
-    return simplifySideCases('SIMPLIFY_RHS')
+    return simplifySideCases('EQ_SIMPLIFY_RHS')
   }
-
-  // Case 4 & 5:
-  else if (!lhsUnchanged && !rhsUnchanged) {
-    const lhsRes = _coreAssessUserStep([previousEquation.lhs, userEquation.lhs], logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog, previousEquation.rhs)
-    const rhsRes = _coreAssessUserStep([previousEquation.rhs, userEquation.rhs], logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog, previousEquation.lhs)
-    const hasAddedTerms = rhsRes.history.some(step => step.sideCheckNumOp) || lhsRes.history.some(step => step.sideCheckNumOp)
-    const hasRemovedTerms = rhsRes.history.some(step => step.equationActionType === 'REMOVE_TERM') || lhsRes.history.some(step => step.equationActionType === 'REMOVE_TERM')
+  // Case 4 & 5: doing things with terms or simplifying both sides
+  else /* if (!lhsUnchanged && !rhsUnchanged) */ {
+    const lhsRes = coreAssessUserStep([previousEquation.lhs, userEquation.lhs], logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog, previousEquation.rhs)
+    const rhsRes = coreAssessUserStep([previousEquation.rhs, userEquation.rhs], logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog, previousEquation.lhs)
+    const hasAddedTerms = rhsRes.history.some(step => step.addedNumOp) || lhsRes.history.some(step => step.addedNumOp)
+    const hasRemovedTerms = rhsRes.history.some(step => step.equationActionType === 'EQ_REMOVE_TERM') || lhsRes.history.some(step => step.equationActionType === 'EQ_REMOVE_TERM')
 
 
     if (hasAddedTerms || hasRemovedTerms) {
       return {
         lhs: lhsRes,
         rhs: rhsRes,
-        equationChangeType: 'SIDE_CHANGES',
+        equationChangeType: undefined,
       }
     }
-
     return {
       lhs: lhsRes,
       rhs: rhsRes,
-      equationChangeType: 'SIMPLIFY_BOTH',
+      equationChangeType: 'EQ_SIMPLIFY_BOTH',
     }
-  }
-
-  // else
-  return {
-    rhs: { history: [] },
-    lhs: { history: [] },
-    equationChangeType: 'UNKNOWN',
   }
 }
