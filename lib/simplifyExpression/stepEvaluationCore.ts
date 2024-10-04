@@ -60,7 +60,7 @@ export interface StepInfo {
 const expressionEquals = (exp0: string | MathNode, exp1: string | MathNode) => areExpressionEqual(exp0, exp1, getValidStepEqCache())
 
 // Change to have it search further down the tree.
-const MAX_NEXT_STEPS = 190
+const MAX_NEXT_STEPS = 110
 const MAX_STEP_DEPTH = 4
 /**
  * Creates a history of steps found from the previous step to get to the user's step. Requires processStepInfo to convert the history into the final StepInfo[] form.
@@ -155,13 +155,13 @@ export function coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesL
       }
 
       stepQueue.push({ ...possibleStep, start: possibleStep.to, history: updatedHistory })
-      // TODO ADD PRIORITY QUEUE!!!
-      // const queuePriority = ['REMOVE_ADDING_ZERO', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_ARITHMETIC__ADD', 'SIMPLIFY_ARITHMETIC__SUBTRACT']
-      // const priorityIndex = queuePriority.indexOf(possibleStep.changeType)
-      // if (priorityIndex === -1)
-      //  stepQueue.push({ ...possibleStep, start: possibleStep.to, history: updatedHistory })
-      // else
-      //  stepQueue.splice(priorityIndex, 0, { ...possibleStep, start: possibleStep.to, history: updatedHistory })
+
+      const queuePriority: AChangeType[] = ['REMOVE_ADDING_ZERO', 'DIVISION_BY_ONE', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__ADD', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'CANCEL_TERMS', 'SIMPLIFY_ARITHMETIC__DIVIDE', 'COLLECT_AND_COMBINE_LIKE_TERMS']
+      const priorityIndex = queuePriority.indexOf(possibleStep.changeType)
+      if (priorityIndex === -1)
+        stepQueue.push({ ...possibleStep, start: possibleStep.to, history: updatedHistory })
+      else
+        stepQueue.splice(priorityIndex, 0, { ...possibleStep, start: possibleStep.to, history: updatedHistory })
     }
 
 
