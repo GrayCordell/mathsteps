@@ -1,8 +1,5 @@
 import type { MathNode } from 'mathjs'
 import { ConstantNode, isConstantNode, isOperatorNode, OperatorNode } from '~/config'
-import { parseText } from '~/index'
-import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
-import { cleanString } from '~/util/stringUtils'
 
 /**
  * Recursively removes unnecessary *1 from a MathJS expression node.
@@ -77,13 +74,3 @@ function isOne(node: MathNode | string | number): boolean {
     return isConstantNode(node) && node.value.toString() === '1'
 }
 
-export function makePlusMinusMinus(node: MathNode | string): MathNode {
-  const nodeStr = typeof node === 'string' ? cleanString(node) : myNodeToString(node)
-  const replacePlusMinus = nodeStr.replace(/\+-/g, '-').replace(/-\+/g, '-')
-  return parseText(replacePlusMinus)
-}
-export function makePlusMinusMinusAndReturnString(node: MathNode | string): string {
-  const nodeStr = typeof node === 'string' ? cleanString(node) : myNodeToString(node)
-  const replacePlusMinus = nodeStr.replace(/\+-/g, '-').replace(/-\+/g, '-')
-  return replacePlusMinus
-}
