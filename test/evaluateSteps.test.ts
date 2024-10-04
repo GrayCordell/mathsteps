@@ -172,8 +172,8 @@ describe('addition Success', () => {
       expectedAnalysis: makeCorrectSteps([
         [
           { from: '7 + (-2) + 3 + (-1)', to: '5 + 3 + (-1)', availableChangeTypes: [SIMPLIFY_ARITHMETIC__SUBTRACT, SIMPLIFY_ARITHMETIC__ADD], attemptedChangeType: SIMPLIFY_ARITHMETIC__SUBTRACT },
-          { from: '5 + 3 + (-1)', to: '8 + (-1)', availableChangeTypes: [SIMPLIFY_ARITHMETIC__SUBTRACT, SIMPLIFY_ARITHMETIC__ADD], attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD },
-          { to: '7', availableChangeTypes: [SIMPLIFY_ARITHMETIC__SUBTRACT], attemptedChangeType: SIMPLIFY_ARITHMETIC__SUBTRACT },
+          { from: '5 + 3 + (-1)', to: '5 + 2', availableChangeTypes: [SIMPLIFY_ARITHMETIC__SUBTRACT, SIMPLIFY_ARITHMETIC__ADD], attemptedChangeType: SIMPLIFY_ARITHMETIC__SUBTRACT },
+          { to: '7', availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD], attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD },
         ],
       ]),
     },
