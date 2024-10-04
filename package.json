@@ -1,7 +1,7 @@
 {
   "name": "mathsteps-experimental-fork",
   "description": "Step by step math solutions. Experimental Fork",
-  "version": "0.4.17",
+  "version": "0.4.4",
   "type": "module",
   "private": false,
   "packageManager": "pnpm@9.7.0",
@@ -22,6 +22,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
+    "temp": "temp",
     "preinstall": "npx only-allow pnpm",
     "dev": "vite --port 3333",
     "build": "vite build --emptyOutDir",
