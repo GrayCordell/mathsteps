@@ -6,7 +6,6 @@ import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreN
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
 import { convertAdditionToSubtractionErrorType, isAnAdditionChangeType } from '~/types/changeType/changeAndMistakeUtils'
 import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
-import { changeGroupMappings } from '~/types/changeType/ChangeTypes'
 import type { NumberOp } from '~/types/NumberOp'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { logger, LogLevel } from '~/util/logger'
@@ -131,7 +130,7 @@ export function coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesL
 
 
       // Handle/check attached alternate mistake options. "mTo". (These are mistakes like added 1 too many, etc.)
-      for (const mToStep of possibleStep.mTo || []) {
+      /* for (const mToStep of possibleStep.mTo || []) {
         if (possibleStep.to && mToStep.to === possibleStep.to)
           continue
 
@@ -152,7 +151,7 @@ export function coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesL
           updatedHistory.push({ ...mToStep, ...possibleStep, from: possibleStep.from, to: mToStep.to, attemptedToGetTo: possibleStep.to, attemptedChangeType: possibleStep.changeType, changeType: mToStep.changeType, isMistake: true })
           return { history: updatedHistory }
         }
-      }
+      } */
 
       stepQueue.push({ ...possibleStep, start: possibleStep.to, history: updatedHistory })
 

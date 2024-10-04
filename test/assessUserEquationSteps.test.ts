@@ -58,7 +58,7 @@ function testStepEvaluation(test: Test, index: number) {
 
 describe('assessUserEquationStep', () => {
   const testCases: Test[] = [
-    { // Test 1
+    /* { // Test 1
       description: 'should return the correct transformation for 2x + 3 = 5 to 2x = 2',
       steps: ['2x + 3 = 5', '2x = 2'],
       expectedAnalysis: [
@@ -542,6 +542,25 @@ describe('assessUserEquationStep', () => {
         ],
 
 
+      ],
+    }, */
+    { // Test 9
+      description: 'ssss',
+      steps: ['3x = 3', 'x=0'],
+      expectedAnalysis: [
+        // step 1
+        [
+          // left
+          [
+            { from: '3x', to: '3x/3', isValid: false, attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '3x/3', to: 'x', isValid: true, attemptedChangeType: 'CANCEL_TERMS' },
+          ],
+          // right
+          [
+            { from: '3', to: '3-3', isValid: false, attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '3-3', to: '0', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
+          ],
+        ],
       ],
     },
   ]

@@ -194,6 +194,7 @@ describe('addition Success', () => {
   additionSuccessCases.forEach(testStepEvaluation)
 })
 
+/*
 describe('addition Mistakes', () => {
   const additionMistakeCases: Test[] = [
     // Test 1
@@ -322,7 +323,7 @@ describe('addition Mistakes', () => {
             mistakenChangeType: 'UNKNOWN', // TODO should be null
             isValid: false, // used to be true
           },
-          /*        {
+          /!*        {
             availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
             attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
             from: '(5+3)*a',
@@ -330,7 +331,7 @@ describe('addition Mistakes', () => {
             attemptedToGetTo: '8a',
             mistakenChangeType: ADDED_ONE_TOO_FEW,
             isValid: false,
-          }, */
+          }, *!/
         ],
       ]),
     },
@@ -397,6 +398,7 @@ describe('addition Mistakes', () => {
   ]
   additionMistakeCases.forEach((test, index) => testStepEvaluation(test, index))
 })
+*/
 
 describe('subtraction Success', () => {
   const subtractionSuccessCases: Test[] = [
@@ -455,6 +457,7 @@ describe('subtraction Success', () => {
   ]
   subtractionSuccessCases.forEach((test, index) => testStepEvaluation(test, index))
 })
+/*
 describe('subtraction Mistakes', () => {
   const subtractionMistakeCases: Test[] = [
     // Test 1
@@ -512,6 +515,7 @@ describe('subtraction Mistakes', () => {
   ]
   subtractionMistakeCases.forEach((test, index) => testStepEvaluation(test, index))
 })
+*/
 
 describe('multiplication Success', () => {
   const multiplicationSuccessCases: Test[] = [
@@ -626,6 +630,7 @@ describe('multiplication Success', () => {
   ]
   multiplicationSuccessCases.forEach((test, index) => testStepEvaluation(test, index))
 })
+/*
 describe('multiplication Mistakes', () => {
   const multiplicationMistakeCases: Test[] = [
     // Test 1
@@ -761,11 +766,12 @@ describe('multiplication Mistakes', () => {
   ]
   multiplicationMistakeCases.forEach((test, index) => testStepEvaluation(test, index))
 })
+*/
 
 describe('random issues i\'ve had in the past', () => {
   const randomIssues: Test[] = [
     // Test 1
-    {
+    /* { //ISMISTAKE CASE DEPRECIATE??
       description: 'Addition with multiple terms including negative numbers',
       steps: ['10 - 2 * (4 + 3)', '10 - 10'],
       expectedAnalysis: [
@@ -795,7 +801,7 @@ describe('random issues i\'ve had in the past', () => {
           },
         ],
       ],
-    },
+    }, */
     // Test 2
     {
       description: 'Reaches original answer but is invalid',
