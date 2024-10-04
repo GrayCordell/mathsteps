@@ -53,43 +53,42 @@ function processEquationInfo(
   const allRemovedRight = rightRes.filter(step => step.removeNumberOp)
 
   // check what was added or removed from each side
-  const rRemovedFrom = { lhs: allRemovedLeft.length > 0, rhs: allRemovedRight.length > 0 }
-  const rAddedTo = { lhs: allAddedLeft.length > 0, rhs: allAddedRight.length > 0 }
-  const lRemovedFrom = { lhs: allRemovedLeft.length > 0, rhs: allRemovedRight.length > 0 }
-  const lAddedTo = { lhs: allAddedLeft.length > 0, rhs: allAddedRight.length > 0 }
-
+  const isRightRemovedFrom = allRemovedRight.length > 0
+  const isRightAddedTo = allAddedRight.length > 0
+  const isLeftAddedTo = allAddedLeft.length > 0
+  const isLeftRemovedFrom = allRemovedLeft.length > 0
+  const hasLeftAddedAndRightRemoved = allAddedLeft.length > 0 && allRemovedRight.length > 0
+  const hasRightAddedAndLeftRemoved = allAddedRight.length > 0 && allRemovedLeft.length > 0
 
   const makeItemInvalidIfHasAttemptedToRemoveNumberOp = (arr: StepInfo[]) => arr.map(step => step.removeNumberOp ? { ...step, isValid: false } : step)
   const makeItemInvalidIfHasAttemptedToAddNumberOp = (arr: StepInfo[]) => arr.map(step => step.addedNumOp ? { ...step, isValid: false } : step)
 
   // if both removedFrom then make them both invalid
-  if (lRemovedFrom.lhs && rRemovedFrom.rhs) {
+  if (isLeftRemovedFrom && isRightRemovedFrom) {
     const left = makeItemInvalidIfHasAttemptedToRemoveNumberOp(leftRes)
     const right = makeItemInvalidIfHasAttemptedToRemoveNumberOp(rightRes)
     return { left, right, attemptedEquationChangeType: 'EQ_ATMPT_REMOVAL_BOTH_SIDES', equationErrorType: 'EQ_ATMPT_REMOVAL_BOTH_SIDES' }
   }
 
   // if both added to then make them both invalid
-  if (lAddedTo.lhs && rAddedTo.rhs) {
+  if (isLeftAddedTo && isRightAddedTo) {
     const left = makeItemInvalidIfHasAttemptedToAddNumberOp(leftRes)
     const right = makeItemInvalidIfHasAttemptedToAddNumberOp(rightRes)
     return { left, right, attemptedEquationChangeType: 'EQ_PLACED_BOTH_SIDES', equationErrorType: 'EQ_PLACED_BOTH_SIDES' }
   }
   // if added to one side and not removed from the other side then make them both invalid
-  if (lAddedTo.lhs && !rRemovedFrom.rhs) {
+  if (isLeftAddedTo && !isRightRemovedFrom) {
     const left = makeItemInvalidIfHasAttemptedToAddNumberOp(leftRes)
     const right = makeItemInvalidIfHasAttemptedToRemoveNumberOp(rightRes)
     return { left, right, attemptedEquationChangeType: 'EQ_PLACED_LEFT_SIDE_ONLY', equationErrorType: 'EQ_PLACED_LEFT_SIDE_ONLY' }
   }
-  else if (lAddedTo.rhs && !rRemovedFrom.lhs) {
+  else if (isRightAddedTo && !isLeftRemovedFrom) {
     const left = makeItemInvalidIfHasAttemptedToRemoveNumberOp(leftRes)
     const right = makeItemInvalidIfHasAttemptedToAddNumberOp(rightRes)
     return { left, right, attemptedEquationChangeType: 'EQ_PLACED_RIGHT_SIDE_ONLY', equationErrorType: 'EQ_PLACED_RIGHT_SIDE_ONLY' }
   }
 
 
-  const hasLeftAddedAndRightRemoved = lAddedTo.lhs && rRemovedFrom.rhs
-  const hasRightAddedAndLeftRemoved = rAddedTo.rhs && lRemovedFrom.lhs
   if ((hasLeftAddedAndRightRemoved && allAddedLeft.length !== allRemovedRight.length) || (hasRightAddedAndLeftRemoved && allAddedRight.length !== allRemovedLeft.length)) {
     return { left: leftRes, right: rightRes, attemptedEquationChangeType: 'EQ_NOT_SAME_OP_PERFORMED', equationErrorType: 'EQ_NOT_SAME_OP_PERFORMED' }
   }
@@ -202,7 +201,7 @@ export function coreAssessUserStepEquation([previousEquationStr, userEquationStr
     const lhsRes = coreAssessUserStep([previousEquation.lhs, userEquation.lhs], logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog, previousEquation.rhs)
     const rhsRes = coreAssessUserStep([previousEquation.rhs, userEquation.rhs], logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog, previousEquation.lhs)
     const hasAddedTerms = rhsRes.history.some(step => step.addedNumOp) || lhsRes.history.some(step => step.addedNumOp)
-    const hasRemovedTerms = rhsRes.history.some(step => step.equationActionType === 'EQ_REMOVE_TERM') || lhsRes.history.some(step => step.equationActionType === 'EQ_REMOVE_TERM')
+    const hasRemovedTerms = rhsRes.history.some(step => step.changeType === 'EQ_REMOVE_TERM') || lhsRes.history.some(step => step.changeType === 'EQ_REMOVE_TERM')
 
 
     if (hasAddedTerms || hasRemovedTerms) {
