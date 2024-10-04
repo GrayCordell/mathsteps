@@ -8,6 +8,9 @@ import { cleanString } from '~/util/stringUtils'
 
 describe('equalityTest', () => {
   const testCases: { input: string, expected: string }[] = [
+    //
+    { input: '(5+-2)*x+-2', expected: '-2+(-2+5)*x' },
+
     // single x cases
     { input: '1*x', expected: 'x' },
     { input: '1x', expected: 'x' },

@@ -4,7 +4,16 @@ import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { assertSpecifiedValues } from './util/assertHelpers'
 
 // Error.stackTraceLimit = 100
-const cleanMath = (str: string) => str?.replace('_', '').replace(' ', '').replace('[', '').replace(']', '').replace('\'', '').replace(`"`, '').replace('`', '')
+const removeTheseChars = ['_', ' ', '[', ']', '\'', '"', '`']
+const cleanMath = <T>(str: T): T => {
+  if (!str)
+    return str
+
+  const str2 = str as string
+  return removeTheseChars.reduce((acc, char) => {
+    return acc.replace(new RegExp(`[${char}]`, 'g'), '')
+  }, str2) as T
+}
 
 type TestStep = Partial<StepInfo>
 interface Test {
@@ -13,12 +22,16 @@ interface Test {
   // first array is the collection of entire steps
   // second array is the collection of steps that make up a user step
   //
-  expectedAnalysis: TestStep[][][]
+  expectedAnalysis: [TestStep[], TestStep[]][]
 }
 function testStepEvaluation(test: Test, index: number) {
   it(`test ${index + 1}: ${test.description}`, () => {
     let { steps, expectedAnalysis } = test
     steps = steps.map(cleanMath)
+    expectedAnalysis = expectedAnalysis.map(([left, right]) => ([
+      left.map(step => step ? { ...step, from: cleanMath(step.from), to: cleanMath(step.to) } : step),
+      right.map(step => step ? { ...step, from: cleanMath(step.from), to: cleanMath(step.to) } : step),
+    ]))
 
     const evaluatedSteps = assessUserEquationSteps(steps)
     for (let i = 0; i < expectedAnalysis.length; i++) {
@@ -90,9 +103,9 @@ describe('assessUserEquationStep', () => {
         [
           // left
           [
-            { from: '5x-4+5', to: '5x+1', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
-            { from: '5x+1', to: '5x + 1 - 5', isValid: true, attemptedChangeType: 'EQ_ADD_TERM' },
-            { from: '5x + 1 - 5', to: '5x + -4', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
+            { from: '5x-4+5', to: '5x-4+5-5', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '5x-4+5-5', to: '5x+-4+0', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
+            { from: '5x+-4+0', to: '5x + -4', isValid: true, attemptedChangeType: 'REMOVE_ADDING_ZERO' },
           ],
           // right
           [
@@ -129,8 +142,8 @@ describe('assessUserEquationStep', () => {
           // left
           [
             { from: '3x+4-5', to: '3x+4-5+5', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM' },
-            { from: '3x+4-5+5', to: '3x+-1+5', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
-            { from: '3x+-1+5', to: '3x+4', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__ADD' }, // TODO why add?
+            { from: '3x+4-5+5', to: '3x+4+0', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
+            { from: '3x+4+0', to: '3x+4', isValid: true, attemptedChangeType: 'REMOVE_ADDING_ZERO' },
           ],
           // right
           [
@@ -223,7 +236,7 @@ describe('assessUserEquationStep', () => {
             },
             {
               from: '5x - 2 + -2x',
-              to: '(5+-2)*x+-2',
+              to: '-2+(-2+5)*x',
               isValid: true,
               attemptedChangeType: 'COLLECT_AND_COMBINE_LIKE_TERMS',
             },
@@ -504,8 +517,8 @@ describe('assessUserEquationStep', () => {
           [
             { from: '3x/4 + 2/4', to: '(3x/4 + 2/4) * 4', attemptedChangeType: 'EQ_REMOVE_TERM' },
             { from: '(3x/4 + 2/4) * 4', to: '3x/4 * 4 + 2/4 * 4', attemptedChangeType: 'KEMU_DISTRIBUTE_MUL_OVER_ADD' },
-            { from: '3x/4 * 4 + 2/4 * 4', to: '3x + 2/4 * 4', attemptedChangeType: 'CANCEL_TERMS' },
-            { from: '3x + 2/4 * 4', to: '3x + 2', attemptedChangeType: 'CANCEL_TERMS' },
+            { from: '3x/4 * 4 + 2/4 * 4', to: '3x/4*4+2', attemptedChangeType: 'CANCEL_TERMS' },
+            { from: '3x/4*4+2', to: '3x + 2', attemptedChangeType: 'CANCEL_TERMS' },
           ],
           // Right
           [
