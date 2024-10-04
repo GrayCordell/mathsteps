@@ -154,7 +154,7 @@ function _parseTextInternal(text: string): MathNode {
   })
 
   ///  QUICK_FIX. This is a quick fix to make occurrences of 0x to 0. It was breaking parsing.
-  text.replaceAll('0x', '0')
+  text = text.replaceAll(/\b0[a-z]\b/gi, '0')
 
   // Process text into node.
   let rv = math.parse(text)
