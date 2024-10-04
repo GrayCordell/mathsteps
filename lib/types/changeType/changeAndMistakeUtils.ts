@@ -42,7 +42,8 @@ export const getChangeTypeGroups = (changeType_: AChangeType): AChangeTypeGroup[
   return [...firstPass, ...secondPass] as AChangeTypeGroup[]
 }
 
-export const getEveryChangeIdApplicable = (changeTypeOrMistakeType_: AChangeType): (AChangeTypeGroup | AChangeType)[] => {
+
+export function getEveryChangeIdApplicable(changeTypeOrMistakeType_: AChangeType): (AChangeTypeGroup | AChangeType)[] {
   const changeTypeOrMistakeType = getRootChangeType(changeTypeOrMistakeType_)
   const isMistake = isMistakeTypeOnly(changeTypeOrMistakeType)
   const changeTypeOnly = convertMistakeOnlyTypeToItsChangeType(changeTypeOrMistakeType, isMistake) || changeTypeOrMistakeType
