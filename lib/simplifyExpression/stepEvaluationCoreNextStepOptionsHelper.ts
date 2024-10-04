@@ -3,7 +3,6 @@ import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalizati
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { findAllOperationsThatCanBeRemoved } from '~/newServices/nodeServices/termRemovalOperations'
 import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
-import { mistakeSearches } from '~/simplifyExpression/mistakes/regexPemdasMistakes'
 import type { ProcessedStep, RawStep } from '~/simplifyExpression/stepEvaluationCore'
 import { getOtherSideOptions } from '~/simplifyExpression/stepEvaluationEquationHelpers'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
@@ -127,8 +126,8 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
 
 
   // +Mistake Steps that ares not caught by the simplification engine.
-  const manualMistakes = mistakeSearches(userStep)
-  processedSteps.push(...manualMistakes)
+  // const manualMistakes = mistakeSearches(userStep)
+  // processedSteps.push(...manualMistakes)
   // ... Add additional steps from other simplification/error engines here if needed
 
   //
