@@ -6,6 +6,7 @@ import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreN
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
 import { convertAdditionToSubtractionErrorType, isAnAdditionChangeType } from '~/types/changeType/changeAndMistakeUtils'
 import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
+import { changeGroupMappings } from '~/types/changeType/ChangeTypes'
 import type { NumberOp } from '~/types/NumberOp'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { logger, LogLevel } from '~/util/logger'
@@ -84,8 +85,6 @@ export function coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesL
 
 
     start = cleanString(start)
-    // TODO temp?
-    start = start.replaceAll('0x', '(0*1x)').replaceAll('0*x', '(0*1x)')
 
     if (triedSteps.has(start) || Array.from(triedSteps).some(step => expressionEquals(step, start)))
       continue
@@ -130,28 +129,32 @@ export function coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesL
 
 
       // Handle/check attached alternate mistake options. "mTo". (These are mistakes like added 1 too many, etc.)
-      /* for (const mToStep of possibleStep.mTo || []) {
-        if (possibleStep.to && mToStep.to === possibleStep.to)
-          continue
-
-        // if its an equation we can't check a lot of these anymore.
-        // @ts-expect-error ---
-        if (otherSide && changeGroupMappings.MistakeWrongOperationRules.includes(mToStep.changeType)) {
-          continue
-        }
-
-        if (expressionEquals(mToStep.to, valueToFind)) {
-          // The mistake found can be a correct step somehow later. So we have to ignore incorrect steps that can become the answer.
-          const isStillCorrect = expressionEquals(getAnswerFromStep(theProblem), getAnswerFromStep(mToStep.to))
-          if (isStillCorrect)
+      // disabled in equations for now.
+      if (!otherSide) {
+        for (const mToStep of possibleStep.mTo || []) {
+          if (possibleStep.to && mToStep.to === possibleStep.to)
             continue
-          // If the mistake is the answer, then we need to add remove the last step in the history
-          updatedHistory.pop()
-          // add the mistake step to the history
-          updatedHistory.push({ ...mToStep, ...possibleStep, from: possibleStep.from, to: mToStep.to, attemptedToGetTo: possibleStep.to, attemptedChangeType: possibleStep.changeType, changeType: mToStep.changeType, isMistake: true })
-          return { history: updatedHistory }
+
+          // if its an equation we can't check a lot of these anymore.
+          // @ts-expect-error ---
+          if (otherSide && changeGroupMappings.MistakeWrongOperationRules.includes(mToStep.changeType)) {
+            continue
+          }
+
+          if (expressionEquals(mToStep.to, valueToFind)) {
+            // The mistake found can be a correct step somehow later. So we have to ignore incorrect steps that can become the answer.
+            const isStillCorrect = expressionEquals(getAnswerFromStep(theProblem), getAnswerFromStep(mToStep.to))
+            if (isStillCorrect)
+              continue
+            // If the mistake is the answer, then we need to add remove the last step in the history
+            updatedHistory.pop()
+            // add the mistake step to the history
+            updatedHistory.push({ ...mToStep, ...possibleStep, from: possibleStep.from, to: mToStep.to, attemptedToGetTo: possibleStep.to, attemptedChangeType: possibleStep.changeType, changeType: mToStep.changeType, isMistake: true })
+            return { history: updatedHistory }
+          }
         }
-      } */
+      }
+
 
       stepQueue.push({ ...possibleStep, start: possibleStep.to, history: updatedHistory })
 
