@@ -9,7 +9,7 @@ import { getReverseOp } from '~/types/changeType/changeAndMistakeUtils'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { cleanString } from '~/util/stringUtils'
 
-type ExpressionEquals = (exp0: MathNode, exp1: MathNode) => boolean
+// type ExpressionEquals = (exp0: MathNode, exp1: MathNode) => boolean
 // Helper function to determine if an expression is negative
 function isNegative(node: MathNode): boolean {
   if (isOperatorNode(node) && node.isUnary()) {

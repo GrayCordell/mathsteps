@@ -12,7 +12,7 @@ import { parseText } from '~/newServices/nodeServices/parseText'
 import stepThrough from '~/simplifyExpression'
 
 
-interface SimplifyOptions {
+export interface SimplifyOptions {
   expressionAsText?: string
   expressionNode?: MathNode
   isDebugMode?: boolean

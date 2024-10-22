@@ -1,7 +1,8 @@
 import { describe } from 'vitest'
 import { parseText } from '~/newServices/nodeServices/parseText'
 import { Creator } from '~/node/index.js'
-import print from '~/util/print.js'
+import { printAscii, printLatex } from '~/util/print.js'
+
 import TestUtil from '../TestUtil.js'
 
 // to create nodes, for testing
@@ -11,16 +12,16 @@ const symbolNode = Creator.symbol
 
 function testPrintStr(exprStr, outputStr) {
   const input = parseText(exprStr)
-  TestUtil.testFunctionOutput(print.ascii, input, outputStr)
+  TestUtil.testFunctionOutput(printAscii, input, outputStr)
 }
 
 function testLatexPrintStr(exprStr, outputStr) {
   const input = TestUtil.parseAndFlatten(exprStr)
-  TestUtil.testFunctionOutput(print.latex, input, outputStr)
+  TestUtil.testFunctionOutput(printLatex, input, outputStr)
 }
 
 function testPrintNode(node, outputStr) {
-  TestUtil.testFunctionOutput(print.ascii, node, outputStr)
+  TestUtil.testFunctionOutput(printAscii, node, outputStr)
 }
 
 describe('print asciimath', () => {

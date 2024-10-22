@@ -1,8 +1,8 @@
 import { assert, describe, it } from 'vitest'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
-import { simplifyExpression } from '../lib/index'
+import { printAscii } from '~/util/print.js'
 
-import print from '../lib/util/print.js'
+import { simplifyExpression } from '../lib/index'
 
 function testSimplify(exprStr, outputStr, debug = false, ctx) {
   it(`${exprStr} -> ${outputStr}`, async () => {
@@ -14,7 +14,7 @@ function testSimplify(exprStr, outputStr, debug = false, ctx) {
     }
 
     const resultNode = simplifyExpression(options)
-    const resultAsText = print.ascii(resultNode)
+    const resultAsText = printAscii(resultNode)
 
     const isEqual = areExpressionEqual(resultAsText, outputStr)
     const isDeepEqual = resultAsText === outputStr

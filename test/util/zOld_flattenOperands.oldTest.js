@@ -17,11 +17,11 @@ function testFlatten(exprStr, afterNode, debug = false) {
   const flattened = TestUtil.parseAndFlatten(exprStr)
   if (debug) {
     // eslint-disable-next-line
-    console.log(print.ascii(flattened));
+    console.log(printAscii(flattened));
   }
   removeComments(flattened)
   removeComments(afterNode)
-  it(print.ascii(flattened), function() {
+  it(printAscii(flattened), function() {
     assert.deepEqual(flattened, afterNode)
   })
 }

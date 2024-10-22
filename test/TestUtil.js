@@ -1,7 +1,7 @@
 import { assert, it } from 'vitest'
 import { parseText } from '~/newServices/nodeServices/parseText'
 import { kemuFlatten } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
-import print from '../lib/util/print.js'
+import { printAscii } from '~/util/print.js'
 
 // TestUtil contains helper methods to share code across tests
 const TestUtil = {}
@@ -25,7 +25,7 @@ TestUtil.testBooleanFunction = function (simplifier, exprString, expectedBoolean
 // Tests a simplification function
 TestUtil.testSimplification = function (simplifyingFunction, exprString, expectedOutputString) {
   it(`${exprString} -> ${expectedOutputString}`, () => {
-    assert.deepEqual(print.ascii(simplifyingFunction(kemuFlatten(parseText(exprString))).rootNode), expectedOutputString)
+    assert.deepEqual(printAscii(simplifyingFunction(kemuFlatten(parseText(exprString))).rootNode), expectedOutputString)
   })
 }
 export default TestUtil

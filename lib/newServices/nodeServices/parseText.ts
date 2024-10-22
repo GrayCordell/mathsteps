@@ -3,10 +3,9 @@ import math from '~/config'
 import clone from '~/newServices/nodeServices/clone'
 import stepThrough from '~/simplifyExpression'
 import { kemuNormalizeConstantNodes } from '~/simplifyExpression/kemuSimplifyCommonServices'
-import { ascii, latex } from '~/util/print'
+import { printAscii, printLatex } from '~/util/print'
 
-export const print = ascii
-const printLatex = latex
+export const print = printAscii
 const CACHE_ENABLED = true
 const CACHE_LOG_MISSING_ENABLED = false
 const CACHE_LOG_REUSED_ENABLED = false

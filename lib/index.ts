@@ -5,9 +5,11 @@ import type { ProcessedEquation } from '~/simplifyExpression/equationEvaluation'
 import { assessUserEquationStep, assessUserEquationSteps } from '~/simplifyExpression/equationEvaluation'
 import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { simplifyExpression, solveEquation } from './indexPrepareSimplifyAndSolve'
+import { myNodeToString } from './newServices/nodeServices/myNodeToString'
 import { assessUserStep, assessUserSteps } from './simplifyExpression/stepEvaluationCore'
 import { changeTypeIsInGroup, convertAdditionToSubtractionErrorType, convertMistakeOnlyTypeToItsChangeType, doesChangeTypeEqual, getChangeTypeGroups, getEveryChangeIdApplicable, getRootChangeType, isChangeTypeInGroup, isMistakeTypeOnly, isSameRootChangeType } from './types/changeType/changeAndMistakeUtils.js'
 import { ChangeTypes } from './types/changeType/ChangeTypes'
+import { printAscii } from './util/print'
 
 export type{
   AChangeType,
@@ -45,9 +47,11 @@ export {
   isSameRootChangeType,
   // kemuSolveEquation,
   math,
+  myNodeToString,
   // normalizeExpression,
   parseText,
   print,
+  printAscii,
   printAsTeX,
   registerPreprocessorAfterParse,
   registerPreprocessorBeforeParse,
