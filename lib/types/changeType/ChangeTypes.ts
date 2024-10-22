@@ -348,25 +348,29 @@ export const mapMistakeTypeToChangeTypeError: Record<AMistakeTypeOnly, AChangeTy
   SUBTRACTED_INSTEAD_OF_ADDED: 'SIMPLIFY_ARITHMETIC__ADD',
 } as const
 
-
+// TODO separate them out.
 export const EQUATION_CHANGE_TYPES = [
+  // Individually applied Types
   'EQ_REMOVE_TERM',
-  'EQ_SWAP_SIDES',
   'EQ_ADD_TERM',
-  'EQ_SIMPLIFY_RHS',
-  'EQ_SIMPLIFY_LHS',
-  'EQ_SIMPLIFY_BOTH',
-  'EQ_NO_CHANGE',
+
+  ///
+  /// Overall Equation Types
+
   // errors
   'EQ_ATMPT_REMOVAL_BOTH_SIDES',
-  'EQ_PLACED_BOTH_SIDES',
+  'EQ_ADDED_DIFF_TERMS_TO_BOTH_SIDES',
   'EQ_NOT_SAME_OP_PERFORMED',
   'EQ_PLACED_LEFT_SIDE_ONLY',
   'EQ_PLACED_RIGHT_SIDE_ONLY',
 
   // equation solving success/attempted
-  'EQ_EQUATION_SOLVING',
-
+  'EQ_ATMPT_OP_BOTH_SIDES',
+  'EQ_SWAP_SIDES',
+  'EQ_SIMPLIFY_RHS',
+  'EQ_SIMPLIFY_LHS',
+  'EQ_SIMPLIFY_BOTH',
+  'EQ_NO_CHANGE',
 ] as const
 export type AEquationChangeType = typeof EQUATION_CHANGE_TYPES[number]
 export const EquationChangeTypes: { [K in AEquationChangeType]: K } = Object.fromEntries(EQUATION_CHANGE_TYPES.map(k => [k, k])) as { [K in AEquationChangeType]: K }
