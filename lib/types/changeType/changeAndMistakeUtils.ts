@@ -1,6 +1,3 @@
-// function to determine the groups a changeType belongs to
-
-
 import type { AChangeType, AChangeTypeGroup, CHANGE_TYPE_GROUPS } from '~/types/changeType/ChangeTypes'
 import { changeGroupMappings, mapMistakeTypeToChangeTypeError, mapWordsToGroups, MISTAKE_ONLY } from '~/types/changeType/ChangeTypes'
 import { cleanString } from '~/util/stringUtils'
@@ -120,6 +117,7 @@ export const unflattenOp: Record<AOperator, AOperator> = {
   '/': '/',
 }
 
+
 /**
  * Get the change type (addition, subtraction, multiplication, etc.).
  * @param op The operator used in the operation.
@@ -149,3 +147,8 @@ export const isAnAdditionChangeType = (change: AChangeType): boolean => changeTy
 // export const isMultiplication = (change: AChangeType): boolean => changeTypeIsInGroup(change, 'MultiplicationRules')
 // export const isDivision = (change: AChangeType): boolean => changeTypeIsInGroup(change, 'DivisionRules')
 
+export const isOpEqual = (op1: string, op2: string): boolean => {
+  const op1Normal = unflattenOp?.[cleanString(op1) as AOperator]
+  const op2Normal = unflattenOp?.[cleanString(op2) as AOperator]
+  return op1Normal === op2Normal
+}
