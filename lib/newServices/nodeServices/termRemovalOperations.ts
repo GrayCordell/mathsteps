@@ -164,7 +164,7 @@ export function findAllOperationsThatCanBeRemoved(
       to: term.newExpression,
       changeType: 'EQ_REMOVE_TERM' as const,
       isMistake: false,
-      removeNumberOp: term.removeNumberOp,
+      removeNumberOp: { ...term.removeNumberOp, op: getReverseOp(term.removeNumberOp.op), number: term.removeNumberOp.number },
       availableChangeTypes: ['EQ_REMOVE_TERM' as const],
     }))
 }
