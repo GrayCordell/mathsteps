@@ -58,11 +58,18 @@ export function assertSpecifiedValues(stepObject: StepInfo, expectedObject: Part
   // remove COLLECT_AND_COMBINE_LIKE_TERMS from availableChangeTypes for now
   // Also lets remove the _CASE_1, _CASE_2, etc. from the ruleId.
   _normalizeRulesProcedure(stepObject, expectedObject)
+  assertObjectEqual(stepObject, expectedObject)
+}
+
+
+export function assertObjectEqual(stepObject: any, expectedObject: any) {
+  if (expectedObject === undefined)
+    return
 
   for (const key of objectKeys(expectedObject)) {
     let expectedValue = expectedObject[key]
     let actualValue = stepObject[key]
-    if (expectedValue === undefined)
+    if (expectedValue === undefined) // we ignore values not in the expected object. TODO come up with better function name.
       continue
     if (typeof expectedValue === 'string')
       expectedValue = cleanString(expectedValue)
