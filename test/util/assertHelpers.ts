@@ -1,7 +1,7 @@
 import { assert } from 'vitest'
-import { parseText } from '~/index'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
+import { parseText } from '~/newServices/nodeServices/parseText'
 import { removeCaseNumberFromRuleId } from '~/newServices/ruleHelper'
 import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { objectKeys } from '~/types/ObjectKeys'

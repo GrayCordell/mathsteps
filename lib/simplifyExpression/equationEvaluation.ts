@@ -10,6 +10,13 @@ import { cleanString } from '~/util/stringUtils'
 
 const expressionEquals = (exp0: string, exp1: string): boolean => areExpressionEqual(exp0, exp1, getValidStepEqCache())
 
+export interface ProcessedEquation {
+  left: StepInfo[]
+  right: StepInfo[]
+  attemptedEquationChangeType: AEquationChangeType
+  equationErrorType?: AEquationChangeType
+  reachesOriginalAnswer: boolean
+}
 
 /**
  * @param leftRes
@@ -91,7 +98,7 @@ function getEquationOperationsValidity(leftRes: StepInfo[], rightRes: StepInfo[]
  * @param reachesOriginalAnswer
  * @mutates can mutate (left|right)Res[number].(removeNumberOp|addedNumOp) isValid.
  */
-function invalidProcedure(left: StepInfo[], right: StepInfo[], reachesOriginalAnswer: boolean): { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType, equationErrorType: AEquationChangeType, reachesOriginalAnswer: boolean } | null {
+function invalidProcedure(left: StepInfo[], right: StepInfo[], reachesOriginalAnswer: boolean): ProcessedEquation | null {
   const allAddedLeft = left.filter(step => step.addedNumOp)
   const allRemovedLeft = left.filter(step => step.removeNumberOp)
   const allAddedRight = right.filter(step => step.addedNumOp)
@@ -153,7 +160,7 @@ function processEquationInfo(
   startingStepAnswer: string,
   startingStepAnswerForEquation: string,
   logs: { lhsFirstChangeTypesLog: AChangeType[], rhsFirstChangeTypesLog: AChangeType[], lhsFirstFoundToLog: string[], rhsFirstFoundToLog: string[] },
-): { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType, equationErrorType?: AEquationChangeType, reachesOriginalAnswer: boolean } {
+): ProcessedEquation {
   const leftFrom = cleanString(previousStep.split('=')[0])
   const rightFrom = cleanString(previousStep.split('=')[1])
   const leftTo = cleanString(userStep.split('=')[0])
@@ -211,7 +218,7 @@ function processEquationInfo(
 
   return { left: leftRes, right: rightRes, attemptedEquationChangeType: equation.equationChangeType || 'EQ_ATMPT_OP_BOTH_SIDES', reachesOriginalAnswer }
 }
-export function assessUserEquationStep(previousUserStep: string, userStep: string, startingStepAnswerForEquation: string): ReturnType<typeof processEquationInfo> {
+export function assessUserEquationStep(previousUserStep: string, userStep: string, startingStepAnswerForEquation: string): ProcessedEquation {
   // const startingStepAnswer = getAnswerFromEquation(previousUserStep)
   const logs = {
     lhsFirstChangeTypesLog: [] as AChangeType[],
@@ -223,7 +230,7 @@ export function assessUserEquationStep(previousUserStep: string, userStep: strin
   // @ts-expect-error --- TODO get starting answer instead of null
   return processEquationInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, null, startingStepAnswerForEquation, logs)
 }
-export function assessUserEquationSteps(userSteps: string[]): ReturnType<typeof assessUserEquationStep>[] {
+export function assessUserEquationSteps(userSteps: string[]): ProcessedEquation[] {
   if (userSteps.length === 0)
     return []
   // const userSteps = userSteps_.map(step => myNodeToString(parseText(step)))

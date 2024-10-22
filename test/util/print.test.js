@@ -1,5 +1,5 @@
 import { describe } from 'vitest'
-import { parseText } from '~/index'
+import { parseText } from '~/newServices/nodeServices/parseText'
 import { Creator } from '~/node/index.js'
 import print from '~/util/print.js'
 import TestUtil from '../TestUtil.js'

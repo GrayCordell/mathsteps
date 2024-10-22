@@ -122,7 +122,6 @@ export const unflattenOp: Record<AOperator, AOperator> = {
  * Get the change type (addition, subtraction, multiplication, etc.).
  * @param op The operator used in the operation.
  * Operator can be '+', '-', '*', '/', '--', '+-'
- * @param term The term that is being operated on. Here for +- and -- operators.
  */
 export const getReverseOp = (op: string | AOperator): AOperator => {
   return reverseOp[cleanString(op) as AOperator]

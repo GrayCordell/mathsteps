@@ -1,7 +1,7 @@
 import type { MathNode } from 'mathjs'
 import { ConstantNode, isConstantNode, isOperatorNode, isSymbolNode } from '~/config'
-import { parseText } from '~/index'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString.js'
+import { parseText } from '~/newServices/nodeServices/parseText'
 import { removeImplicitMultiplicationFromNode } from '~/newServices/treeUtil'
 import { kemuFlatten, kemuNormalizeConstantNodes } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
 import type { EqualityCache } from '~/util/equalityCache'

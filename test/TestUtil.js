@@ -1,5 +1,5 @@
 import { assert, it } from 'vitest'
-import { parseText } from '~/index'
+import { parseText } from '~/newServices/nodeServices/parseText'
 import { kemuFlatten } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
 import print from '../lib/util/print.js'
 

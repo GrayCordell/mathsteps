@@ -100,7 +100,7 @@ try {
   // @ts-expect-error ---
   // eslint-disable-next-line node/prefer-global/process
   process_ = process ? process?.env?.NODE_ENV : ''
-} // eslint-disable-next-line unused-imports/no-unused-vars
+}
 catch (_e: any) { process_ = '' }
 const isDev = devEnvirements.includes(process_) || devEnvirements.includes(import.meta.env.MODE)
 

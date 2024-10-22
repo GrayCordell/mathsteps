@@ -1,8 +1,8 @@
 import type { MathNode } from 'mathjs'
 import { isConstantNode, isOperatorNode } from '~/config'
-import { parseText } from '~/index'
-
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
+
+import { parseText } from '~/newServices/nodeServices/parseText'
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
 import { getReverseOp } from '~/types/changeType/changeAndMistakeUtils'

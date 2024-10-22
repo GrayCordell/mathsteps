@@ -97,11 +97,8 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
   const potentialSteps: RawStep[] = []
   mathsteps.simplifyExpression({
     expressionAsText: userStep,
-    // @ts-expect-error ---
     isDebugMode: false,
-    isDryRun: true,
     getMistakes: true,
-    isWithAlternativeRun: true,
     getAllNextStepPossibilities: true,
     onStepCb: (step: RawStep) => potentialSteps.push(step),
   })
