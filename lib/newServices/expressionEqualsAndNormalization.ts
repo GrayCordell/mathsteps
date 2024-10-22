@@ -8,8 +8,11 @@ import type { EqualityCache } from '~/util/equalityCache'
 import { cleanString } from '~/util/stringUtils.js'
 import kemuSortArgs from '../simplifyExpression/kemuSortArgs.js'
 
-
-export function veryNormalizeNode(node_: MathNode | string): MathNode {
+/**
+ * Normalizes a node for equality comparison. Does not do all the same things as normalizeStringExpressionForEquality. You must do both for best valid normalization.
+ * @param node_
+ */
+export function normalizeNodeForEquality(node_: MathNode | string): MathNode {
   let node = (typeof node_ === 'string') ? parseText(node_) : node_
   node = kemuFlatten(node)
   node = removeImplicitMultiplicationFromNode(node)
@@ -18,6 +21,26 @@ export function veryNormalizeNode(node_: MathNode | string): MathNode {
   node = kemuSortArgs(node, true, true)
   node = convertAll1xToX(node)
   return node
+}
+
+/**
+ * Normalizes a string expression for equality comparison. Does not do all the same things as normalizeNodeForEquality. You must do both for best valid normalization.
+ * @param stringExpression
+ */
+export function normalizeStringExpressionForEquality(stringExpression: string): string {
+  stringExpression = cleanString(stringExpression)
+  // we use 0+ to make sure that we don't have a leading - in the string. Gets rid of some +- issues.
+  stringExpression = makePlusMinusMinusAndReturnString(`0+${stringExpression}`)
+  // make all 1*x into x && all 1x into x
+  stringExpression = stringExpression.replaceAll(/\b0[a-z]\b/gi, '0')
+  stringExpression = stringExpression.replaceAll(/\b1([a-z])\b/gi, '$1')
+
+  // make  number times var into  numberVar
+  stringExpression = stringExpression.replace(/(\d)\*([a-z])/gi, '$1$2')
+
+  // lets clean the strings again
+  stringExpression = cleanString(stringExpression)
+  return stringExpression
 }
 
 export function areExpressionEqual(exp0: string | MathNode, exp1: string | MathNode, equalityCache: EqualityCache | null = null): boolean {
@@ -42,29 +65,21 @@ function areExpressionEqualCore(exp0?: string | MathNode | null, exp1?: string |
   if (exp0 === exp1) // same object reference. Or also same exact string but we will check "cleaned" strings later.
     return true
 
-  let strExp0 = typeof exp0 === 'string' ? cleanString(exp0) : myNodeToString(exp0)
-  let strExp1 = typeof exp1 === 'string' ? cleanString(exp1) : myNodeToString(exp1)
-  strExp0 = makePlusMinusMinusAndReturnString(strExp0)
-  strExp1 = makePlusMinusMinusAndReturnString(strExp1)
-  // make all 1*x into x && all 1x into x
-  strExp0 = strExp0.replaceAll(/\b0[a-z]\b/gi, '0')
-  strExp1 = strExp1.replaceAll(/\b0[a-z]\b/gi, '0')
-  strExp0 = strExp0.replaceAll(/\b1([a-z])\b/gi, '$1')
-  strExp1 = strExp1.replaceAll(/\b1([a-z])\b/gi, '$1')
+  const strExp0 = typeof exp0 === 'string' ? cleanString(exp0) : myNodeToString(exp0)
+  const strExp1 = typeof exp1 === 'string' ? cleanString(exp1) : myNodeToString(exp1)
 
   if (strExp0 === strExp1) // 'cleaned' string check
     return true
 
+  const normalizedExprString0 = normalizeStringExpressionForEquality(strExp0)
+  const normalizedExprString1 = normalizeStringExpressionForEquality(strExp1)
 
-  // strExp0 = typeof exp0 === 'string' ? cleanString(exp0) : myNodeToString(exp0)
-  // strExp1 = typeof exp1 === 'string' ? cleanString(exp1) : myNodeToString(exp1)
-  // if (strExp0 === strExp1) // 'cleaned' string check
-  //  return true
+  if (normalizedExprString0 === normalizedExprString1) // 'normalized' string check
+    return true
 
-  const newExpNode0 = veryNormalizeNode(strExp0)
-  const newExpNode1 = veryNormalizeNode(strExp1)
-
-  return newExpNode0.equals(newExpNode1) // node equal check.
+  const normalizedNode0 = normalizeNodeForEquality(parseText(normalizedExprString0))
+  const normalizedNode1 = normalizeNodeForEquality(parseText(normalizedExprString1))
+  return normalizedNode0.equals(normalizedNode1) // node equal check using mathjs equals
 }
 
 
