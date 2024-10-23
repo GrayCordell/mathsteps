@@ -135,7 +135,7 @@ describe('assessUserEquationStep', () => {
         {
           overallStepEval: { reachesOriginalAnswer: true },
           left: [
-            generateStep('2x+3', '2x+3-3', 'EQ_REMOVE_TERM'),
+            generateStep('2x+3', '2x+3-3', 'EQ_REMOVE_TERM', { removeNumberOp: { number: '3', op: '-', dfsNodeId: 1 } }),
             generateStep('2x+3-3', '2x+0', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
             generateStep('2x+0', '2x', 'REMOVE_ADDING_ZERO'),
           ],
@@ -468,6 +468,21 @@ describe('assessUserEquationStep', () => {
         },
       ],
     },
+    { // test 11
+      description: '11. error incorrect combining like terms',
+      steps: ['2x + 3 - x = 55', '5x = 55'],
+      expectedAnalysis: [
+        {
+          left: [
+            generateStep('2x + 3 - x', '5x', 'UNKNOWN', { isValid: false }),
+          ],
+          right: [
+            generateStep('55', '55', 'NO_CHANGE', { isValid: false }),
+          ],
+        },
+      ],
+    },
+
   ]
 
   testCases.forEach((test, index) => testStepEvaluation(test, index))
