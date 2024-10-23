@@ -1,5 +1,5 @@
 import math from '~/config'
-/* eslint-disable unused-imports/no-unused-vars,no-unused-vars */
+/* eslint-disable no-unused-vars */
 import Node from '~/node/index.js'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 

@@ -39,7 +39,7 @@ const POOLED_TOGETHER_POOL_OF_RULES = {
   multiplyShortFormulas,
   // Numerical result e.g. 1.414 instead of sqrt(2).
   calculateNumericalValue,
-}
+} as const
 // Given rulesArray
 const rulesArray = [
   { id: 'convertDecimalToFraction', fn: convertDecimalToFraction },
@@ -54,12 +54,14 @@ const rulesArray = [
   { id: 'sqrtFromConstant', fn: sqrtFromConstant },
   { id: 'multiplyShortFormulas', fn: multiplyShortFormulas },
   { id: 'calculateNumericalValue', fn: calculateNumericalValue },
-]
+] as const
 // Convert the array back to an object
-const POOL_OF_RULES = rulesArray.reduce((acc, rule) => {
+const POOL_OF_RULES = rulesArray.reduce((acc: any, rule) => {
   acc[rule.id] = rule.fn
   return acc
-}, {})
+}, {}) as object
+
+// keep as exports down here.
 export { POOL_OF_RULES }
 export { POOLED_TOGETHER_POOL_OF_RULES }
 export default {

@@ -1,9 +1,9 @@
 import type { MathNode } from 'mathjs'
 import type { AChangeType } from '~/index'
-import { parseText } from '~/index'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import type { TermTypeAndIndex } from '~/newServices/nodeServices/nodeHelpers'
 import { combineMakeMinusNegativeTerms, combineNumberVarTimesTerms, flattenAndIndexTrackAST, getAddedAndRemovedTerms, makeCountTerms } from '~/newServices/nodeServices/nodeHelpers'
+import { parseText } from '~/newServices/nodeServices/parseText'
 
 
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'

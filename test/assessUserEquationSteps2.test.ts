@@ -1,7 +1,8 @@
 import { describe, it } from 'vitest'
 import { assessUserEquationSteps } from '~/simplifyExpression/equationEvaluation'
 import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
-import { assertSpecifiedValues } from './util/assertHelpers'
+import type { AEquationChangeType } from '~/types/changeType/ChangeTypes'
+import { assertObjectEqual, assertSpecifiedValues } from './util/assertHelpers'
 
 
 const cleanMath = (str: string) => str?.replace('_', '').replace(' ', '').replace('[', '').replace(']', '').replace('\'', '').replace(`"`, '').replace('`', '')
@@ -13,7 +14,15 @@ interface Test {
   // first array is the collection of entire steps
   // second array is the collection of steps that make up a user step
   //
-  expectedAnalysis: { left: TestStep[], right: TestStep[] }[]
+  expectedAnalysis: {
+    overallEval?: {
+      reachesOriginalAnswer: boolean
+      attemptedEquationChangeType?: AEquationChangeType
+      equationErrorType?: AEquationChangeType
+    }
+    left: TestStep[]
+    right: TestStep[]
+  }[]
 }
 function testStepEvaluation(test: Test, index: number) {
   it(`test ${index + 1}: ${test.description}`, () => {
@@ -24,6 +33,7 @@ function testStepEvaluation(test: Test, index: number) {
     for (let i = 0; i < expectedAnalysis.length; i++) {
       const leftExpected = expectedAnalysis[i].left
       const rightExpected = expectedAnalysis[i].right
+
       const leftAndRight = evaluatedSteps[i]
       for (let j = 0; j < leftExpected.length; j++) {
         const leftStepExpected = leftExpected[j]
@@ -39,6 +49,9 @@ function testStepEvaluation(test: Test, index: number) {
         assertSpecifiedValues(leftStep, leftStepExpected)
         assertSpecifiedValues(rightStep, rightStepExpected)
       }
+
+      // check overall checks
+      assertObjectEqual({ ...leftAndRight }, expectedAnalysis[i].overallEval)
     }
   })
 }
@@ -54,13 +67,15 @@ const makeToFromString = (strSplitByArrows: string) => {
 }
 const l = (str: string) => ({ left: makeToFromString(str) })
 const r = (str: string) => ({ right: makeToFromString(str) })
+const reachesOgEqAnswer = (bool: boolean) => ({ overallEval: { reachesOriginalAnswer: bool } })
 describe('assessUserEquationSteps2', () => {
   const tests: Test[] = [
+    // 1
     {
       description: 'simple equation',
       steps: ['x+2=4', 'x=2'],
       expectedAnalysis: [
-        { ...l('x+2->x+2-2->x+0->1x'), ...r('4->4-2->2') },
+        { ...reachesOgEqAnswer(true), ...l('x+2->x+2-2->x+0->1x'), ...r('4->4-2->2') },
       ],
     },
   ]

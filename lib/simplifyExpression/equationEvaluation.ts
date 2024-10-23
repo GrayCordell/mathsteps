@@ -2,23 +2,181 @@ import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalizati
 import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import type { CoreAssessUserStepResult, StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { coreAssessUserStep, processNoHistoryStep, processStep } from '~/simplifyExpression/stepEvaluationCore'
-import { getReverseOp } from '~/types/changeType/changeAndMistakeUtils'
+import { getAnswerFromEquation } from '~/simplifyExpression/stepEvaluationHelpers'
+import { isOpEqual } from '~/types/changeType/changeAndMistakeUtils'
 import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
+import type { NumberOp } from '~/types/NumberOp'
 import { cleanString } from '~/util/stringUtils'
 
 const expressionEquals = (exp0: string, exp1: string): boolean => areExpressionEqual(exp0, exp1, getValidStepEqCache())
+
+export interface ProcessedEquation {
+  left: StepInfo[]
+  right: StepInfo[]
+  attemptedEquationChangeType: AEquationChangeType
+  equationErrorType?: AEquationChangeType
+  reachesOriginalAnswer: boolean
+}
+
+/**
+ * @param leftRes
+ * @param rightRes
+ * @mutates leftRes and rightRes by setting isValid to true or false based on if the steps are equal.
+ */
+function makeActionsValidOrInvalidBasedOnNonComplimentedAddOrRemove(leftRes: StepInfo[], rightRes: StepInfo[]): void {
+  const leftChanges = leftRes.filter(step => step.addedNumOp || step.removeNumberOp)
+  const rightChanges = rightRes.filter(step => step.addedNumOp || step.removeNumberOp)
+  const largestLength = Math.max(leftChanges.length, rightChanges.length)
+  for (let i = 0; i < largestLength; i++) {
+    const getNumOp = (step?: StepInfo) => step?.addedNumOp || step?.removeNumberOp
+    const leftChange = leftChanges?.[i]
+    const rightChange = rightChanges?.[i]
+    if (leftChange && !rightChange) {
+      leftChange.isValid = false
+      continue
+    }
+    if (rightChange && !leftChange) {
+      rightChange.isValid = false
+      continue
+    }
+    const leftNumOp = getNumOp(leftChange)!
+    const rightNumOp = getNumOp(rightChange)!
+
+
+    const isEqualFn = (lStepOp: NumberOp, rStepOp: NumberOp) => expressionEquals(lStepOp.number, rStepOp.number) && isOpEqual(lStepOp.op, rStepOp.op)
+    let areChangesEqual = isEqualFn(leftNumOp, rightNumOp)
+    // lets check 1 Ahead too just in case. TODO could have a very specific edgeCase, but that would likely require many removed/added terms.
+    if (!areChangesEqual) {
+      const rStepOpNext = getNumOp(rightChanges?.[i + 1])
+      if (rStepOpNext)
+        areChangesEqual = isEqualFn(leftNumOp, rightNumOp)
+    }
+
+
+    if (areChangesEqual) {
+      leftChange.isValid = true
+      rightChange.isValid = true
+    }
+    else {
+      leftChange.isValid = false
+      rightChange.isValid = false
+    }
+  }
+}
+
+
+// Note the order checks 1 ahead. Do not use for order.
+function getEquationOperationsValidity(leftRes: StepInfo[], rightRes: StepInfo[]): boolean[] {
+  const leftChange = leftRes.filter(step => step.addedNumOp || step.removeNumberOp)
+  const rightChange = rightRes.filter(step => step.addedNumOp || step.removeNumberOp)
+  const equationNumOpValidity: boolean[] = []
+  const largestLength = Math.max(leftChange.length, rightChange.length)
+  for (let i = 0; i < largestLength; i++) {
+    const getNumOp = (step?: StepInfo) => step?.addedNumOp || step?.removeNumberOp
+    const lStepOp = getNumOp(leftChange?.[i])
+    const rStepOp = getNumOp(rightChange?.[i])
+    if (!lStepOp || !rStepOp) {
+      equationNumOpValidity.push(false)
+      continue
+    }
+    const isEqualFn = (lStepOp: NumberOp, rStepOp: NumberOp) => expressionEquals(lStepOp.number, rStepOp.number) && isOpEqual(lStepOp.op, rStepOp.op)
+    let areStepsEqual = isEqualFn(lStepOp, rStepOp)
+    // lets check 1 Ahead too just in case. TODO could have a very specific edgeCase, but that would likely require many removed/added terms.
+    if (!areStepsEqual) {
+      const rStepOpNext = getNumOp(rightChange?.[i + 1])
+      if (rStepOpNext)
+        areStepsEqual = isEqualFn(lStepOp, rStepOpNext)
+    }
+
+    equationNumOpValidity.push(areStepsEqual)
+  }
+  return equationNumOpValidity
+}
+/**
+ * @param left
+ * @param right
+ * @param reachesOriginalAnswer
+ * @mutates can mutate (left|right)Res[number].(removeNumberOp|addedNumOp) isValid.
+ */
+function invalidProcedure(left: StepInfo[], right: StepInfo[], reachesOriginalAnswer: boolean): ProcessedEquation | null {
+  const allAddedLeft = left.filter(step => step.addedNumOp)
+  const allRemovedLeft = left.filter(step => step.removeNumberOp)
+  const allAddedRight = right.filter(step => step.addedNumOp)
+  const allRemovedRight = right.filter(step => step.removeNumberOp)
+
+  // check what was added or removed from each side
+  const isRightRemovedFrom = allRemovedRight.length > 0
+  const isRightAddedTo = allAddedRight.length > 0
+  const isLeftAddedTo = allAddedLeft.length > 0
+  const isLeftRemovedFrom = allRemovedLeft.length > 0
+  const hasLeftAddedAndRightRemoved = allAddedLeft.length > 0 && allRemovedRight.length > 0
+  const hasRightAddedAndLeftRemoved = allAddedRight.length > 0 && allRemovedLeft.length > 0
+
+
+  function makeError(left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType, equationErrorType: AEquationChangeType) {
+    return { left, right, attemptedEquationChangeType, equationErrorType, reachesOriginalAnswer }
+  }
+  function makeDefaultError(leftRes: StepInfo[], rightRes: StepInfo[], error: AEquationChangeType) {
+    return makeError(leftRes, rightRes, 'EQ_ATMPT_OP_BOTH_SIDES', error)
+  }
+
+  if (isLeftRemovedFrom && isRightRemovedFrom) // if both removedFrom then make them both invalid
+    return makeDefaultError(left, right, 'EQ_ATMPT_REMOVAL_BOTH_SIDES')
+  if (isLeftAddedTo && isRightAddedTo) // if both added to then make them both invalid
+    return makeDefaultError(left, right, 'EQ_ADDED_DIFF_TERMS_TO_BOTH_SIDES')
+
+  if ((isLeftRemovedFrom && !isRightAddedTo))
+    return makeDefaultError(left, right, 'EQ_PLACED_LEFT_SIDE_ONLY')
+  if ((isLeftAddedTo && !isRightRemovedFrom))
+    return makeDefaultError(left, right, 'EQ_PLACED_LEFT_SIDE_ONLY')
+
+  if (isRightRemovedFrom && !isLeftAddedTo)
+    return makeDefaultError(left, right, 'EQ_PLACED_RIGHT_SIDE_ONLY')
+  if ((isRightAddedTo && !isLeftRemovedFrom))
+    return makeDefaultError(left, right, 'EQ_PLACED_RIGHT_SIDE_ONLY')
+
+
+  // If we made it here the equation hasAddedAndRemoved a term
+  // First check if the number of added and removed terms are the same, if not then we don't have to look
+  if ((hasLeftAddedAndRightRemoved && allAddedLeft.length !== allRemovedRight.length) || (hasRightAddedAndLeftRemoved && allAddedRight.length !== allRemovedLeft.length)) {
+    return makeDefaultError(left, right, 'EQ_NOT_SAME_OP_PERFORMED')
+  }
+  // If we have any invalid addedNumOp | removeNumberOp  steps.
+  else if (hasLeftAddedAndRightRemoved || hasRightAddedAndLeftRemoved) {
+    const getHasInvalidEquationOp = (step: StepInfo) => !step.isValid && (step.addedNumOp || step.removeNumberOp)
+    if (left.some(step => getHasInvalidEquationOp(step))
+      || right.some(step => getHasInvalidEquationOp(step))) {
+      return makeDefaultError(left, right, 'EQ_NOT_SAME_OP_PERFORMED')
+    }
+  }
+
+  return null
+}
 
 function processEquationInfo(
   equation: { lhs: CoreAssessUserStepResult, rhs: CoreAssessUserStepResult, equationChangeType: AEquationChangeType | undefined },
   previousStep: string,
   userStep: string,
   startingStepAnswer: string,
+  startingStepAnswerForEquation: string,
   logs: { lhsFirstChangeTypesLog: AChangeType[], rhsFirstChangeTypesLog: AChangeType[], lhsFirstFoundToLog: string[], rhsFirstFoundToLog: string[] },
-): { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType, equationErrorType?: AEquationChangeType } {
+): ProcessedEquation {
   const leftFrom = cleanString(previousStep.split('=')[0])
   const rightFrom = cleanString(previousStep.split('=')[1])
   const leftTo = cleanString(userStep.split('=')[0])
   const rightTo = cleanString(userStep.split('=')[1])
+
+  // TODO room to improve performance
+  const reachesOriginalAnswer = (() => {
+    const leftOgAnswer = startingStepAnswerForEquation.split('=')[0]
+    const rightOgAnswer = startingStepAnswerForEquation.split('=')[1]
+    const leftNewAnswer = getAnswerFromEquation(userStep).split('=')[0]
+    const rightNewAnswer = getAnswerFromEquation(userStep).split('=')[1]
+
+    const normalIsEqual = expressionEquals(leftOgAnswer, leftNewAnswer) && expressionEquals(rightOgAnswer, rightNewAnswer)
+    const flippedIsEqual = expressionEquals(leftOgAnswer, rightNewAnswer) && expressionEquals(rightOgAnswer, leftNewAnswer)
+    return normalIsEqual || flippedIsEqual
+  })()
 
   if (equation.equationChangeType === 'EQ_SWAP_SIDES') {
     // do regular processing and then we will fix the rest
@@ -32,7 +190,7 @@ function processEquationInfo(
     // make isValid true
     leftHistory[0].isValid = true
     rightHistory[0].isValid = true
-    return { left: leftHistory, right: rightHistory, attemptedEquationChangeType: equation.equationChangeType }
+    return { left: leftHistory, right: rightHistory, attemptedEquationChangeType: equation.equationChangeType, reachesOriginalAnswer }
   }
   const rightRes = (equation.rhs.history.length === 0 || equation.equationChangeType === 'EQ_NO_CHANGE' || equation.equationChangeType === 'EQ_SIMPLIFY_LHS')
     ? processNoHistoryStep({ from: rightFrom, to: rightTo, startingStepAnswer, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: 'UNKNOWN', firstChangeTypesLog: logs.rhsFirstChangeTypesLog, firstFoundToLog: logs.rhsFirstFoundToLog })
@@ -43,72 +201,24 @@ function processEquationInfo(
 
 
   if (equation.equationChangeType === 'EQ_SIMPLIFY_BOTH' || equation.equationChangeType === 'EQ_SIMPLIFY_LHS' || equation.equationChangeType === 'EQ_SIMPLIFY_RHS') {
-    return { left: leftRes, right: rightRes, attemptedEquationChangeType: equation.equationChangeType }
+    return { left: leftRes, right: rightRes, attemptedEquationChangeType: equation.equationChangeType, reachesOriginalAnswer }
   }
 
 
-  const allAddedLeft = leftRes.filter(step => step.addedNumOp)
-  const allRemovedLeft = leftRes.filter(step => step.removeNumberOp)
-  const allAddedRight = rightRes.filter(step => step.addedNumOp)
-  const allRemovedRight = rightRes.filter(step => step.removeNumberOp)
+  const isValidEquationOperations = getEquationOperationsValidity(leftRes, rightRes).every(val => val)
+  makeActionsValidOrInvalidBasedOnNonComplimentedAddOrRemove(leftRes, rightRes)
 
-  // check what was added or removed from each side
-  const isRightRemovedFrom = allRemovedRight.length > 0
-  const isRightAddedTo = allAddedRight.length > 0
-  const isLeftAddedTo = allAddedLeft.length > 0
-  const isLeftRemovedFrom = allRemovedLeft.length > 0
-  const hasLeftAddedAndRightRemoved = allAddedLeft.length > 0 && allRemovedRight.length > 0
-  const hasRightAddedAndLeftRemoved = allAddedRight.length > 0 && allRemovedLeft.length > 0
-
-  const makeItemInvalidIfHasAttemptedToRemoveNumberOp = (arr: StepInfo[]) => arr.map(step => step.removeNumberOp ? { ...step, isValid: false } : step)
-  const makeItemInvalidIfHasAttemptedToAddNumberOp = (arr: StepInfo[]) => arr.map(step => step.addedNumOp ? { ...step, isValid: false } : step)
-
-  // if both removedFrom then make them both invalid
-  if (isLeftRemovedFrom && isRightRemovedFrom) {
-    const left = makeItemInvalidIfHasAttemptedToRemoveNumberOp(leftRes)
-    const right = makeItemInvalidIfHasAttemptedToRemoveNumberOp(rightRes)
-    return { left, right, attemptedEquationChangeType: 'EQ_ATMPT_REMOVAL_BOTH_SIDES', equationErrorType: 'EQ_ATMPT_REMOVAL_BOTH_SIDES' }
+  if (!isValidEquationOperations) {
+    const invalidRes = invalidProcedure(leftRes, rightRes, reachesOriginalAnswer)
+    if (invalidRes)
+      return invalidRes
+    else
+      throw new Error('Invalid procedure did not return anything')
   }
 
-  // if both added to then make them both invalid
-  if (isLeftAddedTo && isRightAddedTo) {
-    const left = makeItemInvalidIfHasAttemptedToAddNumberOp(leftRes)
-    const right = makeItemInvalidIfHasAttemptedToAddNumberOp(rightRes)
-    return { left, right, attemptedEquationChangeType: 'EQ_PLACED_BOTH_SIDES', equationErrorType: 'EQ_PLACED_BOTH_SIDES' }
-  }
-  // if added to one side and not removed from the other side then make them both invalid
-  if (isLeftAddedTo && !isRightRemovedFrom) {
-    const left = makeItemInvalidIfHasAttemptedToAddNumberOp(leftRes)
-    const right = makeItemInvalidIfHasAttemptedToRemoveNumberOp(rightRes)
-    return { left, right, attemptedEquationChangeType: 'EQ_PLACED_LEFT_SIDE_ONLY', equationErrorType: 'EQ_PLACED_LEFT_SIDE_ONLY' }
-  }
-  else if (isRightAddedTo && !isLeftRemovedFrom) {
-    const left = makeItemInvalidIfHasAttemptedToRemoveNumberOp(leftRes)
-    const right = makeItemInvalidIfHasAttemptedToAddNumberOp(rightRes)
-    return { left, right, attemptedEquationChangeType: 'EQ_PLACED_RIGHT_SIDE_ONLY', equationErrorType: 'EQ_PLACED_RIGHT_SIDE_ONLY' }
-  }
-
-
-  if ((hasLeftAddedAndRightRemoved && allAddedLeft.length !== allRemovedRight.length) || (hasRightAddedAndLeftRemoved && allAddedRight.length !== allRemovedLeft.length)) {
-    return { left: leftRes, right: rightRes, attemptedEquationChangeType: 'EQ_NOT_SAME_OP_PERFORMED', equationErrorType: 'EQ_NOT_SAME_OP_PERFORMED' }
-  }
-  else if (hasLeftAddedAndRightRemoved) {
-    for (let i = 0; i < allAddedLeft.length; i++) {
-      if (allAddedLeft[i].addedNumOp!.number !== allRemovedRight[i].removeNumberOp!.number && allAddedLeft[i].addedNumOp!.op !== getReverseOp(allRemovedRight[i].removeNumberOp!.op))
-        return { left: leftRes, right: rightRes, attemptedEquationChangeType: 'EQ_NOT_SAME_OP_PERFORMED', equationErrorType: 'EQ_NOT_SAME_OP_PERFORMED' }
-    }
-  }
-  else if (hasRightAddedAndLeftRemoved) {
-    for (let i = 0; i < allAddedRight.length; i++) {
-      if (allAddedRight[i].addedNumOp!.number !== allRemovedLeft[i].removeNumberOp!.number && allAddedRight[i].addedNumOp!.op !== getReverseOp(allRemovedLeft[i].removeNumberOp!.op))
-        return { left: leftRes, right: rightRes, attemptedEquationChangeType: 'EQ_NOT_SAME_OP_PERFORMED', equationErrorType: 'EQ_NOT_SAME_OP_PERFORMED' }
-    }
-  }
-
-
-  return { left: leftRes, right: rightRes, attemptedEquationChangeType: equation.equationChangeType || 'EQ_EQUATION_SOLVING' }
+  return { left: leftRes, right: rightRes, attemptedEquationChangeType: equation.equationChangeType || 'EQ_ATMPT_OP_BOTH_SIDES', reachesOriginalAnswer }
 }
-export function assessUserEquationStep(previousUserStep: string, userStep: string): { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType, equationErrorType?: AEquationChangeType } {
+export function assessUserEquationStep(previousUserStep: string, userStep: string, startingStepAnswerForEquation: string): ProcessedEquation {
   // const startingStepAnswer = getAnswerFromEquation(previousUserStep)
   const logs = {
     lhsFirstChangeTypesLog: [] as AChangeType[],
@@ -118,16 +228,16 @@ export function assessUserEquationStep(previousUserStep: string, userStep: strin
   }
   const rawAssessedStepOptionsRes = coreAssessUserStepEquation([previousUserStep, userStep], logs)
   // @ts-expect-error --- TODO get starting answer instead of null
-  return processEquationInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, null, logs)
+  return processEquationInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, null, startingStepAnswerForEquation, logs)
 }
-export function assessUserEquationSteps(userSteps: string[]): { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType, equationErrorType?: AEquationChangeType }[] {
+export function assessUserEquationSteps(userSteps: string[]): ProcessedEquation[] {
   if (userSteps.length === 0)
     return []
   // const userSteps = userSteps_.map(step => myNodeToString(parseText(step)))
 
-  const assessedSteps: { left: StepInfo[], right: StepInfo[], attemptedEquationChangeType: AEquationChangeType }[] = []
+  const assessedSteps: ReturnType<typeof assessUserEquationStep>[] = []
   let previousStep: string | undefined
-  // const startingStepAnswer = getAnswerFromStep(userSteps[0])
+  const startingStepAnswerForEquation = getAnswerFromEquation(userSteps[0])
 
   for (const userStep of userSteps) {
     // skip starting step. (Its the starting equation)
@@ -135,7 +245,7 @@ export function assessUserEquationSteps(userSteps: string[]): { left: StepInfo[]
       previousStep = userStep
       continue
     }
-    const assessedStep = assessUserEquationStep(previousStep, userStep)
+    const assessedStep = assessUserEquationStep(previousStep, userStep, startingStepAnswerForEquation)
     assessedSteps.push(assessedStep)
     previousStep = userStep
   }

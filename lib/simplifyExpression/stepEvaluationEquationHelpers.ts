@@ -1,5 +1,5 @@
-import { parseText } from '~/index'
 import { combineMakeMinusNegativeTerms, combineNumberVarTimesTerms, flattenAndIndexTrackAST, makeCountTerms } from '~/newServices/nodeServices/nodeHelpers'
+import { parseText } from '~/newServices/nodeServices/parseText'
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
 import { getReverseOp } from '~/types/changeType/changeAndMistakeUtils'
@@ -124,7 +124,7 @@ export function getOtherSideOptions(
     numbers.forEach((num) => {
       const cleanNum = cleanString(cleanString(num).replace('+-', '-').replace('+', ''))
       const newStep = `(${fromString})/${cleanNum}`
-      collectQueue.push({ to: newStep, addedNumOp: { op: '*', number: cleanNum } })
+      collectQueue.push({ to: newStep, addedNumOp: { op: '/', number: cleanNum } })
     })
   }
   // now just add all the vars

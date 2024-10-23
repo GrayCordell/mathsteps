@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/check-alignment */
 /**
  Cast a value to the given type safely.
 

@@ -62,10 +62,14 @@ export function makeCountTerms(terms: TermTypeAndIndex[]): (TermTypeAndIndex & {
 }
 
 
+function isNumberOrDecimal(value: string) {
+  return value.match(/^\d+\.?\d*$/) !== null
+}
+
 export function combineNumberVarTimesTerms(terms: TermTypeAndIndex[]) {
   // If we have a number times a variable term, we need to combine them, and fix the indexs after that
   for (let i = 0; i < terms.length; i++) {
-    if (terms[i].type === 'term' && terms[i + 1]?.type === 'operator' && terms[i + 2]?.type === 'term' && terms[i + 2]?.value.match(/[a-zA-Z]/)) {
+    if (terms[i].type === 'term' && isNumberOrDecimal(terms[i].value) && terms[i + 1]?.value === '*' && terms[i + 1]?.type === 'operator' && terms[i + 2]?.type === 'term' && terms[i + 2]?.value.match(/[a-zA-Z]/)) {
       terms[i].value = terms[i].value + terms[i + 2].value
       terms.splice(i + 1, 2)
       // fix the indexes after

@@ -6,7 +6,7 @@ const TestUtil = require('../TestUtil')
 
 function testRemoveUnnecessaryParens(exprStr, outputStr) {
   const input = removeUnnecessaryParens(mathsteps.parseText(exprStr))
-  TestUtil.testFunctionOutput(print.ascii, input, outputStr)
+  TestUtil.testFunctionOutput(printAscii, input, outputStr)
 }
 
 describe('removeUnnecessaryParens', function () {

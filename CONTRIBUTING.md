@@ -111,7 +111,7 @@ We're excited to see your [pull request](https://help.github.com/articles/about-
   which makes sure tests are passing and the code is eslint-compliant.
 - If you want to see what the expression tree looks like at any point in the
   code (for debugging), you can log a `node` as an expression string (e.g.
-  '2x + 5') with `console.log(print.ascii(node))`, and you can log the full tree
+  '2x + 5') with `console.log(printAscii(node))`, and you can log the full tree
   structure with `console.log(JSON.stringify(node, null, 2))`
 
 There's lots to be done, lots of students to help, and we're so glad you'll be a

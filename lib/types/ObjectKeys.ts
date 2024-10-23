@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/check-alignment */
 // FROM ts-extras repo
 export type ObjectKeys<T extends object> = `${Exclude<keyof T, symbol>}`
 

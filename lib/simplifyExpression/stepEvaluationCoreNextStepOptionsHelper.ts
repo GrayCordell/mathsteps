@@ -72,7 +72,7 @@ function _addAllAvailableChangeTypesToEachStep(steps: ProcessedStep[]) {
     step.availableChangeTypes = availableChangeTypes
   })
 }
-function _sortStepsByChangeType(steps: ProcessedStep[]) {
+/* function _sortStepsByChangeType(steps: ProcessedStep[]) {
   // (possibleStep.changeType === 'SIMPLIFY_ARITHMETIC__ADD' || possibleStep.changeType === 'SIMPLIFY_ARITHMETIC__SUBTRACT' || possibleStep.changeType === 'SIMPLIFY_ARITHMETIC__MULTIPLY' || possibleStep.changeType === 'KEMU_DISTRIBUTE_MUL_OVER_ADD' || possibleStep.changeType === 'REMOVE_ADDING_ZERO' || possibleStep.changeType === 'REMOVE_MULTIPLYING_BY_ONE' || possibleStep.changeType === 'SIMPLIFY_FRACTION') {
   const priorityOrderFirstIsFirst = ['SIMPLIFY_ARITHMETIC__ADD', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'REMOVE_ADDING_ZERO', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_FRACTION']
   return steps.toSorted((a, b) => {
@@ -80,7 +80,7 @@ function _sortStepsByChangeType(steps: ProcessedStep[]) {
     const bIndex = priorityOrderFirstIsFirst.indexOf(b.changeType)
     return aIndex - bIndex
   })
-}
+} */
 
 
 interface NeededForEquationChecks {
@@ -97,11 +97,8 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
   const potentialSteps: RawStep[] = []
   mathsteps.simplifyExpression({
     expressionAsText: userStep,
-    // @ts-expect-error ---
     isDebugMode: false,
-    isDryRun: true,
     getMistakes: true,
-    isWithAlternativeRun: true,
     getAllNextStepPossibilities: true,
     onStepCb: (step: RawStep) => potentialSteps.push(step),
   })

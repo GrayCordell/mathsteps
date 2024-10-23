@@ -1,15 +1,15 @@
 import type { MathNode } from 'mathjs'
 import { isConstantNode, isOperatorNode } from '~/config'
-import { parseText } from '~/index'
-
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
+
+import { parseText } from '~/newServices/nodeServices/parseText'
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
 import { getReverseOp } from '~/types/changeType/changeAndMistakeUtils'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { cleanString } from '~/util/stringUtils'
 
-type ExpressionEquals = (exp0: MathNode, exp1: MathNode) => boolean
+// type ExpressionEquals = (exp0: MathNode, exp1: MathNode) => boolean
 // Helper function to determine if an expression is negative
 function isNegative(node: MathNode): boolean {
   if (isOperatorNode(node) && node.isUnary()) {
@@ -164,7 +164,7 @@ export function findAllOperationsThatCanBeRemoved(
       to: term.newExpression,
       changeType: 'EQ_REMOVE_TERM' as const,
       isMistake: false,
-      removeNumberOp: term.removeNumberOp,
+      removeNumberOp: { ...term.removeNumberOp, op: getReverseOp(term.removeNumberOp.op), number: term.removeNumberOp.number },
       availableChangeTypes: ['EQ_REMOVE_TERM' as const],
     }))
 }
