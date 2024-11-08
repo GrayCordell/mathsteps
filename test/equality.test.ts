@@ -1,13 +1,12 @@
 import type { MathNode } from 'mathjs'
 import { describe, expect, it } from 'vitest'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
-import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { parseText } from '~/newServices/nodeServices/parseText'
-import { removeUnnecessaryMultiplications } from '~/newServices/nodeServices/removeUnnecessaryMultiplications'
 import { cleanString } from '~/util/stringUtils'
 
 describe('equalityTest', () => {
   const testCases: { input: string, expected: string }[] = [
+    { input: '(-2)/-2', expected: '-2/-2' },
     // swapped negative cases
     { input: '-4x+7', expected: '7-4x' },
     { input: '-4x+7', expected: '7+-4x' },
@@ -88,10 +87,7 @@ describe('equalityTest', () => {
       input = cleanString(input)
       const expression: MathNode = parseText(input)
 
-      const simplifiedExpression: MathNode = removeUnnecessaryMultiplications(expression)
-      const first = cleanString(myNodeToString(simplifiedExpression))
-      const second = cleanString(expected)
-      const isEqual = areExpressionEqual(first, second)
+      const isEqual = areExpressionEqual((expression), (expected))
       expect(isEqual).toBe(true)
     })
   })
