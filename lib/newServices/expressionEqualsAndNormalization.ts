@@ -5,6 +5,7 @@ import { parseText } from '~/newServices/nodeServices/parseText'
 import { removeImplicitMultiplicationFromNode } from '~/newServices/treeUtil'
 import { kemuFlatten, kemuNormalizeConstantNodes } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
 import type { EqualityCache } from '~/util/equalityCache'
+import { makeExtendedRegExp } from '~/util/extendedRegex'
 import { cleanString } from '~/util/stringUtils.js'
 import kemuSortArgs from '../simplifyExpression/kemuSortArgs.js'
 
@@ -14,6 +15,7 @@ import kemuSortArgs from '../simplifyExpression/kemuSortArgs.js'
  */
 export function normalizeNodeForEquality(node_: MathNode | string): MathNode {
   let node = (typeof node_ === 'string') ? parseText(node_) : node_
+  node = convertAll1xToX(node)
   node = kemuFlatten(node)
   node = removeImplicitMultiplicationFromNode(node)
   node = convertAllSimpleFractionsToDecimals(node)
@@ -29,6 +31,12 @@ export function normalizeNodeForEquality(node_: MathNode | string): MathNode {
  */
 export function normalizeStringExpressionForEquality(stringExpression: string): string {
   stringExpression = cleanString(stringExpression)
+
+  /// / replace (number) with number
+  stringExpression = stringExpression.replace(/\((\d+(\.\d+)?)\)/g, '$1')
+  /// / replace (-number) with -number
+  stringExpression = stringExpression.replace(/\(-(\d+(\.\d+)?)\)/g, '-$1')
+
   // we use 0+ to make sure that we don't have a leading - in the string. Gets rid of some +- issues.
   stringExpression = makePlusMinusMinusAndReturnString(`0+${stringExpression}`)
   // make all 1*x into x && all 1x into x
@@ -37,6 +45,7 @@ export function normalizeStringExpressionForEquality(stringExpression: string): 
 
   // make  number times var into  numberVar
   stringExpression = stringExpression.replace(/(\d)\*([a-z])/gi, '$1$2')
+
 
   // lets clean the strings again
   stringExpression = cleanString(stringExpression)
@@ -122,7 +131,14 @@ function convertAllSimpleFractionsToDecimals(node: MathNode): MathNode {
 
 function convertAll1xToX(node: MathNode): MathNode {
   const convert1x = (node: MathNode) => {
-    if (isOperatorNode(node) && node.op === '*' && node.args.length === 2 && isConstantNode(node.args[0]) && isSymbolNode(node.args[1]) && node.args[0].value === 1) {
+    if (
+      isOperatorNode(node)
+      && node.op === '*'
+      && node.args.length === 2
+      && isConstantNode(node.args[0])
+      && isSymbolNode(node.args[1])
+      && node.args[0].toString() === '1'
+    ) {
       return node.args[1]
     }
 
@@ -136,6 +152,7 @@ function convertAll1xToX(node: MathNode): MathNode {
   return convert1x(node)
 }
 
+
 export function makePlusMinusMinus(node: MathNode | string): MathNode {
   const nodeStr = typeof node === 'string' ? cleanString(node) : myNodeToString(node)
   const replacePlusMinus = nodeStr.replace(/\+-/g, '-').replace(/-\+/g, '-')
@@ -143,7 +160,23 @@ export function makePlusMinusMinus(node: MathNode | string): MathNode {
 }
 export function makePlusMinusMinusAndReturnString(node: MathNode | string): string {
   const nodeStr = typeof node === 'string' ? cleanString(node) : myNodeToString(node)
-  const replacePlusMinus = nodeStr.replace(/\+-/g, '-').replace(/-\+/g, '-')
-  return replacePlusMinus
+
+
+  const numberRG = '\\b\\d+(?:\\.\\d+)?[a-z]?\\b' //
+  const regexExp = makeExtendedRegExp(
+    String.raw`
+  \+\-          # +-
+  (             #  number / number match group
+    ${numberRG}
+    \/
+    ${numberRG}
+  )
+  `,
+    'gi',
+  )
+
+  return nodeStr
+    .replace(regexExp, '+(-$1)') // replace +-(number/number) with +(-number/number)
+    .replaceAll('+-', '-') // replace +- with -
 }
 
