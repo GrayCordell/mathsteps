@@ -45,14 +45,19 @@ function generateExpressions(
     const operations = ['+', '-', '*', '/', '+-'] // +- should not be here
 
     if (isOperatorNode(node) && operations.includes(node.op) && node.args.length >= 2) {
+      const secondOp = node.op as AOperator
+      let firstOp = node.op as AOperator
+      if (node.args.length === 2 && firstOp === '-') {
+        firstOp = '+'
+      }
       expressions.push({
-        op: node.op as AOperator,
+        op: firstOp,
         node: node.args[0],
         term: myNodeToString(node.args[0]),
         dfsNodeId: dfsNodeId++,
       })
       expressions.push({
-        op: node.op as AOperator,
+        op: secondOp,
         node: node.args[1],
         term: myNodeToString(node.args[1]),
         dfsNodeId: dfsNodeId++,
@@ -153,6 +158,7 @@ export function findAllOperationsThatCanBeRemoved(
   termOps = termOps.filter(term => !flippedPreviousReverseNumOps.some(prev => prev.number === term.term && prev.op === term.op))
   // ignore + or - 0
   termOps = termOps.filter(term => term.term !== '0')
+  termOps = filterUniqueValues(termOps, (a, b) => a.term === b.term && a.op === b.op)
 
 
   const newTermStrings = termOps.map(termOp => `(${fromNodeString}) ${getReverseOp(termOp.op)} (${termOp.term})`)
