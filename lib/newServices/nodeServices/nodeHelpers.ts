@@ -1,4 +1,4 @@
-import type { MathNode } from 'mathjs'
+import type { MathNode, OperatorNode } from 'mathjs'
 import { isConstantNode, isOperatorNode, isSymbolNode } from '~/config'
 
 export interface TermTypeAndIndex {
@@ -6,41 +6,127 @@ export interface TermTypeAndIndex {
   value: string
   index: number
   count?: number
+  isInParentheses?: boolean
+  depth?: number
+  operationAppliedToTerm?: {
+    operation: string | null
+    position: string | null
+  }
 }
+
 
 /**
  * Flatten the AST and track the index of each term/operator within the original string.
+ * Also includes the operation applied to each term and their operand positions.
+ * TODO is a bit bloated and could be refactored. Attaches lots of information to each term.
  * @param node The AST node to flatten.
  */
 export function flattenAndIndexTrackAST(node: MathNode): TermTypeAndIndex[] {
   const terms: TermTypeAndIndex[] = []
   let currentIndex = 0
 
-  function traverse(n: MathNode): void {
-    if (isOperatorNode(n)) {
-      // For binary operators, traverse the left argument first, then the operator, then the right argument
-      if (n.args.length === 2) {
-        traverse(n.args[0]) // Left operand
-        terms.push({ type: 'operator', value: n.op, index: currentIndex })
-        currentIndex += n.op.length
-        traverse(n.args[1]) // Right operand
+  interface TraverseParams {
+    n: MathNode
+    parentOperator?: OperatorNode | null
+    operandPosition?: 'left' | 'right' | null
+    depth?: number
+    inParentheses?: boolean
+  }
+  function traverse(
+    {
+      n,
+      parentOperator = null,
+      operandPosition = null,
+      depth = 0,
+      inParentheses = false, // Track if current node is within parentheses
+    }: TraverseParams,
+  ): void {
+    const newDepth = depth + 1
+    let needsParentheses = false
+
+    if (isOperatorNode(n) && parentOperator) {
+      const currentPrecedence = mathNodePrecedence(n)
+      const parentPrecedence = mathNodePrecedence(parentOperator)
+
+      // Determine if parentheses are needed based on precedence
+      if (
+        currentPrecedence < parentPrecedence
+        || (currentPrecedence === parentPrecedence && operandPosition === 'right')
+      ) {
+        needsParentheses = true
       }
-      // For unary operators, handle them as needed
-      else if (n.args.length === 1) {
-        terms.push({ type: 'operator', value: n.op, index: currentIndex })
+    }
+
+    // Update the inParentheses flag
+    const currentInParentheses = inParentheses || needsParentheses
+
+    if (isOperatorNode(n)) {
+      if (n.args.length === 2) {
+        traverse({ n: n.args[0], parentOperator: n as OperatorNode | null, operandPosition: 'left', depth: newDepth, inParentheses: currentInParentheses })
+        terms.push({
+          type: 'operator',
+          value: n.op,
+          index: currentIndex,
+          isInParentheses: currentInParentheses,
+          depth: newDepth,
+        })
         currentIndex += n.op.length
-        traverse(n.args[0]) // Operand
+        traverse({ n: n.args[1], parentOperator: n as OperatorNode | null, operandPosition: 'right', depth: newDepth, inParentheses: currentInParentheses })
+      }
+      else if (n.args.length === 1) {
+        terms.push({
+          type: 'operator',
+          value: n.op,
+          index: currentIndex,
+          isInParentheses: currentInParentheses,
+          depth: newDepth,
+        })
+        currentIndex += n.op.length
+        traverse({ n: n.args[0], parentOperator: n as OperatorNode | null, operandPosition: 'left', depth: newDepth, inParentheses: currentInParentheses })
       }
     }
     else if (isConstantNode(n) || isSymbolNode(n)) {
       const termStr = n.toString()
-      terms.push({ type: 'term', value: termStr, index: currentIndex })
+      const operation = parentOperator ? parentOperator.op : null
+      terms.push({
+        type: 'term',
+        value: termStr,
+        index: currentIndex,
+        isInParentheses: currentInParentheses,
+        depth: newDepth,
+        operationAppliedToTerm: {
+          operation,
+          position: operandPosition, // 'left' or 'right'
+        },
+      })
       currentIndex += termStr.length
     }
   }
 
-  traverse(node)
+  traverse({ n: node })
   return terms
+}
+
+/**
+ * Get the precedence of a MathNode. 0-5, where 5 is the highest precedence.
+ * @param node
+ */
+export function mathNodePrecedence(node: MathNode): number {
+  if (isOperatorNode(node)) {
+    const precedenceMap: { [key: string]: number } = {
+      '^': 4,
+      '*': 3,
+      '/': 3,
+      '+': 2,
+      '-': 2,
+      '=': 1,
+    }
+    return precedenceMap[node.op] || 0
+  }
+  else {
+    // For constants and symbols
+    return 5 // Assign highest precedence to constants and symbols
+  }
 }
 
 
@@ -69,7 +155,18 @@ function isNumberOrDecimal(value: string) {
 export function combineNumberVarTimesTerms(terms: TermTypeAndIndex[]) {
   // If we have a number times a variable term, we need to combine them, and fix the indexs after that
   for (let i = 0; i < terms.length; i++) {
-    if (terms[i].type === 'term' && isNumberOrDecimal(terms[i].value) && terms[i + 1]?.value === '*' && terms[i + 1]?.type === 'operator' && terms[i + 2]?.type === 'term' && terms[i + 2]?.value.match(/[a-zA-Z]/)) {
+    const number = terms[i]
+    const operator = terms?.[i + 1]
+    const variable = terms?.[i + 2]
+    const isVarNotInParenthesis = variable && (variable.depth === number.depth || (variable.depth === number.depth! + 1 && variable.depth === number.depth))
+
+
+    if (
+      number.type === 'term' && isNumberOrDecimal(number.value) // if it is a number
+      && operator?.value === '*' && operator.type === 'operator' // and the next term is an operator
+      && variable?.type === 'term' && variable?.value.match(/[a-zA-Z]/) // and the (next next) term is a variable
+      && (isVarNotInParenthesis)// and the variable is not in parentheses
+    ) {
       terms[i].value = terms[i].value + terms[i + 2].value
       terms.splice(i + 1, 2)
       // fix the indexes after
@@ -226,3 +323,4 @@ export function getAddedAndRemovedTerms(fromTerms: TermTypeAndIndex[], toTerms: 
       : { removed: [], added: [], opFound: null }
   }
 }
+
