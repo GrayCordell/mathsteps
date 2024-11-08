@@ -145,13 +145,13 @@ export function getNodeStepsToSolveEquation(equation: string): {
       // console.log(`[ ${step.equation.getId()} ] ${step.stepId} | ${step.equation}`)
     },
   })
-  console.log('equationSteps', equationSteps)
+  // console.log('equationSteps', equationSteps)
   return equationSteps
 }
 
 
 describe('assessUserEquationStep3', () => {
-  console.log('starting')
+  // console.log('starting')
   const assessSolvedProblem = (problem: string) => {
     const steps = getNodeStepsToSolveEquation(problem)
     const stepsAsText = steps.map(step => step.equationString)
