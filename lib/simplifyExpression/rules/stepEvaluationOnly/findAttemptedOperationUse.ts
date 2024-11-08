@@ -135,11 +135,14 @@ export function findAttemptedOperationUseCore(
 
   // Get the actual "correct" result of the operation had they done it correctly. Currently this includes incorrect things like 5/2 + 3 -> 5 + 5 -> op performed is seen as + so the correct result is 2 + 3-> 5 + 5
   const termOperationFromSystem = getAnswerFromStep(`${removedTerm1.value} ${useOp.value} ${removedTerm2.value}`)
-  const fullAttemptedOpResult = toTerms.map((term) => {
+  let fullAttemptedOpResult = toTerms.map((term) => {
     return term.type === 'term' && term.value === resultTerm.value && resultTerm.index === term.index
       ? { ...term, value: termOperationFromSystem }
       : term
   }).map(term => term.value).join('')
+  // TODO bad quick fix
+  fullAttemptedOpResult = fullAttemptedOpResult.replace(/^--/g, '-')
+
 
   return {
     opResult: resultTerm.value,
@@ -155,11 +158,9 @@ interface findAttemptedOperationUseArgs {
   from: string | MathNode
   to: string | MathNode
   expressionEquals: { (a: string, b: string): boolean }
-  allPossibleNextStep: { changeType: AChangeType }[]
-  allPossibleCorrectTos: string[]
 }
 
-export function findAttemptedOperationUse({ from, to, expressionEquals, allPossibleNextStep, allPossibleCorrectTos }: findAttemptedOperationUseArgs): ProcessedStep & { removedTerms: string[] } | null {
+export function findAttemptedOperationUse({ from, to, expressionEquals }: findAttemptedOperationUseArgs): (Omit<ProcessedStep, 'mTo' | 'availableChangeTypes' | 'allPossibleCorrectTos'> & { removedTerms: string[] }) | null {
   const fromStr = typeof from === 'string' ? from : myNodeToString(from)
   const toStr = typeof to === 'string' ? to : myNodeToString(to)
   const findWhatOpRes = findAttemptedOperationUseCore(fromStr, toStr)
@@ -170,5 +171,17 @@ export function findAttemptedOperationUse({ from, to, expressionEquals, allPossi
   const isMistake = !expressionEquals(fullAttemptedOpResult, toStr)
 
   // TODO should mistakeType be unknown?
-  return { removedTerms: findWhatOpRes.removedTerms, from: fromStr, to: toStr, changeType, attemptedToGetTo: fullAttemptedOpResult, /* mistakenChangeType: 'UNKNOWN', */ isMistake, mTo: [], availableChangeTypes: allPossibleNextStep.map(step => step.changeType), attemptedChangeType: changeType, allPossibleCorrectTos }
+  return {
+    removedTerms: findWhatOpRes.removedTerms,
+    from: fromStr,
+    to: toStr,
+    changeType,
+    attemptedToGetTo: fullAttemptedOpResult,
+    /* mistakenChangeType: 'UNKNOWN', */
+    isMistake,
+    // mTo: [],
+    // availableChangeTypes: allPossibleNextStep.map(step => step.changeType),
+    attemptedChangeType: changeType,
+    // allPossibleCorrectTos,
+  }
 }

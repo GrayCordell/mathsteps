@@ -1,3 +1,8 @@
+/**
+ * @fileoverview
+ * StepEvaluationCore.ts
+ * This file contains the core logic for assessing users steps and skipped steps in solving an expression or equation.
+ */
 import type { MathNode } from 'mathjs'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
@@ -6,11 +11,15 @@ import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreN
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
 import { convertAdditionToSubtractionErrorType, isAnAdditionChangeType } from '~/types/changeType/changeAndMistakeUtils'
 import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
-import { changeGroupMappings } from '~/types/changeType/ChangeTypes'
 import type { NumberOp } from '~/types/NumberOp'
 import { filterUniqueValues } from '~/util/arrayUtils'
-import { logger, LogLevel } from '~/util/logger'
 import { cleanString } from '~/util/stringUtils'
+
+const countZero = (str: string) => (str.match(/\b0\b/g) || []).length
+
+/**
+ * Creates a history of steps found from the previous step to get to the user's step. Requires processStepInfo to convert the history into the final StepInfo[] form.
+ */
 
 export interface RawStep {
   from: string
@@ -32,6 +41,8 @@ export type ProcessedStep = Omit<RawStep, 'to'> & {
   equationActionType?: AEquationChangeType
   addedNumOp?: NumberOp
   removeNumberOp?: NumberOp
+  deferDepth?: number
+  isDeferred?: boolean
 }
 
 export type CoreAssessUserStepResult = {
@@ -56,131 +67,261 @@ export interface StepInfo {
   removeNumberOp?: NumberOp // The operator and number the user could have removed from the current side of the equation
 }
 
+interface QueueItem {
+  start: string
+  history: ProcessedStep[]
+  isDeferred: boolean
+  addedNumOp?: NumberOp
+  removeNumberOp?: NumberOp
+  deferDepth?: number
+  loggedAllPossibleSteps?: ProcessedStep[]
+}
+
 
 const expressionEquals = (exp0: string | MathNode, exp1: string | MathNode) => areExpressionEqual(exp0, exp1, getValidStepEqCache())
 
-// Change to have it search further down the tree.
 const MAX_NEXT_STEPS = 110
 const MAX_STEP_DEPTH = 4
-/**
- * Creates a history of steps found from the previous step to get to the user's step. Requires processStepInfo to convert the history into the final StepInfo[] form.
- */
-export function coreAssessUserStep(lastTwoUserSteps: string[], firstChangeTypesLog: (AChangeType)[] = [], firstFoundToLog: string[] = [], otherSide: string | null = null): CoreAssessUserStepResult {
-  const valueToFind = lastTwoUserSteps[1]
-  const stepQueue: { start: string, history: ProcessedStep[], addedNumOp?: NumberOp, removeNumberOp?: NumberOp }[] = []
-  const triedSteps = new Set<string>()
-  const theProblem = lastTwoUserSteps[0]
+const QUEUE_PRIORITY: AChangeType[] = ['REMOVE_ADDING_ZERO', 'DIVISION_BY_ONE', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__ADD', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'CANCEL_TERMS', 'SIMPLIFY_ARITHMETIC__DIVIDE', 'COLLECT_AND_COMBINE_LIKE_TERMS']
 
-  if (lastTwoUserSteps[0] === lastTwoUserSteps[1])
-    return { history: [] }
+const DEFERRED_CHANGE_TYPES = ['EQ_ADD_TERM', 'EQ_REMOVE_TERM']
+const DEFERRED_DEPTH_THRESHOLD = 3
 
-  stepQueue.push({ start: lastTwoUserSteps[0], history: [] })
 
-  let stepCount = 0
-  while (stepQueue.length > 0 && stepCount < MAX_NEXT_STEPS) {
-    let { start, history } = stepQueue.shift()! // Use shift for BFS (queue)
-    const depth = history.length
-    if (depth > MAX_STEP_DEPTH)
+//
+// Helpers for coreAssessUserStep
+//
+function findAttachedMistakeThatEqualsValueToFind({ possibleStep, valueToFind, theProblem }: { possibleStep: ProcessedStep, valueToFind: string, theProblem: string }): ProcessedStep | null {
+  for (const mToStep of possibleStep.mTo || []) {
+    if (possibleStep.to && mToStep.to === possibleStep.to)
       continue
 
+    if (expressionEquals(mToStep.to, valueToFind)) {
+      // The mistake found can be a correct step somehow later. So we have to ignore incorrect steps that can become the answer.
+      const isStillCorrect = expressionEquals(getAnswerFromStep(theProblem), getAnswerFromStep(mToStep.to))
+      if (isStillCorrect)
+        continue
 
-    start = cleanString(start)
-
-    if (triedSteps.has(start) || Array.from(triedSteps).some(step => expressionEquals(step, start)))
-      continue
-    triedSteps.add(start)
-
-    logger.deferred('-------------------', LogLevel.DEBUG)
-    logger.deferred(`from:${start}, trying to find ${valueToFind}, depth:${depth} total step options checked:${stepCount}`, LogLevel.DEBUG)
-    const allPossibleNextStep = findAllNextStepOptions(start, { history, otherSide })
-
-
-    if (allPossibleNextStep.length === 0) {
-      continue
+      return { ...mToStep, ...possibleStep, from: possibleStep.from, to: mToStep.to, attemptedToGetTo: possibleStep.to, attemptedChangeType: possibleStep.changeType, changeType: mToStep.changeType, isMistake: true }
     }
+  }
+  return null
+}
+function hasAlreadyAttempted(currentStep: string, triedSteps: Set<string>): boolean {
+  // Check if the exact expression is in the tried set
+  if (triedSteps.has(currentStep))
+    return true
 
+  // Check for equivalent expressions in the tried set
+  for (const attempted of triedSteps) {
+    if (expressionEquals(attempted, currentStep))
+      return true
+  }
 
-    const allPossibleCorrectTos = allPossibleNextStep.filter(step => !step.isMistake).map(step => step.to)
+  // If neither exact match nor equivalent match is found, return false
+  return false
+}
+function logFirstSteps(steps: ProcessedStep[], changeLog: AChangeType[], toLog: string[]): void {
+  const nonMistakeSteps = steps.filter(step => !step.isMistake)
+  changeLog.push(...nonMistakeSteps.map(step => step.changeType))
+  toLog.push(...nonMistakeSteps.map(step => step.to))
+}
+function addStepToQueue(
+  queue: QueueItem[],
+  step: QueueItem,
+  changeType: AChangeType,
+) {
+  const priorityIndex = QUEUE_PRIORITY.indexOf(changeType)
+  if (priorityIndex === -1)
+    queue.push(step)
+  else
+    queue.splice(priorityIndex, 0, step)
+}
+function checkForMatchingSteps({
+  possibleSteps,
+  valueToFind,
+  history,
+  theProblem,
+  isEquation,
+  stepCount,
+  start,
+}: {
+  possibleSteps: ProcessedStep[]
+  valueToFind: string
+  history: ProcessedStep[]
+  theProblem: string
+  isEquation: boolean
+  stepCount: number
+  start: string
+}): CoreAssessUserStepResult | null {
+  for (const possibleStep of possibleSteps) {
+    const updatedHistory = [...history, possibleStep]
 
-
-    if (depth === 0) {
-      firstChangeTypesLog.push(...allPossibleNextStep.filter(step => !step?.isMistake).map(step => step?.changeType))
-      firstFoundToLog.push(...allPossibleCorrectTos)
-    }
-    for (const possibleStep of allPossibleNextStep) {
-      // kind of wasteful but i need to attach the possibleCorrectTos to the step.
-      possibleStep.allPossibleCorrectTos = allPossibleCorrectTos
-
-      // Record the step in history
-      const updatedHistory = [...history, possibleStep]
-
-
-      // This handles normal step checks
-      if (!possibleStep.isMistake && expressionEquals(possibleStep.to, valueToFind)) {
+    if (expressionEquals(possibleStep.to, valueToFind)) {
+      if (!possibleStep.isMistake) {
         return { history: updatedHistory }
       }
-      // Handles steps that are marked isMistake=true.
-      else if (possibleStep.isMistake && expressionEquals(possibleStep.to, valueToFind)) {
-        // The mistake found can be a correct step somehow later. So we have to ignore incorrect steps that can become the answer.
-        const isStillCorrect = expressionEquals(getAnswerFromStep(theProblem), getAnswerFromStep(possibleStep.to))
+      else {
+        const isStillCorrect = expressionEquals(
+          getAnswerFromStep(theProblem),
+          getAnswerFromStep(possibleStep.to),
+        )
         if (!isStillCorrect)
           return { history: updatedHistory }
       }
-
-
-      // Handle/check attached alternate mistake options. "mTo". (These are mistakes like added 1 too many, etc.)
-      // disabled in equations for now.
-      if (!otherSide) {
-        for (const mToStep of possibleStep.mTo || []) {
-          if (possibleStep.to && mToStep.to === possibleStep.to)
-            continue
-
-          // if its an equation we can't check a lot of these anymore.
-          // @ts-expect-error ---
-          if (otherSide && changeGroupMappings.MistakeWrongOperationRules.includes(mToStep.changeType)) {
-            continue
-          }
-
-          if (expressionEquals(mToStep.to, valueToFind)) {
-            // The mistake found can be a correct step somehow later. So we have to ignore incorrect steps that can become the answer.
-            const isStillCorrect = expressionEquals(getAnswerFromStep(theProblem), getAnswerFromStep(mToStep.to))
-            if (isStillCorrect)
-              continue
-            // If the mistake is the answer, then we need to add remove the last step in the history
-            updatedHistory.pop()
-            // add the mistake step to the history
-            updatedHistory.push({ ...mToStep, ...possibleStep, from: possibleStep.from, to: mToStep.to, attemptedToGetTo: possibleStep.to, attemptedChangeType: possibleStep.changeType, changeType: mToStep.changeType, isMistake: true })
-            return { history: updatedHistory }
-          }
-        }
-      }
-
-
-      stepQueue.push({ ...possibleStep, start: possibleStep.to, history: updatedHistory })
-
-      const queuePriority: AChangeType[] = ['REMOVE_ADDING_ZERO', 'DIVISION_BY_ONE', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__ADD', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'CANCEL_TERMS', 'SIMPLIFY_ARITHMETIC__DIVIDE', 'COLLECT_AND_COMBINE_LIKE_TERMS']
-      const priorityIndex = queuePriority.indexOf(possibleStep.changeType)
-      if (priorityIndex === -1)
-        stepQueue.push({ ...possibleStep, start: possibleStep.to, history: updatedHistory })
-      else
-        stepQueue.splice(priorityIndex, 0, { ...possibleStep, start: possibleStep.to, history: updatedHistory })
     }
 
-
-    // TODO handle more stepCount/depth..?
-    if (stepCount === 0) {
-      const opUseExtraCheck = findAttemptedOperationUse({ from: start, to: valueToFind, allPossibleNextStep, allPossibleCorrectTos, expressionEquals })
-      if (opUseExtraCheck && (otherSide && !opUseExtraCheck?.isMistake)) {
-        history.push({ ...opUseExtraCheck })
-        return { history }
-      }
-      else if (opUseExtraCheck && !otherSide) {
-        history.push({ ...opUseExtraCheck })
-        return { history }
+    if (!isEquation) {
+      const foundAttachedMistake = findAttachedMistakeThatEqualsValueToFind({
+        possibleStep,
+        valueToFind,
+        theProblem,
+      })
+      if (foundAttachedMistake) {
+        updatedHistory.pop()
+        updatedHistory.push(foundAttachedMistake)
+        return { history: updatedHistory }
       }
     }
+  }
 
-    stepCount++
+  // special case to check for operation use. this can be picked up by available steps but this will also check for mistakes. Only do this on the first step for now.
+  // TODO increase stepCount?
+  if (stepCount === 0) {
+    const opUseFound = findAttemptedOperationUse({
+      from: start,
+      to: valueToFind,
+      expressionEquals,
+    })
+    const isEquationAndNotAMistake = isEquation && !opUseFound?.isMistake
+    if (opUseFound && (isEquationAndNotAMistake || !isEquation)) {
+      history.push({
+        ...opUseFound,
+        allPossibleCorrectTos: possibleSteps
+          .filter(step => !step.isMistake)
+          .map(step => step.to),
+        availableChangeTypes: possibleSteps.map(step => step.changeType),
+      })
+      return { history }
+    }
+  }
+
+  return null
+}
+export function coreAssessUserStep(
+  lastTwoUserSteps: string[],
+  firstChangeTypesLog: (AChangeType)[] = [],
+  firstFoundToLog: string[] = [],
+  otherSide: string | null = null,
+): CoreAssessUserStepResult {
+  const isEquation = otherSide !== null
+  const valueToFind = lastTwoUserSteps[1]
+  const theProblem = lastTwoUserSteps[0]
+  const triedSteps = new Set<string>()
+
+  if (theProblem === valueToFind)
+    return { history: [] }
+
+  const mainQueue: QueueItem[] = [{
+    start: theProblem,
+    history: [],
+    isDeferred: false,
+    deferDepth: 0,
+  }]
+
+  let stepCount = 0
+  let differed: QueueItem[] = []
+
+  while ((mainQueue.length > 0 || differed.length > 0) && stepCount < MAX_NEXT_STEPS) {
+    //
+    // Handle differed steps
+    //
+
+    // make all the differed depth go up by 1
+    differed.forEach(differedStep => differedStep.deferDepth = (differedStep.deferDepth ?? 0) + 1)
+    differed = differed.sort((a, b) => (b.deferDepth ?? 0) - (a.deferDepth ?? 0))
+    // if the main queue is empty, then we can add the first differed step to the main queue.
+    if (mainQueue.length === 0) {
+      const first = differed.shift()
+      if (first)
+        mainQueue.push(first)
+    }
+    const differedThatPasses = differed.filter(step => (step?.deferDepth ?? 0) > DEFERRED_DEPTH_THRESHOLD)
+    mainQueue.push(...differedThatPasses)
+    differed = differed.filter(step => (step?.deferDepth ?? 0) <= DEFERRED_DEPTH_THRESHOLD)
+
+    //
+    // Handle chosen current step
+    //
+    // isDiffered is currently used to delay 'EQ_ADD_TERM' and 'EQ_REMOVE_TERM' steps.
+    const currentStep = mainQueue.shift()
+    if (!currentStep)
+      continue
+    const { start, history, isDeferred } = currentStep
+    const cleanedStart = cleanString(start)
+    const depth = history.length
+
+    if (depth > MAX_STEP_DEPTH || hasAlreadyAttempted(cleanedStart, triedSteps))
+      continue
+    // Normally if we differed something we never checked if it was equal, so we check it here since its finally when we are going to check it.
+    if (isDeferred && expressionEquals(start, valueToFind))
+      return { history }
+
+    function nextStep(step: string) {
+      triedSteps.add(step)
+
+      //
+      // Get all the available next steps options.
+      // Sorted by ascending number of zeros in the expression (to prioritize removing zeros)
+      let allPossibleNextStep = findAllNextStepOptions(step, { history, otherSide }).sort((a, b) => countZero(b.to) - countZero(a.to))
+
+      //
+      //  Handle differed steps.
+      //
+      differed.push(...allPossibleNextStep.filter(step => DEFERRED_CHANGE_TYPES.includes(step.changeType as string)).map(step => ({
+        start: step.to,
+        history: JSON.parse(JSON.stringify([...history, step])) as ProcessedStep[],
+        depth: depth + 1,
+        isDeferred: true,
+        deferDepth: 0,
+      })))
+      // Remove the deferred steps from current available steps
+      allPossibleNextStep = allPossibleNextStep.filter(step => !DEFERRED_CHANGE_TYPES.includes(step.changeType as string))
+      ///
+
+      // Log the first possible steps for later. Typically Used in cases where we don't find a match. TODO refactor to remove needing this.
+      if (depth === 0)
+        logFirstSteps(allPossibleNextStep, firstChangeTypesLog, firstFoundToLog)
+
+      // Check for matching steps
+      const matchResult = checkForMatchingSteps({
+        possibleSteps: allPossibleNextStep,
+        valueToFind,
+        history,
+        theProblem,
+        isEquation,
+        stepCount,
+        start: cleanedStart,
+      })
+
+      if (matchResult)
+        return matchResult
+
+      // Queue management
+      allPossibleNextStep.forEach((possibleStep) => {
+        addStepToQueue(mainQueue, {
+          start: possibleStep.to,
+          history: [...history, possibleStep],
+          isDeferred: DEFERRED_CHANGE_TYPES.includes(possibleStep.changeType as string),
+          deferDepth: 0,
+        }, possibleStep.changeType)
+      })
+      stepCount++
+    }
+
+    const foundMatch = nextStep(cleanedStart)
+    if (foundMatch)
+      return foundMatch
   }
 
   return { history: [] }

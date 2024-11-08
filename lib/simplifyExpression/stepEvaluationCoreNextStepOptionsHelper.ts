@@ -72,6 +72,12 @@ function _addAllAvailableChangeTypesToEachStep(steps: ProcessedStep[]) {
     step.availableChangeTypes = availableChangeTypes
   })
 }
+function _addAllPossibleCorrectTosToEachStep(steps: ProcessedStep[]) {
+  const allPossibleCorrectTos = steps.filter(step => !step.isMistake).map(step => step.to)
+  steps.forEach((step) => {
+    step.allPossibleCorrectTos = allPossibleCorrectTos
+  })
+}
 /* function _sortStepsByChangeType(steps: ProcessedStep[]) {
   // (possibleStep.changeType === 'SIMPLIFY_ARITHMETIC__ADD' || possibleStep.changeType === 'SIMPLIFY_ARITHMETIC__SUBTRACT' || possibleStep.changeType === 'SIMPLIFY_ARITHMETIC__MULTIPLY' || possibleStep.changeType === 'KEMU_DISTRIBUTE_MUL_OVER_ADD' || possibleStep.changeType === 'REMOVE_ADDING_ZERO' || possibleStep.changeType === 'REMOVE_MULTIPLYING_BY_ONE' || possibleStep.changeType === 'SIMPLIFY_FRACTION') {
   const priorityOrderFirstIsFirst = ['SIMPLIFY_ARITHMETIC__ADD', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'REMOVE_ADDING_ZERO', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_FRACTION']
@@ -137,6 +143,9 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
 
   // availableChangeTypes should be the same for all steps
   _addAllAvailableChangeTypesToEachStep(processedSteps)
+  // add allPossibleCorrectTos to each step
+  _addAllPossibleCorrectTosToEachStep(processedSteps)
+
   // Correct SIMPLIFY_ARITHMETIC__ADD to SIMPLIFY_ARITHMETIC__SUBTRACT if needed
   _correctSimplifyAdditionToSubtraction(processedSteps)
 
