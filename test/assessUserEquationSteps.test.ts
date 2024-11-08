@@ -482,7 +482,29 @@ describe('assessUserEquationStep', () => {
         },
       ],
     },
-
+    { // test 12
+      description: '12. num*ParenthesisVar',
+      steps: ['2(x-4)=6', '(2(x-4))/2=6/2'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true },
+          left: [generateStep('2(x-4)', '(2(x-4))/2', 'EQ_REMOVE_TERM')],
+          right: [generateStep('6', '6/2', 'EQ_ADD_TERM')],
+        },
+      ],
+    },
+    // test 13
+    {
+      description: '13. num*ParenthesisVarTwice',
+      steps: ['2*(x-4)-4*(x+2*3)=6', '(2*(x-4)-4*(x+2*3))/2=6/2'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true },
+          left: [generateStep('2(x-4)-4(x+2*3)', '(2(x-4)-4(x+2*3))/2', 'EQ_REMOVE_TERM')],
+          right: [generateStep('6', '6/2', 'EQ_ADD_TERM')],
+        },
+      ],
+    },
   ]
 
   testCases.forEach((test, index) => testStepEvaluation(test, index))
