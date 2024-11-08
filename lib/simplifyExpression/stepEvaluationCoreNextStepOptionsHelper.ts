@@ -124,6 +124,16 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
       processedSteps.push(...findAllOperationsThatCanBeRemoved(userStep_, neededForEquations.history))
     }
     if (removedDepth < 1 && addedDepth < 2) {
+      /*  TODO try to use just findAllOperationsThatCanBeRemoved or getOtherSideOptions. Not sure why I ever made two separate completely different versions..
+      const useThisVersionLater = findAllOperationsThatCanBeRemoved(neededForEquations.otherSide, neededForEquations.history).map(step => ({
+        ...step,
+        to: `(${userStep}) ${step?.removeNumberOp?.op} ${step?.removeNumberOp?.number}`,
+        removeNumberOp: undefined,
+        addedNumOp: step.removeNumberOp,
+        changeType: 'EQ_ADD_TERM' as const,
+        availableChangeTypes: ['EQ_ADD_TERM' as const],
+       }))
+       processedSteps.push(...useThisVersionLater) */
       processedSteps.push(...getOtherSideOptions(userStep_, neededForEquations.otherSide, neededForEquations.history))
     }
   }
