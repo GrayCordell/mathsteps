@@ -304,14 +304,14 @@ describe('assessUserEquationStep', () => {
         {
           left: [
             generateStep('3x + 5', '3x + 5 + -5', 'EQ_REMOVE_TERM'),
-            generateStep('3x + 5 + -5', '3x + 0', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
-            generateStep('3x + 0', '3x', 'REMOVE_ADDING_ZERO'),
-            generateStep('3x', '3x/3', 'EQ_REMOVE_TERM'),
+            generateStep('3x + 5 + -5', '(3x+5-5)/3', 'EQ_REMOVE_TERM'),
+            generateStep('(3x+5+-5)/3', '(0+3x)/3', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
+            generateStep('(0+3x)/3', '3x/3', 'REMOVE_ADDING_ZERO'),
           ],
           right: [
             generateStep('11', '11 + -5', 'EQ_ADD_TERM'),
-            generateStep('11 + -5', '6', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
-            generateStep('6', '6/3', 'EQ_ADD_TERM'),
+            generateStep('11 + -5', '(11-5)/3', 'EQ_ADD_TERM'),
+            generateStep('(11-5)/3', '6/3', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
           ],
         },
       ],
