@@ -861,13 +861,13 @@ describe('random issues i\'ve had in the past', () => {
       ],
     },
     // Test 5
-    { // TODO fix
+    {
       description: 'very wrong division',
       steps: ['5 + 5/2', '5 + 4'],
       expectedAnalysis: [
         [
           {
-            attemptedChangeType: 'UNKNOWN', // TODO fix
+            attemptedChangeType: 'SIMPLIFY_ARITHMETIC__DIVIDE',
             from: '5 + 5/2',
             to: '5 + 4',
             isValid: false,
