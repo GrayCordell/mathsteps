@@ -346,7 +346,7 @@ export function processNoHistoryStep({ from, to, startingStepAnswer, attemptedTo
 
   const attemptedChangeTypeCorrected = attemptedChangeType || (firstAvailableChangeTypes.length === 1 ? firstAvailableChangeTypes[0] : 'UNKNOWN' as const)
   const attemptedToGetToCorrected = attemptedToGetTo || (firstFoundToLog.length === 1 ? firstFoundToLog[0] : 'UNKNOWN' as const)
-  const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(from), startingStepAnswer)
+  const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(to), startingStepAnswer)
 
   const sharedPart = { isValid: false, from, to, attemptedToGetTo: attemptedToGetToCorrected, reachesOriginalAnswer, attemptedChangeType: attemptedChangeTypeCorrected, availableChangeTypes: firstAvailableChangeTypes, allPossibleCorrectTos: firstFoundToLog } as const
   return expressionEquals(from, to)
