@@ -4,6 +4,7 @@ import { myNodeToString } from '~/newServices/nodeServices/myNodeToString.js'
 import { parseText } from '~/newServices/nodeServices/parseText'
 import { removeImplicitMultiplicationFromNode } from '~/newServices/treeUtil'
 import { kemuFlatten, kemuNormalizeConstantNodes } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
+import { convertNumParVarDivNumToNumVarDivNum } from '~/simplifyExpression/mscNormalizeNodeFunctions'
 import type { EqualityCache } from '~/util/equalityCache'
 import { makeExtendedRegExp } from '~/util/extendedRegex'
 import { cleanString } from '~/util/stringUtils.js'
@@ -15,6 +16,7 @@ import kemuSortArgs from '../simplifyExpression/kemuSortArgs.js'
  */
 export function normalizeNodeForEquality(node_: MathNode | string): MathNode {
   let node = (typeof node_ === 'string') ? parseText(node_) : node_
+  node = convertNumParVarDivNumToNumVarDivNum(node)
   node = convertAll1xToX(node)
   node = kemuFlatten(node)
   node = removeImplicitMultiplicationFromNode(node)
@@ -45,6 +47,11 @@ export function normalizeStringExpressionForEquality(stringExpression: string): 
 
   // make  number times var into  numberVar
   stringExpression = stringExpression.replace(/(\d)\*([a-z])/gi, '$1$2')
+
+  //  make number - (number/number) into number + (-number/number)
+  const numberRG = '\\b\\d+(?:\\.\\d+)?[a-z]?\\b' //
+  const regexExp = makeExtendedRegExp(String.raw`\b(${numberRG})-\((${numberRG})/(${numberRG})\)`, 'gi') // # number - (number/number)
+  stringExpression = stringExpression.replace(regexExp, '$1+(-$2/$3)')
 
 
   // lets clean the strings again

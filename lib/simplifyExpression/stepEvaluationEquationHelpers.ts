@@ -1,10 +1,14 @@
 import { combineMakeMinusNegativeTerms, combineNumberVarTimesTerms, flattenAndIndexTrackAST, makeCountTerms } from '~/newServices/nodeServices/nodeHelpers'
 import { parseText } from '~/newServices/nodeServices/parseText'
 import { removeImplicitMultiplicationFromNode } from '~/newServices/treeUtil'
+import { convertNumParVarDivNumToNumVarDivNum } from '~/simplifyExpression/mscNormalizeNodeFunctions'
+
+
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
 import { getReverseOp } from '~/types/changeType/changeAndMistakeUtils'
 import type { NumberOp } from '~/types/NumberOp'
+
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { pipe } from '~/util/pipe'
 import { cleanString } from '~/util/stringUtils'
@@ -15,9 +19,12 @@ function _makeOpNumbersMap(otherSide: string): Map<'+' | '-' | '*' | '/', string
   const sortTermsFn = <T extends { index: number }>(terms: T[]): T[] => terms.sort((a, b) => a.index - b.index)
   const filterTermsWithoutParenthesesFn = <T extends { isInParentheses?: boolean }>(terms: T[]): T[] => terms.filter(term => term.isInParentheses === false)
 
+  // convert number(var/number) to numberVar/number
+
   const transform = pipe(
     parseText,
     removeImplicitMultiplicationFromNode,
+    convertNumParVarDivNumToNumVarDivNum,
     flattenAndIndexTrackAST,
     sortTermsFn,
     combineNumberVarTimesTerms,

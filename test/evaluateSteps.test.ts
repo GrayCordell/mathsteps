@@ -206,6 +206,7 @@ describe('addition Mistakes', () => {
       expectedAnalysis: ([[{
         availableChangeTypes: [SIMPLIFY_ARITHMETIC__ADD],
         attemptedChangeType: SIMPLIFY_ARITHMETIC__ADD,
+        reachesOriginalAnswer: false,
         from: '4 + 3',
         to: '8',
         attemptedToGetTo: '7',
@@ -824,6 +825,7 @@ describe('random issues i\'ve had in the past', () => {
             to: '5 + 15',
             isValid: false,
             mistakenChangeType: 'UNKNOWN',
+            reachesOriginalAnswer: false,
           },
         ],
       ],
@@ -840,6 +842,7 @@ describe('random issues i\'ve had in the past', () => {
             to: '5 + 15',
             isValid: false,
             mistakenChangeType: 'UNKNOWN',
+            reachesOriginalAnswer: false,
           },
         ],
       ],
@@ -919,6 +922,24 @@ describe('random issues i\'ve had in the past', () => {
           from: '(8 * 5) - 6 + 4',
           to: '30 - 6 + 4',
           isValid: false,
+          mistakenChangeType: 'UNKNOWN',
+          reachesOriginalAnswer: false,
+        }],
+      ],
+    },
+
+    // Test 10
+    {
+      description: 't3',
+      steps: ['8+4*2-7', '2x + 3'],
+      expectedAnalysis: [
+        [{
+          attemptedChangeType: 'UNKNOWN',
+          attemptedToGetTo: 'UNKNOWN',
+          from: '8+4*2-7',
+          to: '2x + 3',
+          isValid: false,
+          reachesOriginalAnswer: false,
           mistakenChangeType: 'UNKNOWN',
         }],
       ],

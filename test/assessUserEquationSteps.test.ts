@@ -505,6 +505,40 @@ describe('assessUserEquationStep', () => {
         },
       ],
     },
+    // test 14
+    {
+      description: '14.',
+      steps: ['4(x/2)+1=3', '4x+2=6'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true },
+          left: [
+            generateStep('4(x/2)+1', '(4(x/2)+1)*2', 'EQ_REMOVE_TERM'),
+          ],
+          right: [
+            generateStep('3', '3*2', 'EQ_ADD_TERM'),
+            generateStep('3*2', '6', 'SIMPLIFY_ARITHMETIC__MULTIPLY'),
+          ],
+        },
+      ],
+    },
+    // test 15
+    {
+      description: '15.',
+      steps: ['4*(x/2)+1=3', '4*x+2=6'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true },
+          left: [
+            generateStep('4*(x/2)+1', '(4(x/2)+1)*2', 'EQ_REMOVE_TERM'),
+          ],
+          right: [
+            generateStep('3', '3*2', 'EQ_ADD_TERM'),
+            generateStep('3*2', '6', 'SIMPLIFY_ARITHMETIC__MULTIPLY'),
+          ],
+        },
+      ],
+    },
   ]
 
   testCases.forEach((test, index) => testStepEvaluation(test, index))
