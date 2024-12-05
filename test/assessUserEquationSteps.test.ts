@@ -539,6 +539,23 @@ describe('assessUserEquationStep', () => {
         },
       ],
     },
+    // test 16
+    {
+      description: '16.',
+      steps: ['2(x+2)=10', '(2x + 4)=10'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true },
+          left: [
+            generateStep('2(x+2)', 'x*2 + 2*2', 'KEMU_DISTRIBUTE_MUL_OVER_ADD'),
+            generateStep('x*2 + 2*2', 'x*2 + 4', 'SIMPLIFY_ARITHMETIC__MULTIPLY'),
+          ],
+          right: [
+            generateStep('10', '10', 'NO_CHANGE', { isValid: false }),
+          ],
+        },
+      ],
+    },
   ]
 
   testCases.forEach((test, index) => testStepEvaluation(test, index))

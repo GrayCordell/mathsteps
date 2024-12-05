@@ -82,8 +82,7 @@ function isValidOperation(useOperators: { term: TermTypeAndIndex }[], removedNoO
   const hasDivisionOrVariables = hasDivisionOp || hasVariables
 
 
-  if (((hasVariables && addedNoOpTerms.length > 2) // TODO: Should be 1, currently breaking on variables
-    || (!hasVariables && addedNoOpTerms.length > 1) // No variables, only 1 term should be added
+  if (((addedNoOpTerms.length > 1) // More than 1 term added. TODO I believe the terms are combining variables so it should be good. Investigate if removed functions similarly? This is all been such a mess here.
     || (removedOperators.length > 1 && !hasDivisionOrVariables) // More than 1 operator without division/variables
     || (removedOperators.length > 2 && hasDivisionOrVariables) // More than 2 operators with division/variables
     || (hasVariables && removedNoOpTerms.length > 3) // TODO: Should be 2, currently breaking on variables
@@ -110,6 +109,11 @@ export function findAttemptedOperationUseCore(
 ): { readonly changeType: AChangeType, opResult: string, removedTerms: string[], fullAttemptedOpResult: string } | null {
   const fromStr = typeof from === 'string' ? from : myNodeToString(from)
   const toStr = typeof to === 'string' ? to : myNodeToString(to)
+
+  // Here is another special check to just make sure there is not a way that large changes would ever be considered a single operation.
+  const strLengthDiff = Math.abs(fromStr.length - toStr.length)
+  if (strLengthDiff > 7)
+    return null
 
   // Parse expressions into "terms" (operators and numbers/numberVariables/negativeNumbers). Each term has an index and a count of how many times that value appears.
   const fromTerms = _parseExpression(fromStr)
