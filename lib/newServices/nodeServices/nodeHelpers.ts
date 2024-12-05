@@ -201,6 +201,7 @@ interface TermDifferenceReturn {
   opFound: { term: TermTypeAndIndex } | null
 }
 
+// TODO this function is a mess. It needs to be refactored.
 export function getTermDifferencesViaRemovals(a: TermTypeAndIndex[], b: TermTypeAndIndex[]): TermDifferenceReturn {
   const issues: ('NO_2_REMOVED_OR_NOT_1_ADDED' | 'NO_OP' | 'TOO_MANY_OPS')[] = []
 
@@ -243,6 +244,7 @@ export function getTermDifferencesViaRemovals(a: TermTypeAndIndex[], b: TermType
     const removedTerm1Value = removedTermsFlattenedNoOp[0].value
     return a.find(item =>
       // We are getting the removed term1 from the original expression.
+      // TODO, I am not sure this is working right. This whole function is a mess.
       item.value === removedTerm1Value && !b.some(bItem => bItem.value === item.value && bItem.index === item.index)
         ? item.index
         : null,
@@ -308,6 +310,7 @@ export function getTermDifferencesViaIndexChanges(fromTerms: TermTypeAndIndex[],
 
 /**
  * Attempts to use two different methods to find the added and removed terms between two sets of terms. If both methods fail, returns null.
+ * TODO needs major reworking.
  * @param fromTerms
  * @param toTerms
  */
