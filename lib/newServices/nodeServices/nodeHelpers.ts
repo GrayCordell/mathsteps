@@ -111,17 +111,20 @@ export function flattenAndIndexTrackAST(node: MathNode): TermTypeAndIndex[] {
  * Get the precedence of a MathNode. 0-5, where 5 is the highest precedence.
  * @param node
  */
-export function mathNodePrecedence(node: MathNode): number {
-  if (isOperatorNode(node)) {
+export function mathNodePrecedence(node: MathNode | string): number {
+  if (typeof node === 'string' || isOperatorNode(node)) {
     const precedenceMap: { [key: string]: number } = {
       '^': 4,
       '*': 3,
       '/': 3,
       '+': 2,
+      '+-': 2,
       '-': 2,
       '=': 1,
     }
-    return precedenceMap[node.op] || 0
+
+    const op = typeof node === 'string' ? node : node.op
+    return precedenceMap[op] || 0
   }
   else {
     // For constants and symbols
