@@ -5,6 +5,7 @@
   "type": "module",
   "private": false,
   "packageManager": "pnpm@9.7.0",
+  "readme": "./README.md",
   "exports": {
     ".": {
       "types": "./dist/types/mathsteps-experimental-fork.d.ts",
