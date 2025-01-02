@@ -51,3 +51,41 @@ export function filterUniqueValues<T>(arr: T[], isEqual: (a: T, b: T) => boolean
   }
   return uniqueArray
 }
+
+export function arrayEquals<T>(a: T[], b: T[], isEqual: (a: T, b: T) => boolean = (a, b) => a === b): boolean {
+  if (a.length !== b.length)
+    return false
+  for (let i = 0; i < a.length; i++) {
+    if (!isEqual(a[i], b[i]))
+      return false
+  }
+  return true
+}
+
+interface Args0<T> { isEqualFn?: (a: T, b: T) => boolean, sortFn?: (arr: T[]) => T[], copyFn?: (arr: T[]) => T[] }
+export const arrayEqualsOrderDoesntMatter = <T>(
+  a: T[],
+  b: T[],
+  {
+    isEqualFn = (a, b) => a === b,
+    sortFn = arr => arr.sort(),
+    copyFn = arr => arr.slice(),
+  }: Args0<T> = {
+    isEqualFn: (a, b) => a === b,
+    sortFn: arr => arr.sort(),
+    copyFn: arr => arr.slice(),
+  },
+) => {
+  if (a.length !== b.length)
+    return false
+
+  const aCopy = copyFn(a)
+  const bCopy = copyFn(b)
+  const sortedA = sortFn(aCopy)
+  const sortedB = sortFn(bCopy)
+
+  for (let i = 0; i < sortedA.length; i++) {
+    if (!isEqualFn(sortedA[i], sortedB[i]))
+      return false
+  }
+}
