@@ -135,12 +135,12 @@ describe('assessUserEquationStep', () => {
         {
           overallStepEval: { reachesOriginalAnswer: true },
           left: [
-            generateStep('2x+3', '2x+3-3', 'EQ_REMOVE_TERM', { removeNumberOp: { number: '3', op: '-', dfsNodeId: 1 } }),
+            generateStep('2x+3', '2x+3-3', 'EQ_REMOVE_TERM_BY_SUBTRACTION', { removeNumberOp: { number: '3', op: '-', dfsNodeId: 1 } }),
             generateStep('2x+3-3', '2x+0', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
             generateStep('2x+0', '2x', 'REMOVE_ADDING_ZERO'),
           ],
           right: [
-            generateStep('5', '5-3', 'EQ_ADD_TERM'),
+            generateStep('5', '5-3', 'EQ_ADD_TERM_BY_SUBTRACTION'),
             generateStep('5-3', '2', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
           ],
         },
@@ -169,12 +169,12 @@ describe('assessUserEquationStep', () => {
         {
           overallStepEval: { reachesOriginalAnswer: true },
           left: [
-            generateStep('5x-4+5', '5x-4+5-5', 'EQ_REMOVE_TERM'),
+            generateStep('5x-4+5', '5x-4+5-5', 'EQ_REMOVE_TERM_BY_SUBTRACTION'),
             generateStep('5x-4+5-5', '5x+-4+0', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
             generateStep('5x+-4+0', '5x+-4', 'REMOVE_ADDING_ZERO'),
           ],
           right: [
-            generateStep('5', '5-5', 'EQ_REMOVE_TERM'),
+            generateStep('5', '5-5', 'EQ_REMOVE_TERM_BY_SUBTRACTION'),
             generateStep('5-5', '0', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
           ],
         },
@@ -182,12 +182,12 @@ describe('assessUserEquationStep', () => {
         {
           overallStepEval: { reachesOriginalAnswer: true },
           left: [
-            generateStep('5x-4', '5x-4+4', 'EQ_REMOVE_TERM'),
+            generateStep('5x-4', '5x-4+4', 'EQ_REMOVE_TERM_BY_ADDITION'),
             generateStep('5x-4+4', '5x+0', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
             generateStep('5x+0', '5x', 'REMOVE_ADDING_ZERO'),
           ],
           right: [
-            generateStep('0', '0+4', 'EQ_ADD_TERM'),
+            generateStep('0', '0+4', 'EQ_ADD_TERM_BY_ADDITION'),
             generateStep('0+4', '4', 'REMOVE_ADDING_ZERO'),
           ],
         },
@@ -201,12 +201,12 @@ describe('assessUserEquationStep', () => {
         {
           overallStepEval: { reachesOriginalAnswer: true },
           left: [
-            generateStep('3x+4-5', '3x+4-5+5', 'EQ_REMOVE_TERM'),
+            generateStep('3x+4-5', '3x+4-5+5', 'EQ_REMOVE_TERM_BY_ADDITION'),
             generateStep('3x+4-5+5', '3x+4+0', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
             generateStep('3x+4+0', '3x+4', 'REMOVE_ADDING_ZERO'),
           ],
           right: [
-            generateStep('5', '5+5', 'EQ_ADD_TERM'),
+            generateStep('5', '5+5', 'EQ_ADD_TERM_BY_ADDITION'),
             generateStep('5+5', '10', 'SIMPLIFY_ARITHMETIC__ADD'),
           ],
         },
@@ -214,12 +214,12 @@ describe('assessUserEquationStep', () => {
         {
           overallStepEval: { reachesOriginalAnswer: true },
           left: [
-            generateStep('3x+4', '3x+4-4', 'EQ_REMOVE_TERM'),
+            generateStep('3x+4', '3x+4-4', 'EQ_REMOVE_TERM_BY_SUBTRACTION'),
             generateStep('3x+4-4', '3x+0', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
             generateStep('3x+0', '3x', 'REMOVE_ADDING_ZERO'),
           ],
           right: [
-            generateStep('10', '10-4', 'EQ_ADD_TERM'),
+            generateStep('10', '10-4', 'EQ_ADD_TERM_BY_SUBTRACTION'),
             generateStep('10-4', '6', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
           ],
         },
@@ -257,11 +257,11 @@ describe('assessUserEquationStep', () => {
             attemptedEquationChangeType: 'EQ_ATMPT_OP_BOTH_SIDES',
           },
           left: [
-            { from: '2x + 14', to: '(2x+14) - (2x)', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '2x + 14', to: '(2x+14) - (2x)', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM_BY_SUBTRACTION' },
             { from: '(2x+14) - (2x)', to: '14', isValid: true, attemptedChangeType: 'CANCEL_TERMS' },
           ],
           right: [
-            { from: '5x - 2', to: '5x - 2 + -2x', isValid: true, attemptedChangeType: 'EQ_ADD_TERM' },
+            { from: '5x - 2', to: '5x - 2 + -2x', isValid: true, attemptedChangeType: 'EQ_ADD_TERM_BY_SUBTRACTION' },
             { from: '5x - 2 + -2x', to: '-2+(-2+5)*x', isValid: true, attemptedChangeType: 'COLLECT_AND_COMBINE_LIKE_TERMS' },
             { from: '(5+-2)*x+-2', to: '3x - 2', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
           ],
@@ -269,21 +269,21 @@ describe('assessUserEquationStep', () => {
         // Step 3: Add 2 to both sides
         {
           left: [
-            { from: '14', to: '14 + 2', isValid: true, attemptedChangeType: 'EQ_ADD_TERM' },
+            { from: '14', to: '14 + 2', isValid: true, attemptedChangeType: 'EQ_ADD_TERM_BY_ADDITION' },
             { from: '14 + 2', to: '16', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__ADD' },
           ],
           right: [
-            { from: '3x - 2', to: '3x - 2 + 2', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '3x - 2', to: '3x - 2 + 2', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM_BY_ADDITION' },
             { from: '3x - 2 + 2', to: '3x + 0', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
             { from: '3x + 0', to: '3x', isValid: true, attemptedChangeType: 'REMOVE_ADDING_ZERO' },
           ],
         },
         // Step 4: Divide by 3
         {
-          left: [{ from: '16', to: '16/3', isValid: true, attemptedChangeType: 'EQ_ADD_TERM',
+          left: [{ from: '16', to: '16/3', isValid: true, attemptedChangeType: 'EQ_ADD_TERM_BY_DIVISION',
           }],
           right: [
-            { from: '3x', to: '3x/3', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '3x', to: '3x/3', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM_BY_DIVISION' },
             { from: '3x/3', to: 'x', isValid: true, attemptedChangeType: 'CANCEL_TERMS' },
           ],
         },
@@ -303,14 +303,14 @@ describe('assessUserEquationStep', () => {
       expectedAnalysis: [
         {
           left: [
-            generateStep('3x + 5', '3x + 5 + -5', 'EQ_REMOVE_TERM'),
-            generateStep('3x + 5 + -5', '(3x+5-5)/3', 'EQ_REMOVE_TERM'),
+            generateStep('3x + 5', '3x + 5 + -5', 'EQ_REMOVE_TERM_BY_SUBTRACTION'),
+            generateStep('3x + 5 + -5', '(3x+5-5)/3', 'EQ_REMOVE_TERM_BY_DIVISION'),
             generateStep('(3x+5+-5)/3', '(0+3x)/3', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
             generateStep('(0+3x)/3', '3x/3', 'REMOVE_ADDING_ZERO'),
           ],
           right: [
-            generateStep('11', '11 + -5', 'EQ_ADD_TERM'),
-            generateStep('11 + -5', '(11-5)/3', 'EQ_ADD_TERM'),
+            generateStep('11', '11 + -5', 'EQ_ADD_TERM_BY_SUBTRACTION'),
+            generateStep('11 + -5', '(11-5)/3', 'EQ_ADD_TERM_BY_DIVISION'),
             generateStep('(11-5)/3', '6/3', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
           ],
         },
@@ -331,7 +331,7 @@ describe('assessUserEquationStep', () => {
             {
               from: '3x/4 + 2',
               to: '(3x/4+2) * (4)',
-              attemptedChangeType: 'EQ_REMOVE_TERM',
+              attemptedChangeType: 'EQ_REMOVE_TERM_BY_MULTIPLICATION',
             },
             {
               from: '(3x/4+2) * (4)',
@@ -350,30 +350,30 @@ describe('assessUserEquationStep', () => {
             },
           ],
           right: [
-            { from: '5', to: '5 * 4', attemptedChangeType: 'EQ_ADD_TERM' },
+            { from: '5', to: '5 * 4', attemptedChangeType: 'EQ_ADD_TERM_BY_MULTIPLICATION' },
             { from: '5 * 4', to: '20', attemptedChangeType: 'SIMPLIFY_ARITHMETIC__MULTIPLY' },
           ],
         },
         // Step 2: Subtract 8 from both sides
         {
           left: [
-            { from: '3x + 8', to: '3x + 8 - 8', attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '3x + 8', to: '3x + 8 - 8', attemptedChangeType: 'EQ_REMOVE_TERM_BY_SUBTRACTION' },
             { from: '3x + 8 - 8', to: '3x + 0', attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
             { from: '3x + 0', to: '3x', attemptedChangeType: 'REMOVE_ADDING_ZERO' },
           ],
           right: [
-            { from: '20', to: '20 - 8', attemptedChangeType: 'EQ_ADD_TERM' },
+            { from: '20', to: '20 - 8', attemptedChangeType: 'EQ_ADD_TERM_BY_SUBTRACTION' },
             { from: '20 - 8', to: '12', attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
           ],
         },
         // Step 3: Divide both by 3
         {
           left: [
-            { from: '3x', to: '3x/3', attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '3x', to: '3x/3', attemptedChangeType: 'EQ_REMOVE_TERM_BY_DIVISION' },
             { from: '3x/3', to: 'x', attemptedChangeType: 'CANCEL_TERMS' },
           ],
           right: [
-            { from: '12', to: '12/3', attemptedChangeType: 'EQ_ADD_TERM' },
+            { from: '12', to: '12/3', attemptedChangeType: 'EQ_ADD_TERM_BY_DIVISION' },
             { from: '12/3', to: '4', attemptedChangeType: 'CANCEL_TERMS' },
           ],
         },
@@ -403,13 +403,13 @@ describe('assessUserEquationStep', () => {
         // Step 2: Multiply both sides by 4
         {
           left: [
-            { from: '3x/4 + 2/4', to: '(3x/4 + 2/4) * 4', attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '3x/4 + 2/4', to: '(3x/4 + 2/4) * 4', attemptedChangeType: 'EQ_REMOVE_TERM_BY_MULTIPLICATION' },
             { from: '(3x/4 + 2/4) * 4', to: '3x/4 * 4 + 2/4 * 4', attemptedChangeType: 'KEMU_DISTRIBUTE_MUL_OVER_ADD' },
             { from: '3x/4 * 4 + 2/4 * 4', to: '3x/4*4+2', attemptedChangeType: 'CANCEL_TERMS' },
             { from: '3x/4*4+2', to: '3x + 2', attemptedChangeType: 'CANCEL_TERMS' },
           ],
           right: [
-            { from: '5', to: '5 * 4', attemptedChangeType: 'EQ_ADD_TERM' },
+            { from: '5', to: '5 * 4', attemptedChangeType: 'EQ_ADD_TERM_BY_MULTIPLICATION' },
             { from: '5 * 4', to: '20', attemptedChangeType: 'SIMPLIFY_ARITHMETIC__MULTIPLY' },
           ],
         },
@@ -420,12 +420,12 @@ describe('assessUserEquationStep', () => {
             attemptedEquationChangeType: 'EQ_ATMPT_OP_BOTH_SIDES',
           },
           left: [
-            { from: '3x + 2', to: '3x + 2 - 2', attemptedChangeType: 'EQ_REMOVE_TERM' },
+            { from: '3x + 2', to: '3x + 2 - 2', attemptedChangeType: 'EQ_REMOVE_TERM_BY_SUBTRACTION' },
             { from: '3x + 2 - 2', to: '3x + 0', attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
             { from: '3x + 0', to: '3x', attemptedChangeType: 'REMOVE_ADDING_ZERO' },
           ],
           right: [
-            { from: '20', to: '20 - 2', attemptedChangeType: 'EQ_ADD_TERM' },
+            { from: '20', to: '20 - 2', attemptedChangeType: 'EQ_ADD_TERM_BY_SUBTRACTION' },
             { from: '20 - 2', to: '18', attemptedChangeType: 'SIMPLIFY_ARITHMETIC__SUBTRACT' },
           ],
         },
@@ -441,11 +441,11 @@ describe('assessUserEquationStep', () => {
             equationErrorType: 'EQ_ATMPT_REMOVAL_BOTH_SIDES',
           },
           left: [
-            generateStep('3x', '3x/3', 'EQ_REMOVE_TERM', { isValid: false }),
+            generateStep('3x', '3x/3', 'EQ_REMOVE_TERM_BY_DIVISION', { isValid: false }),
             generateStep('3x/3', 'x', 'CANCEL_TERMS'),
           ],
           right: [
-            generateStep('3', '3-3', 'EQ_REMOVE_TERM', { isValid: false }),
+            generateStep('3', '3-3', 'EQ_REMOVE_TERM_BY_SUBTRACTION', { isValid: false }),
             generateStep('3-3', '0', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
           ],
         },
@@ -460,10 +460,10 @@ describe('assessUserEquationStep', () => {
             equationErrorType: 'EQ_ADDED_DIFF_TERMS_TO_BOTH_SIDES',
           },
           left: [
-            generateStep('10x', '10x-4', 'EQ_ADD_TERM', { isValid: false }),
+            generateStep('10x', '10x-4', 'EQ_ADD_TERM_BY_SUBTRACTION', { isValid: false }),
           ],
           right: [
-            generateStep('4', '4-10x', 'EQ_ADD_TERM', { isValid: false }),
+            generateStep('4', '4-10x', 'EQ_ADD_TERM_BY_SUBTRACTION', { isValid: false }),
           ],
         },
       ],
@@ -488,8 +488,8 @@ describe('assessUserEquationStep', () => {
       expectedAnalysis: [
         {
           overallStepEval: { reachesOriginalAnswer: true },
-          left: [generateStep('2(x-4)', '(2(x-4))/2', 'EQ_REMOVE_TERM')],
-          right: [generateStep('6', '6/2', 'EQ_ADD_TERM')],
+          left: [generateStep('2(x-4)', '(2(x-4))/2', 'EQ_REMOVE_TERM_BY_DIVISION')],
+          right: [generateStep('6', '6/2', 'EQ_ADD_TERM_BY_DIVISION')],
         },
       ],
     },
@@ -500,8 +500,8 @@ describe('assessUserEquationStep', () => {
       expectedAnalysis: [
         {
           overallStepEval: { reachesOriginalAnswer: true },
-          left: [generateStep('2(x-4)-4(x+2*3)', '(2(x-4)-4(x+2*3))/2', 'EQ_REMOVE_TERM')],
-          right: [generateStep('6', '6/2', 'EQ_ADD_TERM')],
+          left: [generateStep('2(x-4)-4(x+2*3)', '(2(x-4)-4(x+2*3))/2', 'EQ_REMOVE_TERM_BY_DIVISION')],
+          right: [generateStep('6', '6/2', 'EQ_ADD_TERM_BY_DIVISION')],
         },
       ],
     },
@@ -513,10 +513,10 @@ describe('assessUserEquationStep', () => {
         {
           overallStepEval: { reachesOriginalAnswer: true },
           left: [
-            generateStep('4(x/2)+1', '(4(x/2)+1)*2', 'EQ_REMOVE_TERM'),
+            generateStep('4(x/2)+1', '(4(x/2)+1)*2', 'EQ_REMOVE_TERM_BY_MULTIPLICATION'),
           ],
           right: [
-            generateStep('3', '3*2', 'EQ_ADD_TERM'),
+            generateStep('3', '3*2', 'EQ_ADD_TERM_BY_MULTIPLICATION'),
             generateStep('3*2', '6', 'SIMPLIFY_ARITHMETIC__MULTIPLY'),
           ],
         },
@@ -530,10 +530,10 @@ describe('assessUserEquationStep', () => {
         {
           overallStepEval: { reachesOriginalAnswer: true },
           left: [
-            generateStep('4*(x/2)+1', '(4(x/2)+1)*2', 'EQ_REMOVE_TERM'),
+            generateStep('4*(x/2)+1', '(4(x/2)+1)*2', 'EQ_REMOVE_TERM_BY_MULTIPLICATION'),
           ],
           right: [
-            generateStep('3', '3*2', 'EQ_ADD_TERM'),
+            generateStep('3', '3*2', 'EQ_ADD_TERM_BY_MULTIPLICATION'),
             generateStep('3*2', '6', 'SIMPLIFY_ARITHMETIC__MULTIPLY'),
           ],
         },
@@ -541,7 +541,43 @@ describe('assessUserEquationStep', () => {
     },
     // test 16
     {
-      description: '16.',
+      description: '16. Cross Multiplication',
+      steps: ['(2/x)=(10/13)', '10x=26'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true, attemptedEquationChangeType: 'EQ_CROSS_MULTIPLY' },
+          left: [
+            generateStep('(2/x)', '10*x', 'EQ_CROSS_MULTIPLY'),
+          ],
+          right: [
+            generateStep('(10/13)', '(2*13)', 'EQ_CROSS_MULTIPLY'),
+            generateStep('(2*13)', '26', 'SIMPLIFY_ARITHMETIC__MULTIPLY'),
+          ],
+        },
+      ],
+    },
+    // test 17
+    {
+      description: '17. Cross Multiplication 2',
+      steps: ['(2/x)=(10/13)', '26=10x'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true, attemptedEquationChangeType: 'EQ_CROSS_MULTIPLY' },
+          left: [
+            generateStep('(2/x)', '(2*13)', 'EQ_CROSS_MULTIPLY'),
+            generateStep('(2*13)', '26', 'SIMPLIFY_ARITHMETIC__MULTIPLY'),
+          ],
+          right: [
+            generateStep('(10/13)', '10*x', 'EQ_CROSS_MULTIPLY'),
+
+
+          ],
+        },
+      ],
+    },
+    // test 18
+    {
+      description: '18.',
       steps: ['2(x+2)=10', '(2x + 4)=10'],
       expectedAnalysis: [
         {

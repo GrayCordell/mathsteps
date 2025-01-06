@@ -25,7 +25,7 @@ export const getChangeTypeGroups = (changeType_: AChangeType): AChangeTypeGroup[
   const changeType = getRootChangeType(changeType_)
 
   // Find which group(s) this changeType belongs to and return the tags
-  const firstPass = Object.entries(changeGroupMappings) // @ts-expect-error ---
+  const firstPass = Object.entries(changeGroupMappings)
     .filter(([_, rules]) => rules.includes(changeType))
     .map(([tag]) => tag)
     .filter(Boolean)
@@ -151,3 +151,13 @@ export const isOpEqual = (op1: string, op2: string): boolean => {
   const op2Normal = unflattenOp?.[cleanString(op2) as AOperator]
   return op1Normal === op2Normal
 }
+
+
+export const isRemoveTermChangeType = (changeType: AChangeType | string): boolean => typeof changeType !== 'string' ? false : changeType.includes('REMOVE_TERM')
+export const isAddTermChangeType = (changeType: AChangeType | string): boolean => typeof changeType !== 'string' ? false : changeType.includes('ADD_TERM')
+
+export const hasARemoveTermChangeType = (changeTypes: AChangeType[]): boolean => changeTypes.some(isRemoveTermChangeType)
+export const hasAnAddTermChangeType = (changeTypes: AChangeType[]): boolean => changeTypes.some(isAddTermChangeType)
+
+export const getAllRemoveTermChangeTypes = (changeTypes: AChangeType[]): AChangeType[] => changeTypes.filter(isRemoveTermChangeType)
+export const getAllAddTermChangeTypes = (changeTypes: AChangeType[]): AChangeType[] => changeTypes.filter(isAddTermChangeType)

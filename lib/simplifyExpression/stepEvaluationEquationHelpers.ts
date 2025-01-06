@@ -90,6 +90,23 @@ function _makeOpNumbersMap(otherSide: string): Map<'+' | '-' | '*' | '/', string
   return opNumberMap
 }
 
+const changeTypeBasedOnAddedOpFn = (op: AOperator) => {
+  switch (op) {
+    case '+':
+      return 'EQ_ADD_TERM_BY_ADDITION' as const
+    case '-':
+      return 'EQ_ADD_TERM_BY_SUBTRACTION' as const
+    case '+-':
+      return 'EQ_ADD_TERM_BY_SUBTRACTION' as const
+    case '*':
+      return 'EQ_ADD_TERM_BY_MULTIPLICATION' as const
+    case '/':
+      return 'EQ_ADD_TERM_BY_DIVISION' as const
+    default:
+      return 'EQ_ADD_TERM' as const
+  }
+}
+
 export function getOtherSideOptions(
   fromString: string,
   otherSide: string | null,
@@ -146,7 +163,7 @@ export function getOtherSideOptions(
   // convert to ProcessedStep
   return collectQueue.map(({ to, addedNumOp }) => ({
     from: fromString,
-    changeType: 'EQ_ADD_TERM' as const,
+    changeType: changeTypeBasedOnAddedOpFn(addedNumOp.op),
     addedNumOp,
     to,
     isMistake: false,

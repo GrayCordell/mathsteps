@@ -162,13 +162,30 @@ export function findAllOperationsThatCanBeRemoved(
 
 
   const newTermStrings = termOps.map(termOp => `(${fromNodeString}) ${getReverseOp(termOp.op)} (${termOp.term})`)
+  const changeTypeBasedOnRemovedOpFn = (op: AOperator) => {
+    switch (op) {
+      case '+':
+        return 'EQ_REMOVE_TERM_BY_ADDITION' as const
+      case '-':
+        return 'EQ_REMOVE_TERM_BY_SUBTRACTION' as const
+      case '+-':
+        return 'EQ_REMOVE_TERM_BY_SUBTRACTION' as const
+      case '*':
+        return 'EQ_REMOVE_TERM_BY_MULTIPLICATION' as const
+      case '/':
+        return 'EQ_REMOVE_TERM_BY_DIVISION' as const
+      default:
+        return 'EQ_REMOVE_TERM' as const
+    }
+  }
+
   return termOps
     .map((term, index) => ({ removeNumberOp: { number: term.term, op: term.op, dfsNodeId: term.dfsNodeId }, newExpression: newTermStrings[index] })) // map to the correct format
     .filter(term => term.removeNumberOp.number !== undefined && term.removeNumberOp.op !== undefined && term.newExpression !== undefined) // filter out terms with missing values
     .map(term => ({ // map to the correct format
       from: fromNodeString,
       to: term.newExpression,
-      changeType: 'EQ_REMOVE_TERM' as const,
+      changeType: changeTypeBasedOnRemovedOpFn(getReverseOp(term.removeNumberOp.op)),
       isMistake: false,
       removeNumberOp: { ...term.removeNumberOp, op: getReverseOp(term.removeNumberOp.op), number: term.removeNumberOp.number },
       availableChangeTypes: ['EQ_REMOVE_TERM' as const],

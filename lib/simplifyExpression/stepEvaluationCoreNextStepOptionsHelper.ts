@@ -1,4 +1,5 @@
 import mathsteps, { parseText } from '~/index'
+import { getCrossMultiplication } from '~/kemuEquation/Special-CrossMultiplication'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { findAllOperationsThatCanBeRemoved } from '~/newServices/nodeServices/termRemovalOperations'
@@ -116,10 +117,32 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
   //  Add Additional Steps
   //
 
+
   // Equation checks
+
+
+  // Check for add and remove terms
   if (neededForEquations?.otherSide && neededForEquations?.history) {
     const removedDepth = neededForEquations.history.filter(step => step.removeNumberOp).map(step => step.removeNumberOp).length
     const addedDepth = neededForEquations.history.filter(step => step.addedNumOp).map(step => step.addedNumOp).length
+
+
+    // Check for cross multiplication (TODO more history length?)
+    if (
+      neededForEquations.history.length <= 1
+      && removedDepth === 0
+      && addedDepth === 0
+    ) {
+      // check for cross multiplication
+      const crossMultiplied = getCrossMultiplication(userStep_, neededForEquations.otherSide)
+      if (crossMultiplied) {
+        processedSteps.push({ from: userStep, to: myNodeToString(crossMultiplied.crossRight), changeType: 'EQ_CROSS_MULTIPLY', isMistake: false, availableChangeTypes: ['EQ_CROSS_MULTIPLY' as const] })
+        processedSteps.push({ from: userStep, to: myNodeToString(crossMultiplied.crossLeft), changeType: 'EQ_CROSS_MULTIPLY', isMistake: false, availableChangeTypes: ['EQ_CROSS_MULTIPLY' as const] })
+      }
+    }
+
+
+    // Handle adding and removing terms
     if (removedDepth < 2 && addedDepth < 1) {
       processedSteps.push(...findAllOperationsThatCanBeRemoved(userStep_, neededForEquations.history))
     }

@@ -8,10 +8,10 @@ import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalizati
 import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import { findAttemptedOperationUse } from '~/simplifyExpression/rules/stepEvaluationOnly/findAttemptedOperationUse'
 import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
-import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers.js'
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers'
 import { convertAdditionToSubtractionErrorType, isAnAdditionChangeType } from '~/types/changeType/changeAndMistakeUtils'
 import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
+import { EQUATION_ADD_AND_REMOVE_TERMS } from '~/types/changeType/ChangeTypes'
 import type { NumberOp } from '~/types/NumberOp'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { cleanString } from '~/util/stringUtils'
@@ -85,7 +85,7 @@ const MAX_NEXT_STEPS = 110
 const MAX_STEP_DEPTH = 4
 const QUEUE_PRIORITY: AChangeType[] = ['REMOVE_ADDING_ZERO', 'DIVISION_BY_ONE', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__ADD', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'CANCEL_TERMS', 'SIMPLIFY_ARITHMETIC__DIVIDE', 'COLLECT_AND_COMBINE_LIKE_TERMS']
 
-const DEFERRED_CHANGE_TYPES = ['EQ_ADD_TERM', 'EQ_REMOVE_TERM']
+const DEFERRED_CHANGE_TYPES = [...EQUATION_ADD_AND_REMOVE_TERMS]
 const DEFERRED_DEPTH_THRESHOLD = 3
 
 

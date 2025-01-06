@@ -3,7 +3,7 @@ import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import type { CoreAssessUserStepResult, StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { coreAssessUserStep, processNoHistoryStep, processStep } from '~/simplifyExpression/stepEvaluationCore'
 import { getAnswerFromEquation } from '~/simplifyExpression/stepEvaluationHelpers'
-import { isOpEqual } from '~/types/changeType/changeAndMistakeUtils'
+import { isOpEqual, isRemoveTermChangeType } from '~/types/changeType/changeAndMistakeUtils'
 import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
 import type { NumberOp } from '~/types/NumberOp'
 import { cleanString } from '~/util/stringUtils'
@@ -199,7 +199,6 @@ function processEquationInfo(
     ? processNoHistoryStep({ from: leftFrom, to: leftTo, startingStepAnswer, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: 'UNKNOWN', firstChangeTypesLog: logs.lhsFirstChangeTypesLog, firstFoundToLog: logs.lhsFirstFoundToLog })
     : equation.lhs.history.map(step => processStep(step, leftFrom, startingStepAnswer, equation.lhs.history.length))
 
-
   if (equation.equationChangeType === 'EQ_SIMPLIFY_BOTH' || equation.equationChangeType === 'EQ_SIMPLIFY_LHS' || equation.equationChangeType === 'EQ_SIMPLIFY_RHS') {
     return { left: leftRes, right: rightRes, attemptedEquationChangeType: equation.equationChangeType, reachesOriginalAnswer }
   }
@@ -311,8 +310,17 @@ export function coreAssessUserStepEquation([previousEquationStr, userEquationStr
     const lhsRes = coreAssessUserStep([previousEquation.lhs, userEquation.lhs], logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog, previousEquation.rhs)
     const rhsRes = coreAssessUserStep([previousEquation.rhs, userEquation.rhs], logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog, previousEquation.lhs)
     const hasAddedTerms = rhsRes.history.some(step => step.addedNumOp) || lhsRes.history.some(step => step.addedNumOp)
-    const hasRemovedTerms = rhsRes.history.some(step => step.changeType === 'EQ_REMOVE_TERM') || lhsRes.history.some(step => step.changeType === 'EQ_REMOVE_TERM')
+    const hasRemovedTerms = rhsRes.history.some(step => isRemoveTermChangeType(step.changeType)) || lhsRes.history.some(step => isRemoveTermChangeType(step.changeType))
+    const hasCrossMultiplyLeft = lhsRes.history.some(step => step.changeType === 'EQ_CROSS_MULTIPLY')
+    const hasCrossMultiplyRight = rhsRes.history.some(step => step.changeType === 'EQ_CROSS_MULTIPLY')
 
+    if (hasCrossMultiplyLeft || hasCrossMultiplyRight) {
+      return {
+        lhs: lhsRes,
+        rhs: rhsRes,
+        equationChangeType: 'EQ_CROSS_MULTIPLY',
+      }
+    }
 
     if (hasAddedTerms || hasRemovedTerms) {
       return {

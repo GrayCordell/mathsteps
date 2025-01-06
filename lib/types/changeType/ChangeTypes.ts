@@ -5,6 +5,10 @@
  */
 
 
+const _SHARED_EQUATION_AND_MULTIPLY = {
+  EQ_CROSS_MULTIPLY: 'EQ_CROSS_MULTIPLY',
+} as const
+
 // Define all change types in a const array. If the new ChangeType is in multiple places, then add it to the shared object here. (this is just for easier tracking)
 const _SHARED_CHANGE = {
   SIMPLIFY_ARITHMETIC_MULTIPLY: 'SIMPLIFY_ARITHMETIC__MULTIPLY',
@@ -56,9 +60,28 @@ export const MISTAKE_ONLY = {
   SUBTRACTED_INSTEAD_OF_ADDED: 'SUBTRACTED_INSTEAD_OF_ADDED',
   ADDED_INSTEAD_OF_SUBTRACTED: 'ADDED_INSTEAD_OF_SUBTRACTED',
 } as const
+
+
+export const EQUATION_ADD_AND_REMOVE_TERMS = [
+  'EQ_REMOVE_TERM', // equations only. (not expressions)
+  'EQ_ADD_TERM', // equations only.
+  'EQ_ADD_TERM_BY_ADDITION', // equations only.
+  'EQ_ADD_TERM_BY_SUBTRACTION', // equations only.
+  'EQ_ADD_TERM_BY_MULTIPLICATION', // equations only.
+  'EQ_ADD_TERM_BY_DIVISION', // equations only.
+  'EQ_REMOVE_TERM_BY_ADDITION', // equations only.
+  'EQ_REMOVE_TERM_BY_SUBTRACTION', // equations only.
+  'EQ_REMOVE_TERM_BY_MULTIPLICATION', // equations only.
+  'EQ_REMOVE_TERM_BY_DIVISION', // equations only.
+]
+
+
 export type AMistakeTypeOnly = typeof MISTAKE_ONLY[keyof typeof MISTAKE_ONLY]
+// No mistake types
 export const CHANGE_TYPE_ONLY = [
+  ...Object.values(_SHARED_EQUATION_AND_MULTIPLY),
   ...Object.values(_SHARED_CHANGE),
+  ...Object.values(EQUATION_ADD_AND_REMOVE_TERMS),
   'SIMPLIFY_ARITHMETIC__POWER',
   'DIVISION_BY_NEGATIVE_ONE',
   'DIVISION_BY_ONE',
@@ -86,7 +109,7 @@ export const CHANGE_TYPE_ONLY = [
   'NO_CHANGE',
   'ADD_FRACTIONS',
   'COMMON_DENOMINATOR',
-  'SIMPLIFY_FRACTION',
+  // 'SIMPLIFY_FRACTION', UNUSED? Removed
   'KEMU_DECIMAL_TO_FRACTION',
   'KEMU_REMOVE_FRACTION_WITH_UNIT_NUMERATOR',
   'BREAK_UP_FRACTION',
@@ -110,11 +133,12 @@ export const CHANGE_TYPE_ONLY = [
   'KEMU_SQRT_FROM_CONST',
   'KEMU_ROOT_FROM_CONST',
   'EQ_SWAP_SIDES', // equations only.
-  'EQ_REMOVE_TERM', // equations only.
-  'EQ_ADD_TERM', // equations only.
+
+  // 'EQ_CROSS_MULTIPLY',  // equations only. // now placed in _SHARED_EQUATION_AND_MULTIPLY
 ] as const
 export type AChangeTypeOnly = typeof CHANGE_TYPE_ONLY[number]
 export const ALL_CHANGE_TYPES = [
+  ...Object.values(_SHARED_EQUATION_AND_MULTIPLY),
   ...Object.values(_SHARED_CHANGE),
   ...Object.values(MISTAKE_ONLY),
   ...CHANGE_TYPE_ONLY,
@@ -209,6 +233,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeTypeCore[]> = 
     _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB2_SUB,
     _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB3_SUB,
     _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_ABN_SUB,
+    _SHARED_EQUATION_AND_MULTIPLY.EQ_CROSS_MULTIPLY,
   ],
 
   CoefficientSimplificationRules: [
@@ -247,7 +272,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeTypeCore[]> = 
     'ADD_FRACTIONS',
     'COMMON_DENOMINATOR',
     _SHARED_CHANGE.MULTIPLY_FRACTIONS,
-    'SIMPLIFY_FRACTION',
+    // 'SIMPLIFY_FRACTION', UNUSED? Removed
     'KEMU_DECIMAL_TO_FRACTION',
     _SHARED_CHANGE.KEMU_ROOT_FROM_FRACTION,
     'KEMU_REMOVE_FRACTION_WITH_UNIT_NUMERATOR',
@@ -303,6 +328,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeTypeCore[]> = 
     'EQ_SWAP_SIDES',
     'EQ_REMOVE_TERM',
     'EQ_ADD_TERM',
+    _SHARED_EQUATION_AND_MULTIPLY.EQ_CROSS_MULTIPLY,
   ],
 } as const
 
@@ -371,7 +397,8 @@ export const EQUATION_CHANGE_TYPES = [
   'EQ_SIMPLIFY_LHS',
   'EQ_SIMPLIFY_BOTH',
   'EQ_NO_CHANGE',
+  //
+  'EQ_CROSS_MULTIPLY',
 ] as const
 export type AEquationChangeType = typeof EQUATION_CHANGE_TYPES[number]
 export const EquationChangeTypes: { [K in AEquationChangeType]: K } = Object.fromEntries(EQUATION_CHANGE_TYPES.map(k => [k, k])) as { [K in AEquationChangeType]: K }
-
