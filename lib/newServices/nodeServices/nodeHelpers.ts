@@ -7,11 +7,59 @@ export interface TermTypeAndIndex {
   index: number
   count?: number
   isInParentheses?: boolean
+  parenthesisDepth?: number
   depth?: number
   operationAppliedToTerm?: {
     operation: string | null
     position: string | null
   }
+}
+export function termToString(terms: TermTypeAndIndex[]): string {
+  // Sort terms by index for consistent order
+  terms = terms.sort((a, b) => a.index - b.index)
+
+  let lastDepth = 0
+  let result = ''
+  let openParentheses = 0
+
+  for (let i = 0; i < terms.length; i++) {
+    const term = terms[i]
+    const nextTerm = terms[i + 1] ?? null
+    const currentDepth = term?.parenthesisDepth ?? 0
+
+    // Add opening parentheses if depth increases
+    while (currentDepth > lastDepth) {
+      result += '('
+      openParentheses++
+      lastDepth++
+    }
+
+    // Add closing parentheses if depth decreases
+    while (currentDepth < lastDepth) {
+      result += ')'
+      openParentheses--
+      lastDepth--
+    }
+
+    // Add the term value
+    result += term.value
+
+    // Add closing parentheses for the last term if necessary
+    if (!nextTerm && currentDepth > 0) {
+      while (openParentheses > 0) {
+        result += ')'
+        openParentheses--
+      }
+    }
+  }
+
+  // Add any remaining closing parentheses for unbalanced ones
+  while (openParentheses > 0) {
+    result += ')'
+    openParentheses--
+  }
+
+  return result.replace(/\s+/g, '')
 }
 
 
@@ -30,6 +78,7 @@ export function flattenAndIndexTrackAST(node: MathNode): TermTypeAndIndex[] {
     parentOperator?: OperatorNode | null
     operandPosition?: 'left' | 'right' | null
     depth?: number
+    parenthesisDepth?: number
     inParentheses?: boolean
   }
   function traverse(
@@ -38,6 +87,7 @@ export function flattenAndIndexTrackAST(node: MathNode): TermTypeAndIndex[] {
       parentOperator = null,
       operandPosition = null,
       depth = 0,
+      parenthesisDepth = 0,
       inParentheses = false, // Track if current node is within parentheses
     }: TraverseParams,
   ): void {
@@ -54,6 +104,7 @@ export function flattenAndIndexTrackAST(node: MathNode): TermTypeAndIndex[] {
         || (currentPrecedence === parentPrecedence && operandPosition === 'right')
       ) {
         needsParentheses = true
+        parenthesisDepth++
       }
     }
 
@@ -62,16 +113,17 @@ export function flattenAndIndexTrackAST(node: MathNode): TermTypeAndIndex[] {
 
     if (isOperatorNode(n)) {
       if (n.args.length === 2) {
-        traverse({ n: n.args[0], parentOperator: n as OperatorNode | null, operandPosition: 'left', depth: newDepth, inParentheses: currentInParentheses })
+        traverse({ n: n.args[0], parentOperator: n as OperatorNode | null, operandPosition: 'left', depth: newDepth, inParentheses: currentInParentheses, parenthesisDepth })
         terms.push({
           type: 'operator',
           value: n.op,
           index: currentIndex,
           isInParentheses: currentInParentheses,
           depth: newDepth,
+          parenthesisDepth,
         })
         currentIndex += n.op.length
-        traverse({ n: n.args[1], parentOperator: n as OperatorNode | null, operandPosition: 'right', depth: newDepth, inParentheses: currentInParentheses })
+        traverse({ n: n.args[1], parentOperator: n as OperatorNode | null, operandPosition: 'right', depth: newDepth, inParentheses: currentInParentheses, parenthesisDepth })
       }
       else if (n.args.length === 1) {
         terms.push({
@@ -80,9 +132,10 @@ export function flattenAndIndexTrackAST(node: MathNode): TermTypeAndIndex[] {
           index: currentIndex,
           isInParentheses: currentInParentheses,
           depth: newDepth,
+          parenthesisDepth,
         })
         currentIndex += n.op.length
-        traverse({ n: n.args[0], parentOperator: n as OperatorNode | null, operandPosition: 'left', depth: newDepth, inParentheses: currentInParentheses })
+        traverse({ n: n.args[0], parentOperator: n as OperatorNode | null, operandPosition: 'left', depth: newDepth, inParentheses: currentInParentheses, parenthesisDepth })
       }
     }
     else if (isConstantNode(n) || isSymbolNode(n)) {
@@ -94,6 +147,7 @@ export function flattenAndIndexTrackAST(node: MathNode): TermTypeAndIndex[] {
         index: currentIndex,
         isInParentheses: currentInParentheses,
         depth: newDepth,
+        parenthesisDepth,
         operationAppliedToTerm: {
           operation,
           position: operandPosition, // 'left' or 'right'

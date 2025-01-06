@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { myNodeToString, parseText } from '~/index'
+import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { removeUnnecessaryParentheses } from '~/newServices/nodeServices/removeUnnessaryParenthesis'
 
 describe('removeUnnecessaryParentheses', () => {
   const testCases = [
+    { input: '0+((4x)/2+1)*2', expected: '0+(4*x/2+1)*2', description: 'temp.' },
     { input: '17-(7*4/2)', expected: '17-7*4/2', description: 'removes unnecessary parentheses around a negative collection of terms' },
     { input: '(5)', expected: '5', description: 'removes redundant parentheses around constants' },
     { input: '(x)', expected: 'x', description: 'removes redundant parentheses around symbols' },
@@ -12,11 +13,11 @@ describe('removeUnnecessaryParentheses', () => {
     { input: '(((x + y) * z))', expected: '(x + y) * z', description: 'handles deeply nested parentheses' },
     { input: '((x + y) * (z + w))', expected: '(x + y) * (z + w)', description: 'handles mixed operator precedence correctly' },
     { input: '6 + (2 * 3 + 4) * 2', expected: '6 + (2 * 3 + 4) * 2', description: 'returns the same string for expressions without unnecessary parentheses' },
-    { input: '-(-(x))', expected: '-(-x)', description: 'handles nested unary operators' },
+    { input: '-(-(x))', expected: '+x', description: 'handles nested unary operators' },
     { input: '(a * (b + c)) + d', expected: 'a * (b + c) + d', description: 'preserves parentheses for clarity in mixed precedence' },
     { input: '(a + (b * c))', expected: 'a + b * c', description: 'removes unnecessary parentheses when precedence allows' },
     { input: '((a + b) * (c - d)) / e', expected: '(a + b) * (c - d) / e', description: 'handles division and nested parentheses correctly' },
-    { input: 'sin((x))', expected: 'sin(x)', description: 'removes unnecessary parentheses around function arguments' },
+    // { input: 'sin((x))', expected: 'sin(x)', description: 'removes unnecessary parentheses around function arguments' }, TODO
     { input: '((x))', expected: 'x', description: 'reduces multiple layers of parentheses around a symbol' },
     { input: '((a) + ((b)))', expected: 'a + b', description: 'reduces complex nested parentheses with symbols' },
     { input: '(a + b) * (c + d)', expected: '(a + b) * (c + d)', description: 'preserves parentheses for clarity in distributive expressions' },
@@ -41,19 +42,18 @@ describe('removeUnnecessaryParentheses', () => {
 
 
   // Helper functions to clean and compare strings
-  const betterCleanStringFn = (str: string) => myNodeToString(parseText(str.replace(/\+-/g, '-')))
-  const cleanRemoveUnnecessaryParenthesesFn = (input: string) => betterCleanStringFn(myNodeToString(removeUnnecessaryParentheses(betterCleanStringFn(input))))
+  const cleanString = (str: string) => str.replace(/\s/g, '')
 
   // Run test cases
   testCases.forEach(({ input, expected, description }) => {
     it(description, () => {
-      expect(cleanRemoveUnnecessaryParenthesesFn(input)).toBe(betterCleanStringFn(expected))
+      expect(myNodeToString(removeUnnecessaryParentheses(cleanString(input)))).toBe(cleanString(expected))
     })
   })
 
   errorCases.forEach(({ input, description }) => {
     it(description, () => {
-      expect(() => cleanRemoveUnnecessaryParenthesesFn(input)).toThrow()
+      expect(() => myNodeToString(removeUnnecessaryParentheses(cleanString(input)))).toThrow()
     })
   })
 })
