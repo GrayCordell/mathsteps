@@ -6,7 +6,8 @@ import { cleanString } from '~/util/stringUtils'
 
 describe('equalityTest', () => {
   const testCases: { input: string, expected: string }[] = [
-    { input: '14+-3+-(6/3)', expected: '14+-3+-6/3' },
+    { input: '20+-(4*6/2)', expected: '20+-6/2*4' },
+    { input: '17+-(7*4/2)', expected: '17+-7*4/2' },
     { input: '(-2)/-2', expected: '-2/-2' },
     // swapped negative cases
     { input: '-4x+7', expected: '7-4x' },
