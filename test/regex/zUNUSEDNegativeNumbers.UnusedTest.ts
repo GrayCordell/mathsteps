@@ -2,7 +2,7 @@
  CURRENTLY UNUSED. May start using regex like this in the future.
 * */
 import { describe, expect, it } from 'vitest'
-import { makeExtendedRegExp } from '~/util/extendedRegex'
+import { makeExtendedRegExp } from '~/util/regex'
 
 export function extractNegativeNumbers(equation: string): string[] {
   const negativeNumberRegex = makeExtendedRegExp(String.raw`
