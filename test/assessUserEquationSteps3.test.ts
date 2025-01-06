@@ -182,6 +182,10 @@ describe('assessUserEquationStep3', () => {
           return isValid
         }),
       )
+      if (!leftResults.every(step => step.every(isValid => isValid)) || !rightResults.every(step => step.every(isValid => isValid))) {
+        console.error('LEFT RESULTS:', leftResults)
+        console.error('RIGHT RESULTS:', rightResults)
+      }
 
       // Perform assertions
       expect(leftResults.every(step => step.every(isValid => isValid))).toBeTruthy()
