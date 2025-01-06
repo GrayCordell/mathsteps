@@ -62,30 +62,28 @@ export function arrayEquals<T>(a: T[], b: T[], isEqual: (a: T, b: T) => boolean 
   return true
 }
 
-interface Args0<T> { isEqualFn?: (a: T, b: T) => boolean, sortFn?: (arr: T[]) => T[], copyFn?: (arr: T[]) => T[] }
-export const arrayEqualsOrderDoesntMatter = <T>(
-  a: T[],
-  b: T[],
+
+interface ArrayComparisonOptions<T> {
+  isEqualFn?: (a: T, b: T) => boolean
+  sortFn?: (arr: T[]) => T[]
+  copyFn?: (arr: T[]) => T[]
+}
+export const areArraysEqualUnordered = <T>(
+  array1: T[],
+  array2: T[],
   {
     isEqualFn = (a, b) => a === b,
     sortFn = arr => arr.sort(),
-    copyFn = arr => arr.slice(),
-  }: Args0<T> = {
-    isEqualFn: (a, b) => a === b,
-    sortFn: arr => arr.sort(),
-    copyFn: arr => arr.slice(),
-  },
-) => {
-  if (a.length !== b.length)
+    copyFn = arr => [...arr],
+  }: ArrayComparisonOptions<T> = {},
+): boolean => {
+  if (array1.length !== array2.length)
     return false
 
-  const aCopy = copyFn(a)
-  const bCopy = copyFn(b)
-  const sortedA = sortFn(aCopy)
-  const sortedB = sortFn(bCopy)
+  // Optimize by sorting in place if allowed
+  const sortedArray1 = sortFn(copyFn(array1))
+  const sortedArray2 = sortFn(copyFn(array2))
 
-  for (let i = 0; i < sortedA.length; i++) {
-    if (!isEqualFn(sortedA[i], sortedB[i]))
-      return false
-  }
+  // Compare sorted arrays element by element
+  return sortedArray1.every((item, index) => isEqualFn(item, sortedArray2[index]))
 }
