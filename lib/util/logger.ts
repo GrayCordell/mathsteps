@@ -1,3 +1,5 @@
+import { detectedEnvAndModes } from '~/util/detectEnvironment'
+
 export const LogLevel = {
   DEBUG: 'DEBUG',
   INFO: 'INFO',
@@ -85,24 +87,8 @@ class Logger {
   }
 }
 
-const devEnvirements = [
-  'development',
-  'test',
-  'TEST',
-  'local',
-  'LOCAL',
-  'DEV',
-  'dev',
-]
 
-let process_ = ''
-try {
-  // @ts-expect-error ---
-  // eslint-disable-next-line node/prefer-global/process
-  process_ = process ? process?.env?.NODE_ENV : ''
-}
-catch (_e: any) { process_ = '' }
-const isDev = devEnvirements.includes(process_) || devEnvirements.includes(import.meta.env.MODE)
+const isDev = detectedEnvAndModes.isDevelopment
 
 let logLevel: LogLevelKeys = LogLevel.DEBUG
 if (!isDev)
