@@ -1,15 +1,26 @@
 // CURRENTLY UNUSED FILE
 // This file is meant to be a mapping of Math Rules to ChangeTypes.
 // This is a work in progress.
-import type { AChangeTypeCore } from '~/types/changeType/ChangeTypes'
+import type { AChangeType, AChangeTypeCore } from '~/types/changeType/ChangeTypes'
+import { objectEntries } from '~/types/objectEntries'
 
 
-type MathRules = 'Addition_Property_Of_Equality' | 'Subtraction_Property_Of_Equality' | 'Multiplication_Property_Of_Equality' | 'Division_Property_Of_Equality' | 'Distributive_Property' | 'Combining_Like_Terms' | 'Simplify_Signs' | 'EQ_CROSS_MULTIPLY'
+export const ALL_MATH_RULES = [
+  'Addition_Property_Of_Equality',
+  'Subtraction_Property_Of_Equality',
+  'Multiplication_Property_Of_Equality',
+  'Division_Property_Of_Equality',
+  'Distributive_Property',
+  'Combining_Like_Terms',
+  'Simplify_Signs',
+  'Cross_Multiply',
+] as const
 
-type Ordered = AChangeTypeCore[]
-type temp = AChangeTypeCore | Record<string, Ordered[]>
+export type AMathRule = typeof ALL_MATH_RULES[number]
+
+
 // These are supposed to be "Math Rule" Mappings to specific ChangeTypes.
-export const SAMPLE_RULE_MAPPINGS: Record<MathRules, temp[]> = {
+export const SAMPLE_RULE_MAPPINGS: Record<AMathRule, AChangeType[]> = {
   Addition_Property_Of_Equality: [
     'EQ_ADD_TERM_BY_ADDITION',
     'EQ_REMOVE_TERM_BY_ADDITION',
@@ -48,7 +59,43 @@ export const SAMPLE_RULE_MAPPINGS: Record<MathRules, temp[]> = {
   Simplify_Signs: [
     'SIMPLIFY_SIGNS',
   ],
-  EQ_CROSS_MULTIPLY: [
+  Cross_Multiply: [
     'EQ_CROSS_MULTIPLY',
   ],
+} as const
+
+export function getAllMathRuleChangeTypes(): AChangeType[] {
+  return Object.values(SAMPLE_RULE_MAPPINGS).flat()
+}
+export const findRuleForChangeType = (changeType: AChangeTypeCore): AMathRule | null => {
+  const entries = objectEntries(SAMPLE_RULE_MAPPINGS)
+  const foundRuleEntry = entries.find(([rule, changeTypes]) => changeTypes.includes(changeType))
+  if (!foundRuleEntry)
+    return null
+  return foundRuleEntry[0] // return the rule only(not the changeTypes)
+}
+
+export const findChangesTypesForRule = (rule: AMathRule): AChangeType[] => SAMPLE_RULE_MAPPINGS[rule]
+
+export const sloppilyGetRuleBasedOnUserString = (userString: string): AMathRule | null | 'all' => {
+  userString = userString.toLowerCase().trim().replace(/\s+/g, ' ')
+  if (userString.includes('add'))
+    return 'Addition_Property_Of_Equality'
+  if (userString.includes('subt'))
+    return 'Subtraction_Property_Of_Equality'
+  if (userString.includes('mult'))
+    return 'Multiplication_Property_Of_Equality'
+  if (userString.includes('div'))
+    return 'Division_Property_Of_Equality'
+  if (userString.includes('dist'))
+    return 'Distributive_Property'
+  if (userString.includes('like') || userString.includes('combin'))
+    return 'Combining_Like_Terms'
+  if (userString.includes('simp') || userString.includes('sign'))
+    return 'Simplify_Signs'
+  if (userString.includes('cross'))
+    return 'Cross_Multiply'
+  if (userString === 'all')
+    return 'all'
+  return null
 }
