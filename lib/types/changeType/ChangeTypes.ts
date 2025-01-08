@@ -73,7 +73,7 @@ export const EQUATION_ADD_AND_REMOVE_TERMS = [
   'EQ_REMOVE_TERM_BY_SUBTRACTION', // equations only.
   'EQ_REMOVE_TERM_BY_MULTIPLICATION', // equations only.
   'EQ_REMOVE_TERM_BY_DIVISION', // equations only.
-]
+] as const
 
 
 export type AMistakeTypeOnly = typeof MISTAKE_ONLY[keyof typeof MISTAKE_ONLY]
