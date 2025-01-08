@@ -169,7 +169,7 @@ export const CHANGE_TYPE_GROUPS = [
   'MistakeWrongOperationRules',
 ] as const
 export type AChangeTypeGroup = typeof CHANGE_TYPE_GROUPS[number]
-export const changeGroupMappings: Record<AChangeTypeGroup, AChangeTypeCore[]> = {
+export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
   SimplifyArithmetic: [
     _SHARED_CHANGE.SIMPLIFY_ARITHMETIC__ADD,
     _SHARED_CHANGE.SIMPLIFY_ARITHMETIC__DIVIDE, // <-- THIS IS A UNIQUE CASE NOT USED IN THE RULES ENGINE. Its not actually used in a rule like the other SIMPLIFY_ARITHMETIC__* types
