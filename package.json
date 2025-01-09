@@ -32,6 +32,7 @@
     "lint:fix": "eslint --fix .",
     "preview-https": "serve dist",
     "test": "vitest",
+    "quickTest": "VITEST_EXCLUDE='./test/assessUserEquationSteps3.test.ts, ./test/evaluateSteps2.test.ts' vitest",
     "test:e2e": "cypress open",
     "test:unit": "vitest",
     "test:watch": "vitest",

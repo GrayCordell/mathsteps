@@ -59,6 +59,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['test/**/*.test.ts', 'test/**/*.test.js'],
-    exclude: ['node_modules', 'dist'],
+    exclude: [
+      'node_modules',
+      'dist',
+      // eslint-disable-next-line node/prefer-global/process
+      ...(process.env.VITEST_EXCLUDE ? process.env.VITEST_EXCLUDE.split(',') : []),
+    ],
   },
 })
