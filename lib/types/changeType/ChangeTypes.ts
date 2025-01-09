@@ -4,11 +4,6 @@
  * Check _SharedChange, ALL_CHANGE_TYPES, CHANGE_TYPE_GROUPS,changeGroupMappings, and mapWordsToGroups when adding changes. TODO make easier to add changes.(I tried once and it made typescript slow.)
  */
 
-
-const _SHARED_EQUATION_AND_MULTIPLY = {
-  EQ_CROSS_MULTIPLY: 'EQ_CROSS_MULTIPLY',
-} as const
-
 // Define all change types in a const array. If the new ChangeType is in multiple places, then add it to the shared object here. (this is just for easier tracking)
 const _SHARED_CHANGE = {
   SIMPLIFY_ARITHMETIC_MULTIPLY: 'SIMPLIFY_ARITHMETIC__MULTIPLY',
@@ -37,6 +32,7 @@ const _SHARED_CHANGE = {
   KEMU_DISTRIBUTE_MUL_OVER_ADD: 'KEMU_DISTRIBUTE_MUL_OVER_ADD',
   REDUCE_ZERO_NUMERATOR: 'REDUCE_ZERO_NUMERATOR',
   CANCEL_TERMS: 'CANCEL_TERMS',
+  EQ_CROSS_MULTIPLY: 'EQ_CROSS_MULTIPLY', // in both equation and multiply and fractions
 } as const
 const _SHARED_MISTAKE = {
   PEMDAS__ADD_INSTEAD_OF_MULTIPLY: 'PEMDAS__ADD_INSTEAD_OF_MULTIPLY',
@@ -79,7 +75,6 @@ export const EQUATION_ADD_AND_REMOVE_TERMS = [
 export type AMistakeTypeOnly = typeof MISTAKE_ONLY[keyof typeof MISTAKE_ONLY]
 // No mistake types
 export const CHANGE_TYPE_ONLY = [
-  ...Object.values(_SHARED_EQUATION_AND_MULTIPLY),
   ...Object.values(_SHARED_CHANGE),
   ...Object.values(EQUATION_ADD_AND_REMOVE_TERMS),
   'SIMPLIFY_ARITHMETIC__POWER',
@@ -138,7 +133,6 @@ export const CHANGE_TYPE_ONLY = [
 ] as const
 export type AChangeTypeOnly = typeof CHANGE_TYPE_ONLY[number]
 export const ALL_CHANGE_TYPES = [
-  ...Object.values(_SHARED_EQUATION_AND_MULTIPLY),
   ...Object.values(_SHARED_CHANGE),
   ...Object.values(MISTAKE_ONLY),
   ...CHANGE_TYPE_ONLY,
@@ -188,9 +182,9 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
 
   AdditionRules: [
     _SHARED_CHANGE.SIMPLIFY_ARITHMETIC__ADD,
-    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB2_ADD,
-    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB3_ADD,
-    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_ABN_ADD,
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB2_ADD, // seems to be only with ^
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB3_ADD, // seems to be only with ^
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_ABN_ADD, // seems to be only with ^
     _SHARED_CHANGE.PERCENTS_ADD,
     // Mistakes
     ...[MISTAKE_ONLY.ADDED_ONE_TOO_FEW, MISTAKE_ONLY.ADDED_ONE_TOO_MANY, MISTAKE_ONLY.SUBTRACTED_INSTEAD_OF_ADDED],
@@ -198,9 +192,9 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
 
   SubtractionRules: [
     _SHARED_CHANGE.SIMPLIFY_ARITHMETIC__SUBTRACT,
-    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB2_SUB,
-    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB3_SUB,
-    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_ABN_SUB,
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB2_SUB, // seems to be only with ^
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB3_SUB, // seems to be only with ^
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_ABN_SUB, // seems to be only with ^
     _SHARED_CHANGE.PERCENTS_SUB,
     // Mistakes
     ...[MISTAKE_ONLY.SUBTRACTED_ONE_TOO_FEW, MISTAKE_ONLY.SUBTRACTED_ONE_TOO_MANY, MISTAKE_ONLY.ADDED_INSTEAD_OF_SUBTRACTED],
@@ -233,7 +227,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
     _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB2_SUB,
     _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB3_SUB,
     _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_ABN_SUB,
-    _SHARED_EQUATION_AND_MULTIPLY.EQ_CROSS_MULTIPLY,
+    _SHARED_CHANGE.EQ_CROSS_MULTIPLY, // in both equation and multiply and fractions
   ],
 
   CoefficientSimplificationRules: [
@@ -251,6 +245,12 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
     _SHARED_CHANGE.KEMU_POWER_FACTORS,
     _SHARED_CHANGE.KEMU_POWER_TO_MINUS_ONE,
     _SHARED_CHANGE.KEMU_POWER_TO_NEGATIVE_EXPONENT,
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB2_ADD, // seems to be only with ^
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB3_ADD, // seems to be only with ^
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_ABN_ADD, // seems to be only with ^
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB2_SUB, // seems to be only with ^
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB3_SUB, // seems to be only with ^
+    _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_ABN_SUB, // seems to be only with ^
   ],
 
   ExpressionSimplificationRules: [
@@ -280,6 +280,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
     _SHARED_CHANGE.KEMU_REMOVE_DOUBLE_FRACTION,
     _SHARED_CHANGE.PERCENTS_CONVERT_TO_FRACTION,
     _SHARED_CHANGE.REDUCE_ZERO_NUMERATOR,
+    _SHARED_CHANGE.EQ_CROSS_MULTIPLY,
   ],
 
   TrigonometricRules: [
@@ -328,7 +329,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
     'EQ_SWAP_SIDES',
     'EQ_REMOVE_TERM',
     'EQ_ADD_TERM',
-    _SHARED_EQUATION_AND_MULTIPLY.EQ_CROSS_MULTIPLY,
+    _SHARED_CHANGE.EQ_CROSS_MULTIPLY,
   ],
 } as const
 

@@ -11,7 +11,8 @@ export const ALL_MATH_RULES = [
   'Multiplication_Property_Of_Equality',
   'Division_Property_Of_Equality',
   'Distributive_Property',
-  'Combining_Like_Terms',
+  'Combining_Like_Terms_Expressions',
+  'Combining_Like_Terms_Fractions',
   'Simplify_Signs',
   'Cross_Multiply',
 ] as const
@@ -41,13 +42,15 @@ export const SAMPLE_RULE_MAPPINGS: Record<AMathRule, AChangeType[]> = {
     'KEMU_DISTRIBUTE_MUL_OVER_ADD', // and subtract
     'BREAK_UP_FRACTION', // divide over add
   ],
-  Combining_Like_Terms: [
+  Combining_Like_Terms_Expressions: [
     'COLLECT_AND_COMBINE_LIKE_TERMS',
     'SIMPLIFY_ARITHMETIC__ADD',
     'SIMPLIFY_ARITHMETIC__SUBTRACT',
     'SIMPLIFY_ARITHMETIC__MULTIPLY',
     'SIMPLIFY_ARITHMETIC__DIVIDE',
-    // Fractions
+  ],
+  Combining_Like_Terms_Fractions: [
+    'CANCEL_TERMS',
     'MULTIPLY_FRACTIONS', //
     'ADD_FRACTIONS', //
     'COMMON_DENOMINATOR', //
@@ -79,6 +82,9 @@ export const findChangesTypesForRule = (rule: AMathRule): AChangeType[] => SAMPL
 
 export const sloppilyGetRuleBasedOnUserString = (userString: string): AMathRule | null | 'all' => {
   userString = userString.toLowerCase().trim().replace(/\s+/g, ' ')
+
+  const isCombinedTerms = userString.includes('like') || userString.includes('combin')
+
   if (userString.includes('add'))
     return 'Addition_Property_Of_Equality'
   if (userString.includes('subt'))
@@ -89,8 +95,10 @@ export const sloppilyGetRuleBasedOnUserString = (userString: string): AMathRule 
     return 'Division_Property_Of_Equality'
   if (userString.includes('dist'))
     return 'Distributive_Property'
-  if (userString.includes('like') || userString.includes('combin'))
-    return 'Combining_Like_Terms'
+  if (isCombinedTerms && userString.includes('frac'))
+    return 'Combining_Like_Terms_Fractions'
+  if (isCombinedTerms && (userString.includes('expr') || userString.includes('equat') || userString.includes('numbers')))
+    return 'Combining_Like_Terms_Expressions'
   if (userString.includes('simp') || userString.includes('sign'))
     return 'Simplify_Signs'
   if (userString.includes('cross'))
