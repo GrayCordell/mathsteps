@@ -32,7 +32,7 @@
     "lint:fix": "eslint --fix .",
     "preview-https": "serve dist",
     "test": "vitest",
-    "quickTest": "VITEST_EXCLUDE='./test/assessUserEquationSteps3.test.ts, ./test/evaluateSteps2.test.ts' vitest",
+    "quickTest": "cross-env VITEST_EXCLUDE='src/tests/skip-this-file.spec.ts,src/tests/slow-tests/*.spec.ts' vitest",
     "test:e2e": "cypress open",
     "test:unit": "vitest",
     "test:watch": "vitest",
@@ -56,6 +56,7 @@
   "license": "Apache-2.0",
   "author": "Grayson Cordell",
   "dependencies": {
+    "lru-cache": "^11.0.2",
     "mathjs": "^13.1.1"
   },
   "simple-git-hooks": {
@@ -66,16 +67,15 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.6.0",
+    "@types/node": "^22.5.4",
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
-    "eslint": "^9.10.0",
-    "eslint-plugin-format": "^0.1.2",
-    "@types/node": "^22.5.4",
     "@vitest/coverage-v8": "^2.1.1",
     "@vue/test-utils": "^2.4.6",
     "camelcase": "^8.0.0",
     "cross-env": "^7.0.3",
-
+    "eslint": "^9.10.0",
+    "eslint-plugin-format": "^0.1.2",
     "https-localhost": "^4.7.1",
     "jsdom": "^25.0.0",
     "lint-staged": "^15.2.10",
