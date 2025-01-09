@@ -72,6 +72,15 @@ export function normalizeStringExpressionForEquality(stringExpression: string): 
   return stringExpression
 }
 
+
+export function areEquationsEqual(eq0: string, eq1: string, equalityCache: EqualityCache | null = null): boolean {
+  const sides0 = eq0.split('=').map(side => cleanString(side))
+  const sides1 = eq1.split('=').map(side => cleanString(side))
+
+  // TODO it may need to also test the flipped version
+  return (areExpressionEqual(sides0[0], sides1[0], equalityCache) && areExpressionEqual(sides0[1], sides1[1], equalityCache))
+}
+
 export function areExpressionEqual(exp0: string | MathNode, exp1: string | MathNode, equalityCache: EqualityCache | null = null): boolean {
   if (!exp0 || !exp1) // if either is null or undefined, we aren't going to compare them.
     return false
