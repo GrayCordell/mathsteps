@@ -453,7 +453,7 @@ describe('assessUserEquationStep', () => {
     },
     { // Test 10
       description: '10. error - attempt add term to both sides',
-      steps: ['10x = 4', '10x - 4 = 4 - 10x'],
+      steps: ['10x = 4', '10x - 4 = 4/10'],
       expectedAnalysis: [
         {
           overallStepEval: {
@@ -463,7 +463,7 @@ describe('assessUserEquationStep', () => {
             generateStep('10x', '10x-4', 'EQ_ADD_TERM_BY_SUBTRACTION', { isValid: false }),
           ],
           right: [
-            generateStep('4', '4-10x', 'EQ_ADD_TERM_BY_SUBTRACTION', { isValid: false }),
+            generateStep('4', '4/10', 'EQ_ADD_TERM_BY_DIVISION', { isValid: false }),
           ],
         },
       ],
