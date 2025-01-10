@@ -85,7 +85,7 @@ const MAX_NEXT_STEPS = 110
 const MAX_STEP_DEPTH = 4
 const QUEUE_PRIORITY: AChangeType[] = ['REMOVE_ADDING_ZERO', 'DIVISION_BY_ONE', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__ADD', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'CANCEL_TERMS', 'SIMPLIFY_ARITHMETIC__DIVIDE', 'COLLECT_AND_COMBINE_LIKE_TERMS']
 
-const DEFERRED_CHANGE_TYPES = [...EQUATION_ADD_AND_REMOVE_TERMS]
+const DEFERRED_CHANGE_TYPES = [...EQUATION_ADD_AND_REMOVE_TERMS] as AChangeType[]
 const DEFERRED_DEPTH_THRESHOLD = 3
 
 
@@ -279,7 +279,7 @@ export function coreAssessUserStep(
       //
       //  Handle differed steps.
       //
-      differed.push(...allPossibleNextStep.filter(step => DEFERRED_CHANGE_TYPES.includes(step.changeType as string)).map(step => ({
+      differed.push(...allPossibleNextStep.filter(step => DEFERRED_CHANGE_TYPES.includes(step.changeType)).map(step => ({
         start: step.to,
         history: JSON.parse(JSON.stringify([...history, step])) as ProcessedStep[],
         depth: depth + 1,
@@ -287,7 +287,7 @@ export function coreAssessUserStep(
         deferDepth: 0,
       })))
       // Remove the deferred steps from current available steps
-      allPossibleNextStep = allPossibleNextStep.filter(step => !DEFERRED_CHANGE_TYPES.includes(step.changeType as string))
+      allPossibleNextStep = allPossibleNextStep.filter(step => !DEFERRED_CHANGE_TYPES.includes(step.changeType))
       ///
 
       // Log the first possible steps for later. Typically Used in cases where we don't find a match. TODO refactor to remove needing this.
@@ -313,7 +313,7 @@ export function coreAssessUserStep(
         addStepToQueue(mainQueue, {
           start: possibleStep.to,
           history: [...history, possibleStep],
-          isDeferred: DEFERRED_CHANGE_TYPES.includes(possibleStep.changeType as string),
+          isDeferred: DEFERRED_CHANGE_TYPES.includes(possibleStep.changeType),
           deferDepth: 0,
         }, possibleStep.changeType)
       })
