@@ -70,12 +70,18 @@ const r = (str: string) => ({ right: makeToFromString(str) })
 const reachesOgEqAnswer = (bool: boolean) => ({ overallEval: { reachesOriginalAnswer: bool } })
 describe('assessUserEquationSteps2', () => {
   const tests: Test[] = [
-    // 1
-    {
+    { // 1
       description: 'simple equation',
       steps: ['x+2=4', 'x=2'],
       expectedAnalysis: [
         { ...reachesOgEqAnswer(true), ...l('x+2->x+2-2->x+0->1x'), ...r('4->4-2->2') },
+      ],
+    },
+    { // 2
+      description: '2. 6*x=200->x=200/6',
+      steps: ['6*x=200', 'x=200/6'],
+      expectedAnalysis: [
+        { ...reachesOgEqAnswer(true), ...l('6*x->6*x/6->1*x'), ...r('200->200/6') },
       ],
     },
   ]
