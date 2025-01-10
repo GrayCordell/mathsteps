@@ -5,7 +5,8 @@ import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { parseText } from '~/newServices/nodeServices/parseText'
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
-import { getReverseOp } from '~/types/changeType/changeAndMistakeUtils'
+import { getAddRemoveTermTypeBasedOnOp, getReverseOp } from '~/types/changeType/changeAndMistakeUtils'
+
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { cleanString } from '~/util/stringUtils'
 
@@ -35,8 +36,9 @@ function generateExpressions(
   node: MathNode,
   options: { combinedTermLimit: number } = { combinedTermLimit: 2 },
 ): GeneratedExpression[] {
-  ///
-  ///
+  const countTermsFn = (node: MathNode): number => (isOperatorNode(node) && node.args)
+    ? node.args.reduce((acc, arg) => acc + countTermsFn(arg), 0)
+    : 1
 
 
   let dfsNodeId = 0
@@ -85,15 +87,56 @@ function generateExpressions(
         : [{ op: '+', term: myNodeToString(node), node, dfsNodeId: 0 }]
     }
   }
-  return filterResult.filter(item => countTerms(item.node) <= options.combinedTermLimit)
+  return filterResult.filter(item => countTermsFn(item.node) <= options.combinedTermLimit)
 }
 
-function countTerms(node: MathNode): number {
-  if (isOperatorNode(node) && node.args) {
-    return node.args.reduce((acc, arg) => acc + countTerms(arg), 0)
-  }
-  return 1
+/**
+ * Finds all operations that can be "removed" from an expression.
+ * TODO: this function is bad.
+ * @param fromNode_
+ * @param history - The history of steps leading up to the current expression.
+ * @param options
+ * @param options.isAdded - If true, the operation is considered to be added.
+ */
+export function findAllOperationsThatCanBeRemoved(
+  fromNode_: MathNode | string,
+  history: ProcessedStep[],
+  options: { isAdded?: boolean } = {},
+): ProcessedStep[] {
+  const unFlattenNodeFn = (node: MathNode) => parseText(myNodeToString(node))
+  const getNumberOpFn = (step: ProcessedStep) => options.isAdded ? (step?.addedNumOp || step?.removeNumberOp) : (step?.removeNumberOp || step?.addedNumOp)
+
+  const fromNodeNode = typeof fromNode_ === 'string' ? parseText(fromNode_) : unFlattenNodeFn(fromNode_) // have to unflatten because generate requires it.
+  const fromNodeString = typeof fromNode_ === 'string' ? cleanString(fromNode_) : myNodeToString(fromNodeNode)
+
+  const previousRemovedNumOps = history.filter(step => getNumberOpFn(step)).map(step => getNumberOpFn(step))
+  const flippedPreviousReverseNumOps = previousRemovedNumOps.map(numOp => ({ number: numOp!.number, op: getReverseOp(numOp!.op) }))
+
+  let termOps = generateExpressions(fromNodeNode)
+  termOps = filterUniqueValues(termOps, (a, b) => a.term === b.term && a.op === b.op)
+  // remove all terms that have been removed before
+  termOps = termOps.filter(term => !flippedPreviousReverseNumOps.some(prev => prev.number === term.term && prev.op === term.op))
+  // ignore + or - 0
+  termOps = termOps.filter(term => term.term !== '0')
+  termOps = filterUniqueValues(termOps, (a, b) => a.term === b.term && a.op === b.op)
+
+
+  const newTermStrings = termOps.map(termOp => `(${fromNodeString}) ${getReverseOp(termOp.op)} (${termOp.term})`)
+
+
+  return termOps
+    .map((term, index) => ({ removeNumberOp: { number: term.term, op: term.op, dfsNodeId: term.dfsNodeId }, newExpression: newTermStrings[index] })) // map to the correct format
+    .filter(term => term.removeNumberOp.number !== undefined && term.removeNumberOp.op !== undefined && term.newExpression !== undefined) // filter out terms with missing values
+    .map(term => ({ // map to the correct format
+      from: fromNodeString,
+      to: term.newExpression,
+      changeType: getAddRemoveTermTypeBasedOnOp(getReverseOp(term.removeNumberOp.op), options.isAdded ? 'add' : 'remove'),
+      isMistake: false,
+      removeNumberOp: { ...term.removeNumberOp, op: getReverseOp(term.removeNumberOp.op), number: term.removeNumberOp.number },
+      availableChangeTypes: ['EQ_REMOVE_TERM' as const],
+    }))
 }
+
 
 // can give back operation as +-
 /* export function findTermRemovalOperation(
@@ -119,7 +162,6 @@ function countTerms(node: MathNode): number {
   return null
 } */
 
-
 // can give back operation as +-
 // export function findAllOperationsThatCanBeRemoved(
 //  fromNode_: MathNode | string,
@@ -139,55 +181,3 @@ function countTerms(node: MathNode): number {
 //  // remove all terms that have undefined as the number or op or newExpression
 //  return result
 // }
-
-export function findAllOperationsThatCanBeRemoved(
-  fromNode_: MathNode | string,
-  history: ProcessedStep[],
-): ProcessedStep[] {
-  const unFlattenNodeFn = (node: MathNode) => parseText(myNodeToString(node))
-  const fromNodeNode = typeof fromNode_ === 'string' ? parseText(fromNode_) : unFlattenNodeFn(fromNode_) // have to unflatten because generate requires it.
-  const fromNodeString = typeof fromNode_ === 'string' ? cleanString(fromNode_) : myNodeToString(fromNodeNode)
-
-  const previousRemovedNumOps = history.filter(step => step.removeNumberOp).map(step => step.removeNumberOp)
-
-  const flippedPreviousReverseNumOps = previousRemovedNumOps.map(numOp => ({ number: numOp!.number, op: getReverseOp(numOp!.op) }))
-
-  let termOps = generateExpressions(fromNodeNode)
-  termOps = filterUniqueValues(termOps, (a, b) => a.term === b.term && a.op === b.op)
-  // remove all terms that have been removed before
-  termOps = termOps.filter(term => !flippedPreviousReverseNumOps.some(prev => prev.number === term.term && prev.op === term.op))
-  // ignore + or - 0
-  termOps = termOps.filter(term => term.term !== '0')
-  termOps = filterUniqueValues(termOps, (a, b) => a.term === b.term && a.op === b.op)
-
-
-  const newTermStrings = termOps.map(termOp => `(${fromNodeString}) ${getReverseOp(termOp.op)} (${termOp.term})`)
-  const changeTypeBasedOnRemovedOpFn = (op: AOperator) => {
-    switch (op) {
-      case '+':
-        return 'EQ_REMOVE_TERM_BY_ADDITION' as const
-      case '-':
-        return 'EQ_REMOVE_TERM_BY_SUBTRACTION' as const
-      case '+-':
-        return 'EQ_REMOVE_TERM_BY_SUBTRACTION' as const
-      case '*':
-        return 'EQ_REMOVE_TERM_BY_MULTIPLICATION' as const
-      case '/':
-        return 'EQ_REMOVE_TERM_BY_DIVISION' as const
-      default:
-        return 'EQ_REMOVE_TERM' as const
-    }
-  }
-
-  return termOps
-    .map((term, index) => ({ removeNumberOp: { number: term.term, op: term.op, dfsNodeId: term.dfsNodeId }, newExpression: newTermStrings[index] })) // map to the correct format
-    .filter(term => term.removeNumberOp.number !== undefined && term.removeNumberOp.op !== undefined && term.newExpression !== undefined) // filter out terms with missing values
-    .map(term => ({ // map to the correct format
-      from: fromNodeString,
-      to: term.newExpression,
-      changeType: changeTypeBasedOnRemovedOpFn(getReverseOp(term.removeNumberOp.op)),
-      isMistake: false,
-      removeNumberOp: { ...term.removeNumberOp, op: getReverseOp(term.removeNumberOp.op), number: term.removeNumberOp.number },
-      availableChangeTypes: ['EQ_REMOVE_TERM' as const],
-    }))
-}

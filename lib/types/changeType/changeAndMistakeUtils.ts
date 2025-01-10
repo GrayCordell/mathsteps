@@ -166,3 +166,27 @@ export const hasAnAddTermChangeType = (changeTypes: AChangeType[]): boolean => c
 
 export const getAllRemoveTermChangeTypes = (changeTypes: AChangeType[]): AChangeType[] => changeTypes.filter(isRemoveTermChangeType)
 export const getAllAddTermChangeTypes = (changeTypes: AChangeType[]): AChangeType[] => changeTypes.filter(isAddTermChangeType)
+
+
+export const getAddRemoveTermTypeBasedOnOp = <Op extends AOperator, AddOrRemove extends ('add' | 'remove')>(
+  op: Op,
+  addOrRemove: AddOrRemove,
+): AChangeType => {
+  const ADD_REMOVE = addOrRemove === 'add' ? 'ADD' : 'REMOVE'
+  switch (op) {
+    case '+':
+      return `EQ_${ADD_REMOVE}_TERM_BY_ADDITION` as AChangeType
+    case '--':
+      return `EQ_${ADD_REMOVE}_TERM_BY_ADDITION` as AChangeType
+    case '+-':
+      return `EQ_${ADD_REMOVE}_TERM_BY_SUBTRACTION` as AChangeType
+    case '-':
+      return `EQ_${ADD_REMOVE}_TERM_BY_SUBTRACTION` as AChangeType
+    case '*':
+      return `EQ_${ADD_REMOVE}_TERM_BY_MULTIPLICATION` as AChangeType
+    case '/':
+      return `EQ_${ADD_REMOVE}_TERM_BY_DIVISION` as AChangeType
+    default:
+      return `EQ_${ADD_REMOVE}_TERM` as AChangeType
+  }
+}

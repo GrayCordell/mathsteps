@@ -6,7 +6,8 @@ import { findAllOperationsThatCanBeRemoved } from '~/newServices/nodeServices/te
 import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import { mistakeSearches } from '~/simplifyExpression/mistakes/regexPemdasMistakes'
 import type { ProcessedStep, RawStep } from '~/simplifyExpression/stepEvaluationCore'
-import { getOtherSideOptions } from '~/simplifyExpression/stepEvaluationEquationHelpers'
+import { getAddRemoveTermTypeBasedOnOp } from '~/types/changeType/changeAndMistakeUtils'
+import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { cleanString } from '~/util/stringUtils'
@@ -143,21 +144,34 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
 
 
     // Handle adding and removing terms
+    // Adding and removing terms functions are kind of a mess.
+    // findAllOperationsThatCanBeRemoved is now used for both adding and removing terms. (Like I should have done from the start)
+    // There is some weirdness here with the addedNumOp and removeNumberOp types, and converting between them for the added terms.
     if (removedDepth < 2 && addedDepth < 1) {
+      // get removed term possibilities
       processedSteps.push(...findAllOperationsThatCanBeRemoved(userStep_, neededForEquations.history))
     }
     if (removedDepth < 1 && addedDepth < 2) {
-      /*  TODO try to use just findAllOperationsThatCanBeRemoved or getOtherSideOptions. Not sure why I ever made two separate completely different versions..
-      const useThisVersionLater = findAllOperationsThatCanBeRemoved(neededForEquations.otherSide, neededForEquations.history).map(step => ({
-        ...step,
-        to: `(${userStep}) ${step?.removeNumberOp?.op} ${step?.removeNumberOp?.number}`,
-        removeNumberOp: undefined,
-        addedNumOp: step.removeNumberOp,
-        changeType: 'EQ_ADD_TERM' as const,
-        availableChangeTypes: ['EQ_ADD_TERM' as const],
-       }))
-       processedSteps.push(...useThisVersionLater) */
-      processedSteps.push(...getOtherSideOptions(userStep_, neededForEquations.otherSide, neededForEquations.history))
+      // get added term possibilities
+      function makeAddedFn(expression0: string, otherSide: string, history: ProcessedStep[]) {
+        const steps = findAllOperationsThatCanBeRemoved(otherSide, history, { isAdded: true })
+        const removedNumOps = steps.map(step => (step.removeNumberOp)).filter(removedNumOp => removedNumOp !== undefined)
+        const newExpressions: ProcessedStep[] = removedNumOps.map((removedNumOp) => {
+          return {
+            from: expression0,
+            to: `(${expression0}) ${removedNumOp.op} ${removedNumOp.number}`,
+            removeNumberOp: undefined,
+            addedNumOp: removedNumOp as any,
+            changeType: getAddRemoveTermTypeBasedOnOp(removedNumOp.op, 'add') as AChangeType,
+            availableChangeTypes: ['EQ_ADD_TERM'] as any,
+            isMistake: false,
+          }
+        })
+
+        return newExpressions
+      }
+
+      processedSteps.push(...makeAddedFn(userStep_, neededForEquations.otherSide, neededForEquations.history))
     }
   }
 
@@ -187,5 +201,3 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
 
   return processedSteps
 }
-
-
