@@ -1,9 +1,6 @@
-// CURRENTLY UNUSED FILE
 // This file is meant to be a mapping of Math Rules to ChangeTypes.
-// This is a work in progress.
 import type { AChangeType, AChangeTypeCore } from '~/types/changeType/ChangeTypes'
 import { objectEntries } from '~/types/objectEntries'
-
 
 export const ALL_MATH_RULES = [
   'Addition_Property_Of_Equality',
@@ -70,15 +67,14 @@ export const SAMPLE_RULE_MAPPINGS: Record<AMathRule, AChangeType[]> = {
 export function getAllMathRuleChangeTypes(): AChangeType[] {
   return Object.values(SAMPLE_RULE_MAPPINGS).flat()
 }
-export const findRuleForChangeType = (changeType: AChangeTypeCore): AMathRule | null => {
+export const getMathRuleForChangeType = (changeType: AChangeTypeCore): AMathRule | null => {
   const entries = objectEntries(SAMPLE_RULE_MAPPINGS)
   const foundRuleEntry = entries.find(([rule, changeTypes]) => changeTypes.includes(changeType))
   if (!foundRuleEntry)
     return null
   return foundRuleEntry[0] // return the rule only(not the changeTypes)
 }
-
-export const findChangesTypesForRule = (rule: AMathRule): AChangeType[] => SAMPLE_RULE_MAPPINGS[rule]
+export const getChangesTypesForRule = (rule: AMathRule): AChangeType[] => SAMPLE_RULE_MAPPINGS[rule]
 
 export const sloppilyGetRuleBasedOnUserString = (userString: string): AMathRule | null | 'all' => {
   userString = userString.toLowerCase().trim().replace(/\s+/g, ' ')

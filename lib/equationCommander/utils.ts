@@ -1,105 +1,14 @@
-import { getFinalAnswerFromEquation } from '~/kemuEquation/SimpleSolveEquationFunction'
-import { areEquationsEqual } from '~/newServices/expressionEqualsAndNormalization'
-import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
-import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
-import { isAnOp, isOpEqual } from '~/types/changeType/changeAndMistakeUtils'
-import { ChangeTypes } from '~/types/changeType/ChangeTypes'
-import type { AMathRule } from '~/types/changeType/MathRuleTypes'
-import { findChangesTypesForRule } from '~/types/changeType/MathRuleTypes'
-import { cleanString } from '~/util/stringUtils'
-import { UndoableString } from '~/util/UndoableString'
-import type { EqLRStep, EqLRStepWithNewTo, EqProcessedSteps } from '~/WIP/Types'
-
-
-export class EquationCommander {
-  private equationHistory: UndoableString
-  private finalCorrectAnswer: string
-  constructor(initialValue = '') {
-    this.equationHistory = new UndoableString(initialValue)
-    this.finalCorrectAnswer = getFinalAnswerFromEquation(initialValue)
-  }
-
-  redo() {
-    this.equationHistory.redo()
-  }
-
-  undo() {
-    this.equationHistory.undo()
-  }
-
-  setValue(newValue: string) {
-    this.equationHistory.setValue(newValue)
-  }
-
-  getValue() {
-    return this.equationHistory.getValue()
-  }
-
-  isSolved() {
-    return areEquationsEqual(this.finalCorrectAnswer, this.getValue())
-  }
-
-  swap() {
-    const currentEquation = this.getValue()
-    const [left, right] = currentEquation.split('=')
-    this.setValue(`${right}=${left}`)
-  }
-
-  getCurrentMatches(): EqLRStepWithNewTo[] {
-    const currentEquation = this.getValue()
-    // Build up the possible matches
-    const startingLeftRight = makeStartingLeftAndRightEqSteps(currentEquation)
-    const eqProcessedSteps = makeEquationProcessSteps(currentEquation)
-
-    const addRemoveCombo = findMatchingAddRemoveTerms(eqProcessedSteps)
-    const nonAddRemoveRuleMatches = findNonAddRemoveRuleMatches(
-      eqProcessedSteps,
-      startingLeftRight,
-    )
-    const allRuleMatches = addRemoveCombo
-      .concat(nonAddRemoveRuleMatches)
-      .map(option => ({
-        left: option.left,
-        right: option.right,
-        newTo: `${option.left.to}=${option.right.to}`, // full equation after applying that step
-      }))
-    return allRuleMatches
-  }
-
-  getMatchesForRule(rule: AMathRule | 'all'): EqLRStepWithNewTo[] {
-    const matches = this.getCurrentMatches()
-
-    const changeTypesForGivenRule
-      = rule !== 'all'
-        ? findChangesTypesForRule(rule)
-        : Object.values(ChangeTypes).flat()
-
-    return matches.filter(match => changeTypesForGivenRule.includes(match.left.changeType) || changeTypesForGivenRule.includes(match.right.changeType))
-  }
-
-  isAnAlterCommand(command: string) {
-    const lower = command.trim().toLowerCase()
-    return lower === 'back' || lower === 'undo' || lower === 'forward' || lower === 'redo' || lower.includes('swap')
-  }
-
-  callEquationAlterCommandBasedOnString(command: string) {
-    const lower = command.trim().toLowerCase()
-    if (lower === 'back' || lower === 'undo')
-      this.undo()
-    else if (lower === 'forward' || lower === 'redo')
-      this.redo()
-    else if (lower.includes('swap'))
-      this.swap()
-    else
-      console.warn('Invalid command')
-  }
-}
-
 
 //
 // Utils
 //
-function findMatchingAddRemoveTerms(
+import type { EqLRStep, EqProcessedSteps } from '~/equationCommander/Types'
+import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
+import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
+import { isAnOp, isOpEqual } from '~/types/changeType/changeAndMistakeUtils'
+import { cleanString } from '~/util/stringUtils'
+
+export function findMatchingAddRemoveTerms(
   eqProcessedStep: EqProcessedSteps,
 ): { left: ProcessedStep, right: ProcessedStep }[] {
   const isTermMatchingForAddRemoveFn = (
@@ -154,7 +63,7 @@ function findMatchingAddRemoveTerms(
   }[]
 }
 
-function makeStartingLeftAndRightEqSteps(
+export function makeStartingLeftAndRightEqSteps(
   equation: string,
 ): {
     left: ProcessedStep
@@ -180,7 +89,7 @@ function makeStartingLeftAndRightEqSteps(
 }
 
 
-function findNonAddRemoveRuleMatches(
+export function findNonAddRemoveRuleMatches(
   eqProcessedSteps: EqProcessedSteps,
   starting: { left: ProcessedStep, right: ProcessedStep },
 ): EqLRStep[] {
@@ -199,7 +108,7 @@ function findNonAddRemoveRuleMatches(
   return newFullEquationsFromLeft.concat(newFullEquationsFromRight)
 }
 
-function makeEquationProcessSteps(equation: string): EqProcessedSteps {
+export function makeEquationProcessSteps(equation: string): EqProcessedSteps {
   const expressions = equation.split('=').map(expression => cleanString(expression))
   const leftExpression = expressions[0]
   const rightExpression = expressions[1]

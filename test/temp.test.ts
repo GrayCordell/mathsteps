@@ -1,5 +1,5 @@
 import { describe, expect } from 'vitest'
-import { RUN_DEV_MATH_RULE_CLI } from '~/WIP/CLI'
+import { RUN_DEV_MATH_RULE_CLI } from '~/equationCommander/CLI'
 
 
 describe('temp', async () => {

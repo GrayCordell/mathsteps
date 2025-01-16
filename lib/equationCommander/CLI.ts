@@ -1,11 +1,11 @@
 import readline from 'node:readline'
+import { EquationCommander } from '~/equationCommander/index'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { parseText } from '~/newServices/nodeServices/parseText'
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import type { AChangeType } from '~/types/changeType/ChangeTypes'
-import { ALL_MATH_RULES, sloppilyGetRuleBasedOnUserString } from '~/types/changeType/MathRuleTypes'
+import { sloppilyGetRuleBasedOnUserString } from '~/types/changeType/MathRuleTypes'
 import { veryCleanEquation } from '~/util/stringUtils'
-import { EquationCommander } from '~/WIP/EquationCommander'
 
 const STARTING_EQUATION = '2x/2 + 4x/2 = 100'
 const makePrintableMath = (str: string) => {
@@ -34,23 +34,6 @@ function askQuestion(query: string, rl: readline.Interface): Promise<string> {
     })
   })
 }
-
-
-const ALLOWED_COMMANDS = [
-  // Info
-  'solve',
-
-  // Matching Rules
-  'all', // everything
-  ...ALL_MATH_RULES,
-
-  // Swapping sides
-  'swap',
-
-  // Altering the equation through history
-  'undo',
-  'redo',
-] as const
 
 /**
  * Continuously asks for the command from the user.
@@ -127,7 +110,6 @@ export async function RUN_DEV_MATH_RULE_CLI(startingEquation = STARTING_EQUATION
   }
   await core()
 }
-// RUN_DEV_MATH_RULE_CLI().then(r => console.log('done'))
 
 
 // This code is all bad.. Its all temporary
