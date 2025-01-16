@@ -1,23 +1,11 @@
 import readline from 'node:readline'
 import { EquationCommander } from '~/equationCommander/index'
-import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
-import { parseText } from '~/newServices/nodeServices/parseText'
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { sloppilyGetRuleBasedOnUserString } from '~/types/changeType/MathRuleTypes'
-import { veryCleanEquation } from '~/util/stringUtils'
+import { cleanEquationForShow } from '~/util/stringUtils'
 
 const STARTING_EQUATION = '2x/2 + 4x/2 = 100'
-const makePrintableMath = (str: string) => {
-  const core = (str: string) => veryCleanEquation(myNodeToString(parseText((str))))
-  if (str.includes('=')) {
-    const [left, right] = str.split('=')
-    return `${core(left)} = ${core(right)}`
-  }
-  else {
-    return core(str)
-  }
-}
 
 // eslint-disable-next-line node/prefer-global/process
 const _process = process
@@ -43,7 +31,7 @@ export async function RUN_DEV_MATH_RULE_CLI(startingEquation = STARTING_EQUATION
   async function core() {
     const updatedEquation = equationCommander.getValue()
 
-    console.log(`Current equation is now: ${makePrintableMath(updatedEquation)}`)
+    console.log(`Current equation is now: ${cleanEquationForShow(updatedEquation)}`)
     const command = await askQuestion('input command (or "exit" to quit): ', rl)
     const lower = command.trim().toLowerCase()
     const mathRuleBasedOnTheString = sloppilyGetRuleBasedOnUserString(lower)
@@ -224,8 +212,8 @@ function makeLRString(obj: { left: ProcessedStep, right: ProcessedStep, newTo: s
     return `Operation: Applying ${changeTypeLeft} to the left side and ${changeTypeRight} to the right side`
   }
 
-  const leftTo = makePrintableMath(start.left.to)
-  const rightTo = makePrintableMath(start.right.to)
+  const leftTo = cleanEquationForShow(start.left.to)
+  const rightTo = cleanEquationForShow(start.right.to)
   const operation = getOperationMessage(start)
   const equation = `New Equation: ${leftTo} = ${rightTo}`
 
