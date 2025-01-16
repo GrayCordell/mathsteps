@@ -18,7 +18,7 @@ export type AMathRule = typeof ALL_MATH_RULES[number]
 
 
 // These are supposed to be "Math Rule" Mappings to specific ChangeTypes.
-export const SAMPLE_RULE_MAPPINGS: Record<AMathRule, AChangeType[]> = {
+export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> = {
   Addition_Property_Of_Equality: [
     'EQ_ADD_TERM_BY_ADDITION',
     'EQ_REMOVE_TERM_BY_ADDITION',
@@ -64,17 +64,14 @@ export const SAMPLE_RULE_MAPPINGS: Record<AMathRule, AChangeType[]> = {
   ],
 } as const
 
-export function getAllMathRuleChangeTypes(): AChangeType[] {
-  return Object.values(SAMPLE_RULE_MAPPINGS).flat()
-}
 export const getMathRuleForChangeType = (changeType: AChangeTypeCore): AMathRule | null => {
-  const entries = objectEntries(SAMPLE_RULE_MAPPINGS)
+  const entries = objectEntries(MATH_RULE_TO_CHANGE_TYPE_MAPPING)
   const foundRuleEntry = entries.find(([rule, changeTypes]) => changeTypes.includes(changeType))
   if (!foundRuleEntry)
     return null
   return foundRuleEntry[0] // return the rule only(not the changeTypes)
 }
-export const getChangesTypesForRule = (rule: AMathRule): AChangeType[] => SAMPLE_RULE_MAPPINGS[rule]
+export const getChangesTypesForRule = (rule: AMathRule): AChangeType[] => MATH_RULE_TO_CHANGE_TYPE_MAPPING[rule]
 
 export const sloppilyGetRuleBasedOnUserString = (userString: string): AMathRule | null | 'all' => {
   userString = userString.toLowerCase().trim().replace(/\s+/g, ' ')
