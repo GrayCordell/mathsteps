@@ -24,6 +24,7 @@ export class EquationCommander {
   getValue = (): string => this.equationHistory.getValue()
   isSolved = (): boolean => areEquationsEqual(this.finalCorrectAnswer, this.getValue()) // TODO add cache
   getHistory = (): string[] => this.equationHistory.getHistory()
+  getFuture = (): string[] => this.equationHistory.getFuture()
   swap() {
     const currentEquation = this.getValue()
     const [left, right] = currentEquation.split('=')

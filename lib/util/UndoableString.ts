@@ -24,6 +24,10 @@ export class UndoableString {
     return this.history
   }
 
+  public getFuture(): string[] {
+    return this.future
+  }
+
   // Update the value and save the current state to the history
   public setValue(newValue: string): void {
     this.history.push(this.value) // Save current value to history
