@@ -1,5 +1,5 @@
 import type { AChangeType, AChangeTypeCore, AChangeTypeGroup, AChangeTypeOnly, AChangeTypeWithCase, AEquationChangeType, AMistakeTypeOnly, EQUATION_CHANGE_TYPES, EquationChangeTypes } from './types/changeType/ChangeTypes'
-import type { AMathRule, getChangesTypesForRule, getMathRuleForChangeType } from './types/changeType/MathRuleTypes'
+import type { ALL_MATH_RULES, AMathRule, getChangesTypesForRule, getMathRuleForChangeType } from './types/changeType/MathRuleTypes'
 import math from '~/config'
 import { convertTextToTeX, isOkAsSymbolicExpression, parseText, print, printAsTeX, registerPreprocessorAfterParse, registerPreprocessorBeforeParse } from '~/newServices/nodeServices/parseText'
 import type { ProcessedEquation } from '~/simplifyExpression/equationEvaluation'
@@ -26,9 +26,9 @@ export type{
   AMistakeTypeOnly,
   ProcessedEquation,
   StepInfo,
-
 }
 export {
+  ALL_MATH_RULES,
   assessUserEquationStep,
   assessUserEquationSteps,
   assessUserStep,
