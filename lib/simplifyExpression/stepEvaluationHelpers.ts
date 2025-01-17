@@ -2,8 +2,8 @@ import type { MathNode } from 'mathjs'
 import mathsteps from '~/index'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString.js'
+import { cleanString } from '~/util/cleanString'
 import { EqualityCache } from '~/util/equalityCache'
-import { cleanString } from '~/util/stringUtils.js'
 
 const nextStepEqCache = new EqualityCache()
 

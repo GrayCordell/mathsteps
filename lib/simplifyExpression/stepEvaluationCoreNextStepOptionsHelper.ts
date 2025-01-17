@@ -10,7 +10,7 @@ import { getAddRemoveTermTypeBasedOnOp } from '~/types/changeType/changeAndMista
 import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import { filterUniqueValues } from '~/util/arrayUtils'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 
 const { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
 

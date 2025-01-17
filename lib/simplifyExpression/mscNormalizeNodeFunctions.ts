@@ -3,8 +3,8 @@ import { OperatorNode, ParenthesisNode } from 'mathjs'
 import { ConstantNode, isConstantNode, isOperatorNode, isSymbolNode } from '~/config'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { parseText } from '~/newServices/nodeServices/parseText'
+import { cleanString } from '~/util/cleanString'
 import { makeExtendedRegExp } from '~/util/regex'
-import { cleanString } from '~/util/stringUtils'
 
 /**
  * Converts instances of "number * (var / number)" to "(number * var) / number" at all depths

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import mathsteps, { myNodeToString } from '~/index'
 
 import { assessUserSteps } from '~/simplifyExpression/stepEvaluationCore'
+import { cleanString } from '~/util/cleanString'
 import { RANDOM_EXPRESSIONS } from '~/util/randomExpression'
-import { cleanString } from '~/util/stringUtils'
 
 export function getNodeStepsToSolveExpression(userStep: string) {
   userStep = cleanString(userStep)

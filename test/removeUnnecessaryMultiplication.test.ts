@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { parseText } from '~/newServices/nodeServices/parseText'
 import { removeUnnecessaryMultiplications } from '~/newServices/nodeServices/removeUnnecessaryMultiplications'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 
 describe('removeUnnecessaryMultiplications', () => {
   const testCases: { input: string, expected: string }[] = [

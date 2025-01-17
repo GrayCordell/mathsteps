@@ -6,7 +6,7 @@ import { getAnswerFromEquation } from '~/simplifyExpression/stepEvaluationHelper
 import { isOpEqual, isRemoveTermChangeType } from '~/types/changeType/changeAndMistakeUtils'
 import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
 import type { NumberOp } from '~/types/NumberOp'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 
 const expressionEquals = (exp0: string, exp1: string): boolean => areExpressionEqual(exp0, exp1, getValidStepEqCache())
 

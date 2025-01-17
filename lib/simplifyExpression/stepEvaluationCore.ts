@@ -14,7 +14,7 @@ import type { AChangeType, AEquationChangeType } from '~/types/changeType/Change
 import { EQUATION_ADD_AND_REMOVE_TERMS } from '~/types/changeType/ChangeTypes'
 import type { NumberOp } from '~/types/NumberOp'
 import { filterUniqueValues } from '~/util/arrayUtils'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 
 const countZero = (str: string) => (str.match(/\b0\b/g) || []).length
 

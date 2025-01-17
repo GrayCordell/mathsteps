@@ -6,7 +6,7 @@ import { removeCaseNumberFromRuleId } from '~/newServices/ruleHelper'
 import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { objectKeys } from '~/types/ObjectKeys'
 import { filterUniqueValues } from '~/util/arrayUtils'
-import { cleanString } from '~/util/stringUtils.js'
+import { cleanString } from '~/util/cleanString'
 
 /**
  * @param stepObject

@@ -7,9 +7,9 @@ import { removeImplicitMultiplicationFromNode } from '~/newServices/treeUtil'
 import { kemuFlatten, kemuNormalizeConstantNodes } from '~/simplifyExpression/kemuSimplifyCommonServices.js'
 import { convertAll1xToX, convertAllSimpleFractionsToDecimals, convertNumParVarDivNumToNumVarDivNum, makePlusMinusMinusAndReturnString, normalizeNegativesAndFractions } from '~/simplifyExpression/mscNormalizeNodeFunctions'
 import { areArraysEqualUnordered } from '~/util/arrayUtils'
+import { cleanString } from '~/util/cleanString'
 import type { EqualityCache } from '~/util/equalityCache'
 import { makeExtendedRegExp, RGFraction } from '~/util/regex'
-import { cleanString } from '~/util/stringUtils.js'
 import kemuSortArgs from '../simplifyExpression/kemuSortArgs.js'
 
 export const getNodeStepsToSolveExpression = (userStep: string) => (mathsteps.simplifyExpression({

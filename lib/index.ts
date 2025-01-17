@@ -12,8 +12,8 @@ import { assessUserStep, assessUserSteps } from './simplifyExpression/stepEvalua
 import { changeTypeIsInGroup, convertAdditionToSubtractionErrorType, convertMistakeOnlyTypeToItsChangeType, doesChangeTypeEqual, getChangeTypeGroups, getEveryChangeIdApplicable, getRootChangeType, isChangeTypeInGroup, isMistakeTypeOnly, isSameRootChangeType } from './types/changeType/changeAndMistakeUtils.js'
 import { ChangeTypes } from './types/changeType/ChangeTypes'
 import { MATH_RULE_TO_CHANGE_TYPE_MAPPING } from './types/changeType/MathRuleTypes'
+import { cleanEquationForShow } from './util/cleanEquationForShow'
 import { printAscii } from './util/print'
-import { cleanEquationForShow } from './util/stringUtils'
 
 export type{
   AChangeType,

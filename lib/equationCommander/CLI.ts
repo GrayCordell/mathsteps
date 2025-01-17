@@ -3,7 +3,7 @@ import { EquationCommander } from '~/equationCommander/index'
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { sloppilyGetRuleBasedOnUserString } from '~/types/changeType/MathRuleTypes'
-import { cleanEquationForShow } from '~/util/stringUtils'
+import { cleanEquationForShow } from '~/util/cleanEquationForShow'
 
 const STARTING_EQUATION = '2x/2 + 4x/2 = 100'
 

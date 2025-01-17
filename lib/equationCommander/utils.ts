@@ -6,7 +6,7 @@ import type { EqLRStep, EqProcessedSteps } from '~/equationCommander/Types'
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import { findAllNextStepOptions } from '~/simplifyExpression/stepEvaluationCoreNextStepOptionsHelper'
 import { isAnOp, isOpEqual } from '~/types/changeType/changeAndMistakeUtils'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 
 export function findMatchingAddRemoveTerms(
   eqProcessedStep: EqProcessedSteps,

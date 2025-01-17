@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { myNodeToString } from '~/newServices/nodeServices/myNodeToString'
 import { convertNumParVarDivNumToNumVarDivNum } from '~/simplifyExpression/mscNormalizeNodeFunctions'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 
 describe('convertNumParVarDivNumToNumVarDivNum function test', () => {
   it('should convert \'3 * (x / 4)\' to \'(3 * x) / 4\'', () => {

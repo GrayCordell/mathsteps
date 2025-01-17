@@ -1,6 +1,6 @@
 import type { AChangeType, AChangeTypeGroup, CHANGE_TYPE_GROUPS } from '~/types/changeType/ChangeTypes'
 import { changeGroupMappings, mapMistakeTypeToChangeTypeError, mapWordsToGroups, MISTAKE_ONLY } from '~/types/changeType/ChangeTypes'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 
 export const getRootChangeType = <T extends { includes: any, split?: any } | null>(changeType_: T) =>
   (changeType_ && changeType_?.includes('__CASE_'))

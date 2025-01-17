@@ -8,7 +8,7 @@ import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
 import { getAddRemoveTermTypeBasedOnOp, getReverseOp } from '~/types/changeType/changeAndMistakeUtils'
 
 import { filterUniqueValues } from '~/util/arrayUtils'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 
 // type ExpressionEquals = (exp0: MathNode, exp1: MathNode) => boolean
 // Helper function to determine if an expression is negative

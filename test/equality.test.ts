@@ -2,7 +2,7 @@ import type { MathNode } from 'mathjs'
 import { describe, expect, it } from 'vitest'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
 import { parseText } from '~/newServices/nodeServices/parseText'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 
 describe('equalityTest', () => {
   const testCases: { input: string, expected: string }[] = [

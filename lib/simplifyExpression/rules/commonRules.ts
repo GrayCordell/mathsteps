@@ -2,7 +2,7 @@ import math from '~/config'
 import { createFunctionForEveryRule } from '~/newServices/ruleHelper'
 import { commonRuleMistakes } from '~/simplifyExpression/mistakes/commonRulesMistakes'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
-import { cleanString } from '~/util/stringUtils'
+import { cleanString } from '~/util/cleanString'
 /* eslint-disable antfu/consistent-list-newline */
 import Node from '../../node/index.js'
 import { applyRules } from '../kemuSimplifyCommonServices.js'
