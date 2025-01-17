@@ -12,6 +12,7 @@ export const ALL_MATH_RULES = [
   'Combining_Like_Terms_Fractions',
   'Simplify_Signs',
   'Cross_Multiply',
+  'Remove_Zeros',
 ] as const
 
 export type AMathRule = typeof ALL_MATH_RULES[number]
@@ -56,12 +57,9 @@ export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> 
     'KEMU_REMOVE_DOUBLE_FRACTION',
     'REDUCE_ZERO_NUMERATOR',
   ],
-  Simplify_Signs: [
-    'SIMPLIFY_SIGNS',
-  ],
-  Cross_Multiply: [
-    'EQ_CROSS_MULTIPLY',
-  ],
+  Simplify_Signs: ['SIMPLIFY_SIGNS'],
+  Cross_Multiply: ['EQ_CROSS_MULTIPLY'],
+  Remove_Zeros: ['REMOVE_ADDING_ZERO'],
 } as const
 
 export const getMathRuleForChangeType = (changeType: AChangeTypeCore): AMathRule | null => {
@@ -96,6 +94,8 @@ export const sloppilyGetRuleBasedOnUserString = (userString: string): AMathRule 
     return 'Simplify_Signs'
   if (userString.includes('cross'))
     return 'Cross_Multiply'
+  if (userString.includes('zero'))
+    return 'Remove_Zeros'
   if (userString === 'all')
     return 'all'
   return null
