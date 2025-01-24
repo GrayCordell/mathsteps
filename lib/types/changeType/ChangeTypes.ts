@@ -4,7 +4,13 @@
  * Check _SharedChange, ALL_CHANGE_TYPES, CHANGE_TYPE_GROUPS,changeGroupMappings, and mapWordsToGroups when adding changes. TODO make easier to add changes.(I tried once and it made typescript slow.)
  */
 
-// Define all change types in a const array. If the new ChangeType is in multiple places, then add it to the shared object here. (this is just for easier tracking)
+
+
+
+/**
+ * Define all change types in a const array. If the new ChangeType is in multiple places, then add it to the shared object here. (this is just for easier tracking)
+ * Its kind of unnecessary, but I wanted to see what rules where used in multiple places.
+ */
 const _SHARED_CHANGE = {
   SIMPLIFY_ARITHMETIC_MULTIPLY: 'SIMPLIFY_ARITHMETIC__MULTIPLY',
   SIMPLIFY_ARITHMETIC__DIVIDE: 'SIMPLIFY_ARITHMETIC__DIVIDE', // <-- THIS IS A UNIQUE CASE NOT USED IN THE RULES ENGINE. Its not actually used in a rule like the other SIMPLIFY_ARITHMETIC__* types
@@ -38,6 +44,10 @@ const _SHARED_MISTAKE = {
   PEMDAS__ADD_INSTEAD_OF_MULTIPLY: 'PEMDAS__ADD_INSTEAD_OF_MULTIPLY',
 } as const
 
+/**
+ * Mistake types only. (not change types)
+ * Mistake types are mistakes we found in mistake detection. At the current moment, Mistake detection only is checked if one side/expression is changed.
+ */
 export const MISTAKE_ONLY = {
   ..._SHARED_MISTAKE,
   PEMDAS__ADD_INSTEAD_OF_MULTIPLY: 'PEMDAS__ADD_INSTEAD_OF_MULTIPLY',
@@ -58,17 +68,28 @@ export const MISTAKE_ONLY = {
 } as const
 
 
+/** equations only. (not expressions)
+ * "Remove terms" are terms that are added to a side in an attempt to "remove" a term from a side.
+ * "Add terms" are terms that are added to a side because they are removing from the other.
+ * In an equation there should be 1 "add" and 1 "remove" term when doing anything to both sides.
+ * We currently do not handle  multiplying|dividing|adding|subtracting on both sides by *random* numbers.
+ * Ex. 2x + 3 = 5x + 7 -> 2x + 3 - 2x = 5x + 7 - 2x
+ * Action: Remove 2x from both sides
+ * Left: -2x changeType: EQ_REMOVE_TERM_BY_SUBTRACTION
+ * Right: -2x changeType: EQ_ADD_TERM_BY_SUBTRACTION
+ *
+ */
 export const EQUATION_ADD_AND_REMOVE_TERMS = [
-  'EQ_REMOVE_TERM', // equations only. (not expressions)
-  'EQ_ADD_TERM', // equations only.
-  'EQ_ADD_TERM_BY_ADDITION', // equations only.
-  'EQ_ADD_TERM_BY_SUBTRACTION', // equations only.
-  'EQ_ADD_TERM_BY_MULTIPLICATION', // equations only.
-  'EQ_ADD_TERM_BY_DIVISION', // equations only.
-  'EQ_REMOVE_TERM_BY_ADDITION', // equations only.
-  'EQ_REMOVE_TERM_BY_SUBTRACTION', // equations only.
-  'EQ_REMOVE_TERM_BY_MULTIPLICATION', // equations only.
-  'EQ_REMOVE_TERM_BY_DIVISION', // equations only.
+  'EQ_REMOVE_TERM', // TODO remove?
+  'EQ_ADD_TERM', // TODO remove?
+  'EQ_ADD_TERM_BY_ADDITION',
+  'EQ_ADD_TERM_BY_SUBTRACTION',
+  'EQ_ADD_TERM_BY_MULTIPLICATION',
+  'EQ_ADD_TERM_BY_DIVISION',
+  'EQ_REMOVE_TERM_BY_ADDITION',
+  'EQ_REMOVE_TERM_BY_SUBTRACTION',
+  'EQ_REMOVE_TERM_BY_MULTIPLICATION',
+  'EQ_REMOVE_TERM_BY_DIVISION',
 ] as const
 
 
@@ -97,7 +118,7 @@ export const CHANGE_TYPE_ONLY = [
   'RESOLVE_DOUBLE_MINUS',
   'SIMPLIFY_SIGNS',
   'COLLECT_AND_COMBINE_LIKE_TERMS',
-  'KEMU_REMOVE_UNNEDED_PARENTHESIS',
+  //'KEMU_REMOVE_UNNEDED_PARENTHESIS', UNUSED? Removed
   'KEMU_ORIGINAL_EXPRESSION',
   'ABSOLUTE_VALUE',
   'UNKNOWN',
@@ -141,7 +162,14 @@ export type AChangeTypeCore = typeof ALL_CHANGE_TYPES[number] // ex. 'SIMPLIFY_A
 export type AChangeTypeWithCase = `${AChangeTypeCore}__CASE_${number}` // ex. 'SIMPLIFY_ARITHMETIC__OP__CASE_1'
 export type AChangeType = AChangeTypeCore | AChangeTypeWithCase// ex. 'SIMPLIFY_ARITHMETIC__OP' | 'SIMPLIFY_ARITHMETIC__OP__CASE_1'
 export const ChangeTypes: { [K in AChangeTypeCore]: K } = Object.fromEntries(ALL_CHANGE_TYPES.map(k => [k, k])) as { [K in AChangeTypeCore]: K }
+
+
+/**
+ * Change type groups are not used anywhere right now. We provide some exports for easier mapping to these changeTypes via these "groups".
+ * We have a new concept called "MathRuleTypes" that provides mappings for "MathRules". Neither mappings are not really used directly anywhere in the repo, but are useful for other projects.
+ */
 export const CHANGE_TYPE_GROUPS = [
+  'OriginalExpression',
   'SimplifyArithmetic',
   'AdditionRules',
   'SubtractionRules',
@@ -164,6 +192,10 @@ export const CHANGE_TYPE_GROUPS = [
 ] as const
 export type AChangeTypeGroup = typeof CHANGE_TYPE_GROUPS[number]
 export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
+  OriginalExpression: [
+    'KEMU_ORIGINAL_EXPRESSION',
+  ],
+
   SimplifyArithmetic: [
     _SHARED_CHANGE.SIMPLIFY_ARITHMETIC__ADD,
     _SHARED_CHANGE.SIMPLIFY_ARITHMETIC__DIVIDE, // <-- THIS IS A UNIQUE CASE NOT USED IN THE RULES ENGINE. Its not actually used in a rule like the other SIMPLIFY_ARITHMETIC__* types
@@ -260,8 +292,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
     'RESOLVE_DOUBLE_MINUS',
     'SIMPLIFY_SIGNS',
     'COLLECT_AND_COMBINE_LIKE_TERMS',
-    'KEMU_REMOVE_UNNEDED_PARENTHESIS',
-    'KEMU_ORIGINAL_EXPRESSION',
+    //'KEMU_REMOVE_UNNEDED_PARENTHESIS', UNUSED? Removed
   ],
 
   AbsoluteValueRules: ['ABSOLUTE_VALUE'],
