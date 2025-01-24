@@ -1,7 +1,7 @@
 {
   "name": "mathsteps-experimental-fork",
   "description": "Step by step math solutions. Experimental Fork",
-  "version": "0.8.9",
+  "version": "0.9.0",
   "type": "module",
   "private": false,
   "engines": {
@@ -31,7 +31,7 @@
     "dev": "vite --port 3333",
     "build": "vite build --emptyOutDir",
     "prepublishOnly": "pnpm build",
-    "release": "bumpp --no-push && npm publish",
+    "release": "pnpm build && bumpp --no-push && npm publish",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
