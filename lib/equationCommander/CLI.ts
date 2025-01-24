@@ -23,6 +23,14 @@ function askQuestion(query: string, rl: readline.Interface): Promise<string> {
   })
 }
 
+const AVAILABLE_ALTER_ACTION_COMMANDS = ['back', 'undo', 'forward', 'redo', 'swap'] as const
+export type EquationCommanderAlterCommands = typeof AVAILABLE_ALTER_ACTION_COMMANDS[number]
+const isAnEquationCommanderAlterCommand = (command: 'back' | 'undo' | 'forward' | 'redo' | 'swap' | string): boolean => {
+  const lower = command.trim().toLowerCase()
+  return AVAILABLE_ALTER_ACTION_COMMANDS.includes(lower as EquationCommanderAlterCommands)
+}
+
+
 /**
  * Continuously asks for the command from the user.
  */
@@ -45,7 +53,7 @@ export async function RUN_DEV_MATH_RULE_CLI(startingEquation = STARTING_EQUATION
       const message = equationCommander.isSolved() ? 'Correct!' : 'Incorrect'
       console.log(message)
     }
-    else if (equationCommander.isAnAlterCommand(command)) {
+    else if (isAnEquationCommanderAlterCommand(lower)) {
       const lower = command.trim().toLowerCase()
 
       if (lower === 'back' || lower === 'undo') {

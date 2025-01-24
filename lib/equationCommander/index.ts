@@ -1,4 +1,4 @@
-
+// noinspection UnnecessaryLocalVariableJS
 
 import type { EqLRStepWithNewTo } from '~/equationCommander/Types'
 import { findMatchingAddRemoveTerms, findNonAddRemoveRuleMatches, makeEquationProcessSteps, makeStartingLeftAndRightEqSteps } from '~/equationCommander/utils'
@@ -62,25 +62,5 @@ export class EquationCommander {
 
     return matches.filter(match => changeTypesForGivenRule.includes(match.left.changeType) || changeTypesForGivenRule.includes(match.right.changeType))
   }
-
-  // Used for the dev CLI
-  isAnAlterCommand(command: string) {
-    const lower = command.trim().toLowerCase()
-    return lower === 'back' || lower === 'undo' || lower === 'forward' || lower === 'redo' || lower.includes('swap')
-  }
-
-  // Used for the dev CLI
-  callEquationAlterCommandBasedOnString(command: string) {
-    const lower = command.trim().toLowerCase()
-    if (lower === 'back' || lower === 'undo')
-      this.undo()
-    else if (lower === 'forward' || lower === 'redo')
-      this.redo()
-    else if (lower.includes('swap'))
-      this.swap()
-    else
-      console.warn('Invalid command')
-  }
 }
 export default EquationCommander
-
