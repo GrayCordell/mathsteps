@@ -54,6 +54,7 @@ export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> 
     'MULTIPLY_BY_ZERO',
     'REMOVE_ADDING_ZERO',
     'REMOVE_MULTIPLYING_BY_ONE',
+    'DISTRIBUTE_NEGATIVE_ONE',
     'CANCEL_TERMS_FOR_ADDITION',
   ],
   Combining_Like_Terms_Fractions: [
