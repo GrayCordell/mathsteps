@@ -121,7 +121,14 @@ export function findAllOperationsThatCanBeRemoved(
   termOps = filterUniqueValues(termOps, (a, b) => a.term === b.term && a.op === b.op)
 
 
-  const newTermStrings = termOps.map(termOp => `(${fromNodeString}) ${getReverseOp(termOp.op)} (${termOp.term})`)
+  const newTermStrings = termOps
+  .map(termOp =>{
+    const fn = (str: string) => ['+', '-', '*', '/','^','(',')'].some(op => str.includes(op))
+    let tempFrom = fn(fromNodeString) ? `(${fromNodeString})` : fromNodeString  // ex (fromTerm+fromTerm) or fromTerm
+    const tempTerm = fn(termOp.term) ? `(${termOp.term})` : termOp.term // ex. (term+term) or term
+    return `${tempFrom} ${getReverseOp(termOp.op)} ${tempTerm}` // ex. (previous expression) - (term)
+  })
+
 
 
   return termOps
