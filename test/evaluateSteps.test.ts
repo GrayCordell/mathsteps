@@ -8,7 +8,7 @@ import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 // @ts-ignore --- I don't know why this needs to be ignored.
 import { assertSpecifiedValues } from './util/assertHelpers'
 
-const { CANCEL_TERMS, COLLECT_AND_COMBINE_LIKE_TERMS, KEMU_DECIMAL_TO_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, REARRANGE_COEFF, REMOVE_ADDING_ZERO, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
+const { CANCEL_TERMS_FOR_FRACTION, COLLECT_AND_COMBINE_LIKE_TERMS, KEMU_DECIMAL_TO_FRACTION, MULTIPLY_BY_ZERO, MULTIPLY_FRACTIONS, REARRANGE_COEFF, REMOVE_ADDING_ZERO, REMOVE_MULTIPLYING_BY_ONE, SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__MULTIPLY, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
 const { ADDED_INSTEAD_OF_MULTIPLIED, ADDED_INSTEAD_OF_SUBTRACTED, ADDED_ONE_TOO_MANY, MULTIPLIED_INSTEAD_OF_ADDED, MULTIPLIED_ONE_TOO_MANY, SUBTRACTED_ONE_TOO_FEW, PEMDAS__ADD_INSTEAD_OF_MULTIPLY, SUBTRACTED_ONE_TOO_MANY } = ChangeTypes
 
 const cleanMath = (str: string) => str?.replace('_', '').replace(' ', '').replace('[', '').replace(']', '').replace('\'', '').replace(`"`, '').replace('`', '')
@@ -702,7 +702,7 @@ describe('multiplication Mistakes', () => {
           attemptedChangeType: MULTIPLY_FRACTIONS,
           availableChangeTypes: [
             MULTIPLY_FRACTIONS,
-            CANCEL_TERMS,
+            CANCEL_TERMS_FOR_FRACTION,
             REARRANGE_COEFF,
           ],
         }],

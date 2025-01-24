@@ -153,7 +153,7 @@ describe('assessUserEquationStep', () => {
         {
           overallStepEval: { reachesOriginalAnswer: true },
           left: [
-            generateStep('4x+(8/2)', '4x+4', 'CANCEL_TERMS', { attemptedToGetTo: '4x+4' }),
+            generateStep('4x+(8/2)', '4x+4', 'CANCEL_TERMS_FOR_FRACTION', { attemptedToGetTo: '4x+4' }),
           ],
           right: [
             generateNoChangeStep('5'),
@@ -258,7 +258,7 @@ describe('assessUserEquationStep', () => {
           },
           left: [
             { from: '2x + 14', to: '(2x+14) - (2x)', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM_BY_SUBTRACTION' },
-            { from: '(2x+14) - (2x)', to: '14', isValid: true, attemptedChangeType: 'CANCEL_TERMS' },
+            { from: '(2x+14) - (2x)', to: '14', isValid: true, attemptedChangeType: 'CANCEL_TERMS_FOR_FRACTION' },
           ],
           right: [
             { from: '5x - 2', to: '5x - 2 + -2x', isValid: true, attemptedChangeType: 'EQ_ADD_TERM_BY_SUBTRACTION' },
@@ -284,7 +284,7 @@ describe('assessUserEquationStep', () => {
           }],
           right: [
             { from: '3x', to: '3x/3', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM_BY_DIVISION' },
-            { from: '3x/3', to: 'x', isValid: true, attemptedChangeType: 'CANCEL_TERMS' },
+            { from: '3x/3', to: 'x', isValid: true, attemptedChangeType: 'CANCEL_TERMS_FOR_FRACTION' },
           ],
         },
         // Step 5: Flip sides
@@ -346,7 +346,7 @@ describe('assessUserEquationStep', () => {
             {
               from: '3x/4*4+8',
               to: '3x+8',
-              attemptedChangeType: 'CANCEL_TERMS',
+              attemptedChangeType: 'CANCEL_TERMS_FOR_FRACTION',
             },
           ],
           right: [
@@ -370,11 +370,11 @@ describe('assessUserEquationStep', () => {
         {
           left: [
             { from: '3x', to: '3x/3', attemptedChangeType: 'EQ_REMOVE_TERM_BY_DIVISION' },
-            { from: '3x/3', to: 'x', attemptedChangeType: 'CANCEL_TERMS' },
+            { from: '3x/3', to: 'x', attemptedChangeType: 'CANCEL_TERMS_FOR_FRACTION' },
           ],
           right: [
             { from: '12', to: '12/3', attemptedChangeType: 'EQ_ADD_TERM_BY_DIVISION' },
-            { from: '12/3', to: '4', attemptedChangeType: 'CANCEL_TERMS' },
+            { from: '12/3', to: '4', attemptedChangeType: 'CANCEL_TERMS_FOR_FRACTION' },
           ],
         },
       ],
@@ -405,8 +405,8 @@ describe('assessUserEquationStep', () => {
           left: [
             { from: '3x/4 + 2/4', to: '(3x/4 + 2/4) * 4', attemptedChangeType: 'EQ_REMOVE_TERM_BY_MULTIPLICATION' },
             { from: '(3x/4 + 2/4) * 4', to: '3x/4 * 4 + 2/4 * 4', attemptedChangeType: 'KEMU_DISTRIBUTE_MUL_OVER_ADD' },
-            { from: '3x/4 * 4 + 2/4 * 4', to: '3x/4*4+2', attemptedChangeType: 'CANCEL_TERMS' },
-            { from: '3x/4*4+2', to: '3x + 2', attemptedChangeType: 'CANCEL_TERMS' },
+            { from: '3x/4 * 4 + 2/4 * 4', to: '3x/4*4+2', attemptedChangeType: 'CANCEL_TERMS_FOR_FRACTION' },
+            { from: '3x/4*4+2', to: '3x + 2', attemptedChangeType: 'CANCEL_TERMS_FOR_FRACTION' },
           ],
           right: [
             { from: '5', to: '5 * 4', attemptedChangeType: 'EQ_ADD_TERM_BY_MULTIPLICATION' },
@@ -442,7 +442,7 @@ describe('assessUserEquationStep', () => {
           },
           left: [
             generateStep('3x', '3x/3', 'EQ_REMOVE_TERM_BY_DIVISION', { isValid: false }),
-            generateStep('3x/3', 'x', 'CANCEL_TERMS'),
+            generateStep('3x/3', 'x', 'CANCEL_TERMS_FOR_FRACTION'),
           ],
           right: [
             generateStep('3', '3-3', 'EQ_REMOVE_TERM_BY_SUBTRACTION', { isValid: false }),
