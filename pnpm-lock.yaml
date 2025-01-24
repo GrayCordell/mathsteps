@@ -45,6 +45,9 @@ importers:
       eslint-plugin-format:
         specifier: ^0.1.2
         version: 0.1.2(eslint@9.10.0(jiti@1.21.6))
+      eslint-plugin-scoped-construct:
+        specifier: ^0.2.0
+        version: 0.2.0(eslint@9.10.0(jiti@1.21.6))
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1
@@ -1490,6 +1493,11 @@ packages:
     engines: {node: ^18 || >=20}
     peerDependencies:
       eslint: '>=8.44.0'
+
+  eslint-plugin-scoped-construct@0.2.0:
+    resolution: {integrity: sha512-43gDwMre+oPZF4XL0R4AhS3KXL/jzpqnCAk6koajJ2bfIXlhjt9ZPbcAtRz1OS5fYRbLhhkLLpopjrHBkz11rA==}
+    peerDependencies:
+      eslint: '*'
 
   eslint-plugin-toml@0.11.1:
     resolution: {integrity: sha512-Y1WuMSzfZpeMIrmlP1nUh3kT8p96mThIq4NnHrYUhg10IKQgGfBZjAWnrg9fBqguiX4iFps/x/3Hb5TxBisfdw==}
@@ -4613,6 +4621,11 @@ snapshots:
       refa: 0.12.1
       regexp-ast-analysis: 0.7.1
       scslre: 0.3.0
+
+  eslint-plugin-scoped-construct@0.2.0(eslint@9.10.0(jiti@1.21.6)):
+    dependencies:
+      '@antfu/utils': 0.7.10
+      eslint: 9.10.0(jiti@1.21.6)
 
   eslint-plugin-toml@0.11.1(eslint@9.10.0(jiti@1.21.6)):
     dependencies:

@@ -1,8 +1,10 @@
 // @ts-check
 import antfu from '@antfu/eslint-config'
+import scopedPlugin from 'eslint-plugin-scoped-construct'
 // import { FlatCompat } from "@eslint/eslintrc";
 // const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 // const compat = new FlatCompat({ baseDirectory: __dirname });
+
 
 // baseConfig: https://github.com/antfu/eslint-config
 export default antfu(
@@ -78,6 +80,18 @@ export default antfu(
     ],
   },
   {
-
+    plugins: {
+      scoped: scopedPlugin,
+    },
+    rules: {
+      'scoped/enforce-scoped-construct': [
+        'error',
+        {
+          functionName: 'scoped',
+          exceptions: ['console', 'process'],
+          requireFunctionsInScope: true,
+        },
+      ],
+    },
   },
 )
