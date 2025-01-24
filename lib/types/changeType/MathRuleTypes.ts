@@ -53,6 +53,7 @@ export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> 
     'SIMPLIFY_ARITHMETIC__DIVIDE',
     'MULTIPLY_BY_ZERO',
     'REMOVE_ADDING_ZERO',
+    'REMOVE_MULTIPLYING_BY_ONE'
   ],
   Combining_Like_Terms_Fractions: [
     'CANCEL_TERMS',
