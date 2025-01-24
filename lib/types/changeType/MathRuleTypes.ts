@@ -12,7 +12,6 @@ export const ALL_MATH_RULES = [
   'Combining_Like_Terms_Fractions',
   'Simplify_Signs',
   'Cross_Multiply',
-  'Remove_Zeros',
 ] as const
 
 export type AMathRule = typeof ALL_MATH_RULES[number]
@@ -40,12 +39,20 @@ export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> 
     'KEMU_DISTRIBUTE_MUL_OVER_ADD', // and subtract
     'BREAK_UP_FRACTION', // divide over add
   ],
+  /*
+  We use this rule in as an action. Its special because this isn't in available ChangeTypes. We do use something like this for 'swap' action in commander.
+  Symmetric_Property_Of_Equality: [
+    'Does not exist. Its "swap" technically.' //EQ_SWAP_SIDES would make most sense here though.
+  ]
+  * */
   Combining_Like_Terms_Expressions: [
     'COLLECT_AND_COMBINE_LIKE_TERMS',
     'SIMPLIFY_ARITHMETIC__ADD',
     'SIMPLIFY_ARITHMETIC__SUBTRACT',
     'SIMPLIFY_ARITHMETIC__MULTIPLY',
     'SIMPLIFY_ARITHMETIC__DIVIDE',
+    'MULTIPLY_BY_ZERO',
+    'REMOVE_ADDING_ZERO',
   ],
   Combining_Like_Terms_Fractions: [
     'CANCEL_TERMS',
@@ -59,7 +66,6 @@ export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> 
   ],
   Simplify_Signs: ['SIMPLIFY_SIGNS'],
   Cross_Multiply: ['EQ_CROSS_MULTIPLY'],
-  Remove_Zeros: ['REMOVE_ADDING_ZERO'],
 } as const
 
 export const getMathRuleForChangeType = (changeType: AChangeTypeCore): AMathRule | null => {
@@ -94,8 +100,6 @@ export const sloppilyGetRuleBasedOnUserString = (userString: string): AMathRule 
     return 'Simplify_Signs'
   if (userString.includes('cross'))
     return 'Cross_Multiply'
-  if (userString.includes('zero'))
-    return 'Remove_Zeros'
   if (userString === 'all')
     return 'all'
   return null
