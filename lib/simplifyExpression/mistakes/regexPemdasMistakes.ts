@@ -162,10 +162,11 @@ export function mistakeSearches(start: string) {
 
   const pemdasAddBeforeMultMistake = addBeforeMultMistakes[0]
     ? {
-      ...addBeforeMultMistakes[0],
-      mTo: addBeforeMultMistakes,
-    }
+        ...addBeforeMultMistakes[0],
+        mTo: addBeforeMultMistakes,
+      }
     : null
+
 
   /* const pemdasIgnoredParenthesesMistake = ignoredParenthesesMistakes[0]
     ? {
@@ -175,7 +176,7 @@ export function mistakeSearches(start: string) {
     : null */
 
   // Return both types of mistakes
-  return [pemdasAddBeforeMultMistake].filter(mistake => mistake)
+  return [pemdasAddBeforeMultMistake].filter(mistake => mistake) as ProcessedStep[]
 }
 
 // UTILS
