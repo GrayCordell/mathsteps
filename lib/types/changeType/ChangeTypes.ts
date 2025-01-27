@@ -5,8 +5,6 @@
  */
 
 
-
-
 /**
  * Define all change types in a const array. If the new ChangeType is in multiple places, then add it to the shared object here. (this is just for easier tracking)
  * Its kind of unnecessary, but I wanted to see what rules where used in multiple places.
@@ -40,6 +38,7 @@ const _SHARED_CHANGE = {
   CANCEL_TERMS_FOR_ADDITION: 'CANCEL_TERMS_FOR_ADDITION',
   CANCEL_TERMS_FOR_FRACTION: 'CANCEL_TERMS_FOR_FRACTION',
   EQ_CROSS_MULTIPLY: 'EQ_CROSS_MULTIPLY', // in both equation and multiply and fractions
+  EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE: 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE', // in both equation and multiply and fractions
 } as const
 const _SHARED_MISTAKE = {
   PEMDAS__ADD_INSTEAD_OF_MULTIPLY: 'PEMDAS__ADD_INSTEAD_OF_MULTIPLY',
@@ -69,7 +68,8 @@ export const MISTAKE_ONLY = {
 } as const
 
 
-/** equations only. (not expressions)
+/**
+ * equations only. (not expressions)
  * "Remove terms" are terms that are added to a side in an attempt to "remove" a term from a side.
  * "Add terms" are terms that are added to a side because they are removing from the other.
  * In an equation there should be 1 "add" and 1 "remove" term when doing anything to both sides.
@@ -91,6 +91,7 @@ export const EQUATION_ADD_AND_REMOVE_TERMS = [
   'EQ_REMOVE_TERM_BY_SUBTRACTION',
   'EQ_REMOVE_TERM_BY_MULTIPLICATION',
   'EQ_REMOVE_TERM_BY_DIVISION',
+  'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE',
 ] as const
 
 
@@ -119,7 +120,7 @@ export const CHANGE_TYPE_ONLY = [
   'RESOLVE_DOUBLE_MINUS',
   'SIMPLIFY_SIGNS',
   'COLLECT_AND_COMBINE_LIKE_TERMS',
-  //'KEMU_REMOVE_UNNEDED_PARENTHESIS', UNUSED? Removed
+  // 'KEMU_REMOVE_UNNEDED_PARENTHESIS', UNUSED? Removed
   'KEMU_ORIGINAL_EXPRESSION',
   'ABSOLUTE_VALUE',
   'UNKNOWN',
@@ -262,6 +263,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
     _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_AB3_SUB,
     _SHARED_CHANGE.KEMU_SHORT_MULTIPLICATION_ABN_SUB,
     _SHARED_CHANGE.EQ_CROSS_MULTIPLY, // in both equation and multiply and fractions
+    _SHARED_CHANGE.EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE, // in both equation and multiply
   ],
 
   CoefficientSimplificationRules: [
@@ -294,7 +296,7 @@ export const changeGroupMappings: Record<AChangeTypeGroup, AChangeType[]> = {
     'RESOLVE_DOUBLE_MINUS',
     'SIMPLIFY_SIGNS',
     'COLLECT_AND_COMBINE_LIKE_TERMS',
-    //'KEMU_REMOVE_UNNEDED_PARENTHESIS', UNUSED? Removed
+    // 'KEMU_REMOVE_UNNEDED_PARENTHESIS', UNUSED? Removed
   ],
 
   AbsoluteValueRules: ['ABSOLUTE_VALUE'],
@@ -434,6 +436,7 @@ export const EQUATION_CHANGE_TYPES = [
   'EQ_NO_CHANGE',
   //
   'EQ_CROSS_MULTIPLY',
+  'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE',
 ] as const
 export type AEquationChangeType = typeof EQUATION_CHANGE_TYPES[number]
 export const EquationChangeTypes: { [K in AEquationChangeType]: K } = Object.fromEntries(EQUATION_CHANGE_TYPES.map(k => [k, k])) as { [K in AEquationChangeType]: K }

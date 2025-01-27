@@ -3,8 +3,8 @@ import { getValidStepEqCache } from '~/simplifyExpression/equationCache'
 import type { CoreAssessUserStepResult, StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { coreAssessUserStep, processNoHistoryStep, processStep } from '~/simplifyExpression/stepEvaluationCore'
 import { getAnswerFromEquation } from '~/simplifyExpression/stepEvaluationHelpers'
-import { isOpEqual, isRemoveTermChangeType } from '~/types/changeType/changeAndMistakeUtils'
-import type { AChangeType, AEquationChangeType } from '~/types/changeType/ChangeTypes'
+import { isAddTermChangeType, isOpEqual, isRemoveTermChangeType } from '~/types/changeType/changeAndMistakeUtils'
+import type { AEquationChangeType } from '~/types/changeType/ChangeTypes'
 import type { NumberOp } from '~/types/NumberOp'
 import { cleanString } from '~/util/cleanString'
 
@@ -159,7 +159,6 @@ function processEquationInfo(
   userStep: string,
   startingStepAnswer: string,
   startingStepAnswerForEquation: string,
-  logs: { lhsFirstChangeTypesLog: AChangeType[], rhsFirstChangeTypesLog: AChangeType[], lhsFirstFoundToLog: string[], rhsFirstFoundToLog: string[] },
 ): ProcessedEquation {
   const leftFrom = cleanString(previousStep.split('=')[0])
   const rightFrom = cleanString(previousStep.split('=')[1])
@@ -183,20 +182,20 @@ function processEquationInfo(
     const leftHistory = equation.lhs.history.map(step => processStep(step, leftFrom, startingStepAnswer, equation.lhs.history.length))
     const rightHistory = equation.rhs.history.map(step => processStep(step, rightFrom, startingStepAnswer, equation.rhs.history.length))
     // make changeType EQ_SWAP_SIDES
-    leftHistory[0].attemptedChangeType = 'EQ_SWAP_SIDES'
-    leftHistory[0].equationActionType = 'EQ_SWAP_SIDES'
-    rightHistory[0].attemptedChangeType = 'EQ_SWAP_SIDES'
-    rightHistory[0].equationActionType = 'EQ_SWAP_SIDES'
+    // leftHistory[0].attemptedChangeType = equation.equationChangeType
+    // leftHistory[0].equationActionType = equation.equationChangeType
+    // rightHistory[0].attemptedChangeType = equation.equationChangeType
+    // rightHistory[0].equationActionType = equation.equationChangeType
     // make isValid true
-    leftHistory[0].isValid = true
-    rightHistory[0].isValid = true
+    // leftHistory[0].isValid = true
+    // rightHistory[0].isValid = true
     return { left: leftHistory, right: rightHistory, attemptedEquationChangeType: equation.equationChangeType, reachesOriginalAnswer }
   }
   const rightRes = (equation.rhs.history.length === 0 || equation.equationChangeType === 'EQ_NO_CHANGE' || equation.equationChangeType === 'EQ_SIMPLIFY_LHS')
-    ? processNoHistoryStep({ from: rightFrom, to: rightTo, startingStepAnswer, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: 'UNKNOWN', firstChangeTypesLog: logs.rhsFirstChangeTypesLog, firstFoundToLog: logs.rhsFirstFoundToLog })
+    ? processNoHistoryStep({ from: rightFrom, to: rightTo, startingStepAnswer, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: 'UNKNOWN', firstFoundNextStepOptions: equation.rhs.firstFoundNextStepOptions })
     : equation.rhs.history.map(step => processStep(step, rightFrom, startingStepAnswer, equation.rhs.history.length))
   const leftRes = (equation.lhs.history.length === 0 || equation.equationChangeType === 'EQ_NO_CHANGE' || equation.equationChangeType === 'EQ_SIMPLIFY_RHS')
-    ? processNoHistoryStep({ from: leftFrom, to: leftTo, startingStepAnswer, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: 'UNKNOWN', firstChangeTypesLog: logs.lhsFirstChangeTypesLog, firstFoundToLog: logs.lhsFirstFoundToLog })
+    ? processNoHistoryStep({ from: leftFrom, to: leftTo, startingStepAnswer, attemptedToGetTo: 'UNKNOWN', attemptedChangeType: 'UNKNOWN', firstFoundNextStepOptions: equation.rhs.firstFoundNextStepOptions })
     : equation.lhs.history.map(step => processStep(step, leftFrom, startingStepAnswer, equation.lhs.history.length))
 
   if (equation.equationChangeType === 'EQ_SIMPLIFY_BOTH' || equation.equationChangeType === 'EQ_SIMPLIFY_LHS' || equation.equationChangeType === 'EQ_SIMPLIFY_RHS') {
@@ -219,15 +218,9 @@ function processEquationInfo(
 }
 export function assessUserEquationStep(previousUserStep: string, userStep: string, startingStepAnswerForEquation: string): ProcessedEquation {
   // const startingStepAnswer = getAnswerFromEquation(previousUserStep)
-  const logs = {
-    lhsFirstChangeTypesLog: [] as AChangeType[],
-    rhsFirstChangeTypesLog: [] as AChangeType[],
-    lhsFirstFoundToLog: [] as string[],
-    rhsFirstFoundToLog: [] as string[],
-  }
-  const rawAssessedStepOptionsRes = coreAssessUserStepEquation([previousUserStep, userStep], logs)
+  const rawAssessedStepOptionsRes = coreAssessUserStepEquation([previousUserStep, userStep])
   // @ts-expect-error --- TODO get starting answer instead of null
-  return processEquationInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, null, startingStepAnswerForEquation, logs)
+  return processEquationInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, null, startingStepAnswerForEquation)
 }
 export function assessUserEquationSteps(userSteps: string[]): ProcessedEquation[] {
   if (userSteps.length === 0)
@@ -254,7 +247,7 @@ export function assessUserEquationSteps(userSteps: string[]): ProcessedEquation[
 }
 
 
-export function coreAssessUserStepEquation([previousEquationStr, userEquationStr]: [string, string], logs: any): {
+export function coreAssessUserStepEquation([previousEquationStr, userEquationStr]: [string, string]): {
   lhs: CoreAssessUserStepResult
   rhs: CoreAssessUserStepResult
   equationChangeType: AEquationChangeType | undefined
@@ -263,57 +256,94 @@ export function coreAssessUserStepEquation([previousEquationStr, userEquationStr
   const userEquation = { lhs: cleanString(userEquationStr.split('=')[0]), rhs: cleanString(userEquationStr.split('=')[1]) }
 
   // Determine the operation applied to the equation
-  const lhsUnchanged = expressionEquals(previousEquation.lhs, userEquation.lhs)
-  const rhsUnchanged = expressionEquals(previousEquation.rhs, userEquation.rhs)
+  const lhsChanged = !expressionEquals(previousEquation.lhs, userEquation.lhs)
+  const lhsUnchanged = !lhsChanged
+  const rhsChanged = !expressionEquals(previousEquation.rhs, userEquation.rhs)
+  const rhsUnchanged = !rhsChanged
+  const lhsOnlyChanged = lhsChanged && !rhsChanged
+  const rhsOnlyChanged = rhsChanged && !lhsChanged
 
-  // Case 0 - No changes
+
+  const lhsRes = lhsOnlyChanged
+    ? coreAssessUserStep([previousEquation.lhs, userEquation.lhs])
+    : coreAssessUserStep([previousEquation.lhs, userEquation.lhs], previousEquation.rhs)
+  const rhsRes = rhsOnlyChanged
+    ? coreAssessUserStep([previousEquation.rhs, userEquation.rhs]) // previousEquation.lhs <- Not included because its an expression if we are only changing one side
+    : coreAssessUserStep([previousEquation.rhs, userEquation.rhs], previousEquation.lhs) // pass in the other side to allow for equation change types)
+  // Case 0: No changes
   if (lhsUnchanged && rhsUnchanged) {
     return {
-      lhs: { history: [] },
-      rhs: { history: [] },
+      lhs: lhsRes,
+      rhs: rhsRes,
       equationChangeType: 'EQ_NO_CHANGE',
     }
   }
 
   // Case 1: Swapping sides
   if (
-    (!lhsUnchanged && !rhsUnchanged)
+    (lhsChanged && rhsChanged)
     && expressionEquals(previousEquation.lhs, userEquation.rhs)
     && expressionEquals(previousEquation.rhs, userEquation.lhs)
   ) {
     return {
-      lhs: { history: [{ to: previousEquation.rhs, from: previousEquation.lhs, changeType: 'EQ_SWAP_SIDES', attemptedChangeType: 'EQ_SWAP_SIDES', isMistake: false, availableChangeTypes: [], attemptedToGetTo: previousEquation.rhs, allPossibleCorrectTos: [] }] },
-      rhs: { history: [{ to: previousEquation.lhs, from: previousEquation.rhs, changeType: 'EQ_SWAP_SIDES', attemptedChangeType: 'EQ_SWAP_SIDES', isMistake: false, availableChangeTypes: [], attemptedToGetTo: previousEquation.lhs, allPossibleCorrectTos: [] }] },
+      lhs: {
+        history:
+          [
+            {
+              to: previousEquation.rhs,
+              attemptedToGetTo: previousEquation.rhs,
+              from: previousEquation.lhs,
+              changeType: 'EQ_SWAP_SIDES',
+              attemptedChangeType: 'EQ_SWAP_SIDES',
+              isMistake: false,
+              availableChangeTypes: lhsRes.firstFoundNextStepOptions?.[0]?.availableChangeTypes || [],
+              allPossibleCorrectTos: lhsRes.firstFoundNextStepOptions.map(step => step.to),
+            },
+          ],
+        firstFoundNextStepOptions: lhsRes.firstFoundNextStepOptions,
+      },
+      rhs: {
+        history: [
+          {
+            to: previousEquation.lhs,
+            attemptedToGetTo: previousEquation.lhs,
+            from: previousEquation.rhs,
+            changeType: 'EQ_SWAP_SIDES',
+            attemptedChangeType: 'EQ_SWAP_SIDES',
+            isMistake: false,
+            availableChangeTypes: rhsRes.firstFoundNextStepOptions?.[0]?.availableChangeTypes || [],
+            allPossibleCorrectTos: rhsRes.firstFoundNextStepOptions.map(step => step.to),
+          },
+        ],
+        firstFoundNextStepOptions: rhsRes.firstFoundNextStepOptions,
+      },
       equationChangeType: 'EQ_SWAP_SIDES',
     }
   }
 
-  function simplifySideCases(equationChangeType: 'EQ_SIMPLIFY_LHS' | 'EQ_SIMPLIFY_RHS') {
-    const rhsRes = coreAssessUserStep([previousEquation.rhs, userEquation.rhs], logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog)
-    const lhsRes = coreAssessUserStep([previousEquation.lhs, userEquation.lhs], logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog)
-    return {
-      lhs: lhsRes,
-      rhs: rhsRes,
-      equationChangeType,
-    }
-  }
-
   // Case 2 & 3: Simplifying one side
-  if (!lhsUnchanged && rhsUnchanged) {
-    return simplifySideCases('EQ_SIMPLIFY_LHS')
+  if (lhsOnlyChanged) {
+    return { lhs: lhsRes, rhs: rhsRes, equationChangeType: 'EQ_SIMPLIFY_LHS' }
   }
-  else if (lhsUnchanged && !rhsUnchanged) {
-    return simplifySideCases('EQ_SIMPLIFY_RHS')
+  else if (rhsOnlyChanged) {
+    return { lhs: lhsRes, rhs: rhsRes, equationChangeType: 'EQ_SIMPLIFY_RHS' }
   }
   // Case 4 & 5: doing things with terms or simplifying both sides
   else /* if (!lhsUnchanged && !rhsUnchanged) */ {
-    const lhsRes = coreAssessUserStep([previousEquation.lhs, userEquation.lhs], logs.lhsFirstChangeTypesLog, logs.lhsFirstFoundToLog, previousEquation.rhs)
-    const rhsRes = coreAssessUserStep([previousEquation.rhs, userEquation.rhs], logs.rhsFirstChangeTypesLog, logs.rhsFirstFoundToLog, previousEquation.lhs)
-    const hasAddedTerms = rhsRes.history.some(step => step.addedNumOp) || lhsRes.history.some(step => step.addedNumOp)
-    const hasRemovedTerms = rhsRes.history.some(step => isRemoveTermChangeType(step.changeType)) || lhsRes.history.some(step => isRemoveTermChangeType(step.changeType))
+    // Could have issues if done twice implicitly? Not sure how or why you would do that though.
+    const hasMultiplyBothSidesByNegativeOneLeft = lhsRes.history.some(step => step.changeType === 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE')
+    const hasMultiplyBothSidesByNegativeOneRight = rhsRes.history.some(step => step.changeType === 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE')
+    if (hasMultiplyBothSidesByNegativeOneLeft || hasMultiplyBothSidesByNegativeOneRight) {
+      return {
+        lhs: lhsRes,
+        rhs: rhsRes,
+        equationChangeType: 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE',
+      }
+    }
+
+    // Could have issues if done twice implicitly? Not sure how or why you would do that though.
     const hasCrossMultiplyLeft = lhsRes.history.some(step => step.changeType === 'EQ_CROSS_MULTIPLY')
     const hasCrossMultiplyRight = rhsRes.history.some(step => step.changeType === 'EQ_CROSS_MULTIPLY')
-
     if (hasCrossMultiplyLeft || hasCrossMultiplyRight) {
       return {
         lhs: lhsRes,
@@ -322,17 +352,21 @@ export function coreAssessUserStepEquation([previousEquationStr, userEquationStr
       }
     }
 
+    const hasAddedTerms = rhsRes.history.some(step => isAddTermChangeType(step.changeType)) || lhsRes.history.some(step => isAddTermChangeType(step.changeType))
+    const hasRemovedTerms = rhsRes.history.some(step => isRemoveTermChangeType(step.changeType)) || lhsRes.history.some(step => isRemoveTermChangeType(step.changeType))
     if (hasAddedTerms || hasRemovedTerms) {
       return {
         lhs: lhsRes,
         rhs: rhsRes,
-        equationChangeType: undefined,
+        equationChangeType: undefined, // TBD later
       }
     }
-    return {
-      lhs: lhsRes,
-      rhs: rhsRes,
-      equationChangeType: 'EQ_SIMPLIFY_BOTH',
+    else {
+      return {
+        lhs: lhsRes,
+        rhs: rhsRes,
+        equationChangeType: 'EQ_SIMPLIFY_BOTH',
+      }
     }
   }
 }

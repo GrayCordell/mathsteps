@@ -63,7 +63,7 @@ function generateNoChangeStep(
   return {
     from: cleanMath(expression),
     to: cleanMath(expression),
-    isValid: false,
+    isValid: true,
     attemptedToGetTo: 'UNKNOWN',
     attemptedChangeType: 'NO_CHANGE',
     mistakenChangeType: 'NO_CHANGE',
@@ -247,7 +247,7 @@ describe('assessUserEquationStep', () => {
             { from: '2x + 8 + 6', to: '2x + 14', isValid: true, attemptedChangeType: 'SIMPLIFY_ARITHMETIC__ADD' },
           ],
           right: [
-            { from: '5x - 2', to: '5x - 2', isValid: false, attemptedChangeType: 'NO_CHANGE', mistakenChangeType: 'NO_CHANGE' },
+            { from: '5x - 2', to: '5x - 2', isValid: true, attemptedChangeType: 'NO_CHANGE', mistakenChangeType: 'NO_CHANGE' },
           ],
         },
         // Step 2: Subtract 2x from both sides
@@ -258,7 +258,7 @@ describe('assessUserEquationStep', () => {
           },
           left: [
             { from: '2x + 14', to: '(2x+14) - (2x)', isValid: true, attemptedChangeType: 'EQ_REMOVE_TERM_BY_SUBTRACTION' },
-            { from: '(2x+14) - (2x)', to: '14', isValid: true, attemptedChangeType: 'CANCEL_TERMS_FOR_FRACTION' },
+            { from: '(2x+14) - (2x)', to: '14', isValid: true, attemptedChangeType: 'CANCEL_TERMS_FOR_ADDITION' },
           ],
           right: [
             { from: '5x - 2', to: '5x - 2 + -2x', isValid: true, attemptedChangeType: 'EQ_ADD_TERM_BY_SUBTRACTION' },
@@ -288,10 +288,10 @@ describe('assessUserEquationStep', () => {
           ],
         },
         // Step 5: Flip sides
-        {
+        /*        {
           left: [{ from: '16/3', to: 'x', isValid: true, attemptedToGetTo: 'x', attemptedChangeType: 'EQ_SWAP_SIDES', equationActionType: 'EQ_SWAP_SIDES' }],
           right: [{ from: 'x', to: '16/3', isValid: true, attemptedToGetTo: '16/3', attemptedChangeType: 'EQ_SWAP_SIDES', equationActionType: 'EQ_SWAP_SIDES' }],
-        },
+        }, */
       ],
     },
     { // Test 6
@@ -397,7 +397,7 @@ describe('assessUserEquationStep', () => {
             { from: '3x/4 + 2', to: '3x/4 + 2/4', attemptedChangeType: 'UNKNOWN', isValid: false },
           ],
           right: [
-            { from: '5', to: '5', attemptedChangeType: 'NO_CHANGE', isValid: false },
+            { from: '5', to: '5', attemptedChangeType: 'NO_CHANGE', isValid: true },
           ],
         },
         // Step 2: Multiply both sides by 4
@@ -477,7 +477,7 @@ describe('assessUserEquationStep', () => {
             generateStep('2x + 3 - x', '5x', 'UNKNOWN', { isValid: false }),
           ],
           right: [
-            generateStep('55', '55', 'NO_CHANGE', { isValid: false }),
+            generateStep('55', '55', 'NO_CHANGE'),
           ],
         },
       ],
@@ -587,11 +587,58 @@ describe('assessUserEquationStep', () => {
             generateStep('x*2 + 2*2', 'x*2 + 4', 'SIMPLIFY_ARITHMETIC__MULTIPLY'),
           ],
           right: [
-            generateStep('10', '10', 'NO_CHANGE', { isValid: false }),
+            generateStep('10', '10', 'NO_CHANGE'),
           ],
         },
       ],
     },
+
+    {
+      description: '19. EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE',
+      steps: ['-x = -5', 'x * -1 = 5 * -1'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true, attemptedEquationChangeType: 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE' },
+          left: [
+            generateStep('-x', '-1*-x', 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE'),
+          ],
+          right: [
+            generateStep('-5', '-1*-5', 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE'),
+          ],
+        },
+      ],
+    },
+
+    {
+      description: '20. No change',
+      steps: ['2x + 3 = 5', '2x + 3 = 5'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true, attemptedEquationChangeType: 'EQ_NO_CHANGE' },
+          left: [
+            generateNoChangeStep('2x + 3'),
+          ],
+          right: [
+            generateNoChangeStep('5'),
+          ],
+        },
+      ],
+    },
+    /*    {
+      description: 'TBD',
+      steps: ['-8+x=0', '-8 + x + 8 = 0 + 8'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true },
+          left: [
+            generateStep('-8+x', '-8 + x + 8', 'EQ_REMOVE_TERM_BY_ADDITION'),
+          ],
+          right: [
+            generateStep('0', '0 + 8', 'EQ_ADD_TERM_BY_ADDITION'),
+          ],
+        },
+      ],
+    } */
   ]
 
   testCases.forEach((test, index) => testStepEvaluation(test, index))

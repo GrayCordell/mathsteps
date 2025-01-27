@@ -46,9 +46,10 @@ export type ProcessedStep = Omit<RawStep, 'to'> & {
   isDeferred?: boolean
 }
 
-export type CoreAssessUserStepResult = {
+export interface CoreAssessUserStepResult {
   history: ProcessedStep[]
-} | { history: [] }
+  firstFoundNextStepOptions: ProcessedStep[]
+}
 
 /**
  * The final step info object that is returned to the user.
@@ -83,7 +84,7 @@ const expressionEquals = (exp0: string | MathNode, exp1: string | MathNode) => a
 
 const MAX_NEXT_STEPS = 110
 const MAX_STEP_DEPTH = 4
-const QUEUE_PRIORITY: AChangeType[] = ['REMOVE_ADDING_ZERO', 'DIVISION_BY_ONE', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__ADD', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'CANCEL_TERMS_FOR_FRACTION','CANCEL_TERMS_FOR_ADDITION', 'SIMPLIFY_ARITHMETIC__DIVIDE', 'COLLECT_AND_COMBINE_LIKE_TERMS']
+const QUEUE_PRIORITY: AChangeType[] = ['REMOVE_ADDING_ZERO', 'DIVISION_BY_ONE', 'REMOVE_MULTIPLYING_BY_ONE', 'SIMPLIFY_ARITHMETIC__SUBTRACT', 'SIMPLIFY_ARITHMETIC__ADD', 'KEMU_DISTRIBUTE_MUL_OVER_ADD', 'SIMPLIFY_ARITHMETIC__MULTIPLY', 'CANCEL_TERMS_FOR_FRACTION', 'CANCEL_TERMS_FOR_ADDITION', 'SIMPLIFY_ARITHMETIC__DIVIDE', 'COLLECT_AND_COMBINE_LIKE_TERMS']
 
 const DEFERRED_CHANGE_TYPES = [...EQUATION_ADD_AND_REMOVE_TERMS] as AChangeType[]
 const DEFERRED_DEPTH_THRESHOLD = 3
@@ -122,11 +123,7 @@ function hasAlreadyAttempted(currentStep: string, triedSteps: Set<string>): bool
   // If neither exact match nor equivalent match is found, return false
   return false
 }
-function logFirstSteps(steps: ProcessedStep[], changeLog: AChangeType[], toLog: string[]): void {
-  const nonMistakeSteps = steps.filter(step => !step.isMistake)
-  changeLog.push(...nonMistakeSteps.map(step => step.changeType))
-  toLog.push(...nonMistakeSteps.map(step => step.to))
-}
+
 function addStepToQueue(
   queue: QueueItem[],
   step: QueueItem,
@@ -154,7 +151,7 @@ function checkForMatchingSteps({
   isEquation: boolean
   stepCount: number
   start: string
-}): CoreAssessUserStepResult | null {
+}): { history: ProcessedStep[] } | null {
   for (const possibleStep of possibleSteps) {
     const updatedHistory = [...history, possibleStep]
 
@@ -211,17 +208,16 @@ function checkForMatchingSteps({
 }
 export function coreAssessUserStep(
   lastTwoUserSteps: string[],
-  firstChangeTypesLog: (AChangeType)[] = [],
-  firstFoundToLog: string[] = [],
   otherSide: string | null = null,
 ): CoreAssessUserStepResult {
   const isEquation = otherSide !== null
   const valueToFind = lastTwoUserSteps[1]
   const theProblem = lastTwoUserSteps[0]
   const triedSteps = new Set<string>()
+  let firstFoundNextStepOptions: ProcessedStep[] = []
 
   if (theProblem === valueToFind)
-    return { history: [] }
+    return { history: [], firstFoundNextStepOptions: findAllNextStepOptions(valueToFind, { history: [], otherSide }) }
 
   const mainQueue: QueueItem[] = [{
     start: theProblem,
@@ -266,9 +262,9 @@ export function coreAssessUserStep(
       continue
     // Normally if we differed something we never checked if it was equal, so we check it here since its finally when we are going to check it.
     if (isDeferred && expressionEquals(start, valueToFind))
-      return { history }
+      return { history, firstFoundNextStepOptions }
 
-    function nextStep(step: string) {
+    function nextStep(step: string): CoreAssessUserStepResult | undefined {
       triedSteps.add(step)
 
       //
@@ -291,8 +287,10 @@ export function coreAssessUserStep(
       ///
 
       // Log the first possible steps for later. Typically Used in cases where we don't find a match. TODO refactor to remove needing this.
-      if (depth === 0)
-        logFirstSteps(allPossibleNextStep, firstChangeTypesLog, firstFoundToLog)
+      if (depth === 0) {
+        // excludes mistakes
+        firstFoundNextStepOptions = allPossibleNextStep.filter(step => !step.isMistake)
+      }
 
       // Check for matching steps
       const matchResult = checkForMatchingSteps({
@@ -304,9 +302,9 @@ export function coreAssessUserStep(
         stepCount,
         start: cleanedStart,
       })
-
-      if (matchResult)
-        return matchResult
+      if (matchResult) {
+        return { ...matchResult, firstFoundNextStepOptions }
+      }
 
       // Queue management
       allPossibleNextStep.forEach((possibleStep) => {
@@ -325,7 +323,7 @@ export function coreAssessUserStep(
       return foundMatch
   }
 
-  return { history: [] }
+  return { history: [], firstFoundNextStepOptions }
 }
 
 
@@ -342,17 +340,19 @@ function correctChangeTypeSubtractToAddFix<T extends (AChangeType | undefined | 
 
 
 // These two are also used in equationEvaluation. //TODO move to a shared file?
-export function processNoHistoryStep({ from, to, startingStepAnswer, attemptedToGetTo, attemptedChangeType, firstChangeTypesLog, firstFoundToLog }: { from: string, to: string, attemptedToGetTo?: string | null, attemptedChangeType?: AChangeType | null, startingStepAnswer: string, firstChangeTypesLog: (AChangeType)[], firstFoundToLog: string[] }): StepInfo[] {
+export function processNoHistoryStep({ from, to, startingStepAnswer, attemptedToGetTo, attemptedChangeType, firstFoundNextStepOptions }: { from: string, to: string, attemptedToGetTo?: string | null, firstFoundNextStepOptions: ProcessedStep[], attemptedChangeType?: AChangeType | null, startingStepAnswer: string }): StepInfo[] {
+  const firstChangeTypesLog = firstFoundNextStepOptions.map(step => step.changeType)
+  const firstFoundToLog = firstFoundNextStepOptions.map(step => step.to)
   const firstAvailableChangeTypes = filterUniqueValues(firstChangeTypesLog.flat())
 
   const attemptedChangeTypeCorrected = attemptedChangeType || (firstAvailableChangeTypes.length === 1 ? firstAvailableChangeTypes[0] : 'UNKNOWN' as const)
   const attemptedToGetToCorrected = attemptedToGetTo || (firstFoundToLog.length === 1 ? firstFoundToLog[0] : 'UNKNOWN' as const)
   const reachesOriginalAnswer = expressionEquals(getAnswerFromStep(to), startingStepAnswer)
 
-  const sharedPart = { isValid: false, from, to, attemptedToGetTo: attemptedToGetToCorrected, reachesOriginalAnswer, attemptedChangeType: attemptedChangeTypeCorrected, availableChangeTypes: firstAvailableChangeTypes, allPossibleCorrectTos: firstFoundToLog } as const
+  const sharedPart = { from, to, attemptedToGetTo: attemptedToGetToCorrected, reachesOriginalAnswer, attemptedChangeType: attemptedChangeTypeCorrected, availableChangeTypes: firstAvailableChangeTypes, allPossibleCorrectTos: firstFoundToLog } as const
   return expressionEquals(from, to)
-    ? [{ ...sharedPart, mistakenChangeType: 'NO_CHANGE', attemptedChangeType: 'NO_CHANGE' }]
-    : [{ ...sharedPart, mistakenChangeType: 'UNKNOWN' }]
+    ? [{ ...sharedPart, isValid: true, mistakenChangeType: 'NO_CHANGE', attemptedChangeType: 'NO_CHANGE' }]
+    : [{ ...sharedPart, isValid: false, mistakenChangeType: 'UNKNOWN' }]
 }
 export function processStep(step: ProcessedStep, previousStep: string, startingStepAnswer: string, historyLength: number): StepInfo & Partial<ProcessedStep> {
   const to = step.to
@@ -398,8 +398,6 @@ function processStepInfo(
   previousStep: string,
   userStep: string,
   startingStepAnswer: string,
-  firstChangeTypesLog: (AChangeType)[],
-  firstFoundToLog: string[],
 ): StepInfo[] {
   const history = res.history
   userStep = cleanString(userStep)
@@ -410,7 +408,7 @@ function processStepInfo(
   })
 
   return history.length === 0
-    ? processNoHistoryStep({ from: previousStep, to: userStep, startingStepAnswer, firstChangeTypesLog, firstFoundToLog })
+    ? processNoHistoryStep({ from: previousStep, to: userStep, startingStepAnswer, firstFoundNextStepOptions: res.firstFoundNextStepOptions })
     : history.map(step => processStep(step, previousStep, startingStepAnswer, history.length))
 }
 
@@ -437,10 +435,8 @@ function processStepInfo(
  */
 export function assessUserStep(previousUserStep: string, userStep: string, startingStepAnswer: string = getAnswerFromStep(previousUserStep)): StepInfo[] {
   // const userStep = myNodeToString(parseText(userStep_))
-  const firstChangeTypesLog: AChangeType[] = []
-  const firstFoundToLog: string[] = []
-  const rawAssessedStepOptionsRes = coreAssessUserStep([previousUserStep, userStep], firstChangeTypesLog, firstFoundToLog)
-  return processStepInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, startingStepAnswer, firstChangeTypesLog, firstFoundToLog)
+  const rawAssessedStepOptionsRes = coreAssessUserStep([previousUserStep, userStep])
+  return processStepInfo(rawAssessedStepOptionsRes, previousUserStep, userStep, startingStepAnswer)
 }
 
 

@@ -19,6 +19,10 @@ export type AMathRule = typeof ALL_MATH_RULES[number]
 
 // These are supposed to be "Math Rule" Mappings to specific ChangeTypes.
 export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> = {
+
+  //
+  // Properties of Equality
+  //
   Addition_Property_Of_Equality: [
     'EQ_ADD_TERM_BY_ADDITION',
     'EQ_REMOVE_TERM_BY_ADDITION',
@@ -30,21 +34,26 @@ export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> 
   Multiplication_Property_Of_Equality: [
     'EQ_ADD_TERM_BY_MULTIPLICATION',
     'EQ_REMOVE_TERM_BY_MULTIPLICATION',
+    'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE',
   ],
   Division_Property_Of_Equality: [
     'EQ_ADD_TERM_BY_DIVISION',
     'EQ_REMOVE_TERM_BY_DIVISION',
   ],
+  /* Symmetric_Property_Of_Equality: [
+    'Does not exist. Its "swap" technically.' //EQ_SWAP_SIDES would make most sense here though.
+    // Swap sides is handled in cli as an "action" instead technically.
+  ],
+ */
+
+  //
+  //
+  //
   Distributive_Property: [
     'KEMU_DISTRIBUTE_MUL_OVER_ADD', // and subtract
     'BREAK_UP_FRACTION', // divide over add
   ],
-  /*
-  We use this rule in as an action. Its special because this isn't in available ChangeTypes. We do use something like this for 'swap' action in commander.
-  Symmetric_Property_Of_Equality: [
-    'Does not exist. Its "swap" technically.' //EQ_SWAP_SIDES would make most sense here though.
-  ]
-  * */
+
   Combining_Like_Terms_Expressions: [
     'COLLECT_AND_COMBINE_LIKE_TERMS',
     'SIMPLIFY_ARITHMETIC__ADD',
