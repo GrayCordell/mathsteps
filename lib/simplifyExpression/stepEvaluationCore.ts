@@ -21,7 +21,6 @@ const countZero = (str: string) => (str.match(/\b0\b/g) || []).length
 /**
  * Creates a history of steps found from the previous step to get to the user's step. Requires processStepInfo to convert the history into the final StepInfo[] form.
  */
-
 export interface RawStep {
   from: string
   to: string[]
@@ -32,6 +31,8 @@ export interface RawStep {
 
 /**
  * The processed step is the same as the raw step, but the 'to' is a string instead of an array of strings. We flattened it. TODO make a better name for this. IntermediateStep?
+ * TODO: - A lot of this type is optional and is causing issues/confusion. It needs to be more strict and have less optional properties.
+ * TODO: There is slight ambiguity between:  the "attempted", things and the "actual" things. Its fixed in processed steps but multiple/shared/slightly different definitions here are slightly confusing.
  */
 export type ProcessedStep = Omit<RawStep, 'to'> & {
   to: string // to is a string instead of an array of strings. We flattened it.
@@ -39,12 +40,13 @@ export type ProcessedStep = Omit<RawStep, 'to'> & {
   attemptedToGetTo?: string
   attemptedChangeType?: AChangeType
   allPossibleCorrectTos?: string[]
-  equationActionType?: AEquationChangeType
-  addedNumOp?: NumberOp
-  removeNumberOp?: NumberOp
+  equationActionType?: AEquationChangeType // TODO move out. Think its currently redundant with changeType. and should only exist in equationEvaluations return.
+  addedNumOp?: NumberOp // TODO should have a seperate type for equation adding and removing terms.
+  removeNumberOp?: NumberOp // -- should have a seperate type for equation adding and removing terms.
   deferDepth?: number
-  isDeferred?: boolean
+  isDeferred?: boolean // TODO remove? Just use deferDepth?
 }
+
 
 export interface CoreAssessUserStepResult {
   history: ProcessedStep[]
@@ -52,7 +54,7 @@ export interface CoreAssessUserStepResult {
 }
 
 /**
- * The final step info object that is returned to the user.
+ * The final step info object that is returned to the user. Less optionals.
  */
 export interface StepInfo {
   isValid: boolean // Whether the step is valid from the previous step.
@@ -185,6 +187,7 @@ function checkForMatchingSteps({
 
   // special case to check for operation use. this can be picked up by available steps but this will also check for mistakes. Only do this on the first step for now.
   // TODO increase stepCount?
+  // Direct action check. Different from find all options because this is a direct check for the action from the last to this step.
   if (stepCount === 0) {
     const opUseFound = findAttemptedOperationUse({
       from: start,
@@ -390,8 +393,6 @@ export function processStep(step: ProcessedStep, previousStep: string, startingS
  * @param previousStep - The previous step before the user's step. ex. '2x + 2x + 2x'
  * @param userStep - The users step moving from the previous step to the current step. ex. '2x + 4x'
  * @param startingStepAnswer - The actual answer of the equation.
- * @param firstChangeTypesLog - The first change types logged from the first step, for unknown and no change cases. TODO remove/refactor to not need this.
- * @param firstFoundToLog - The first found to logged from the first step, for unknown and no change cases.  TODO remove/refactor to not need this.
  */
 function processStepInfo(
   res: CoreAssessUserStepResult,
