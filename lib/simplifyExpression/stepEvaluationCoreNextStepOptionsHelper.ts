@@ -1,3 +1,4 @@
+import type { MathNode } from 'mathjs'
 import mathsteps, { parseText } from '~/index'
 import { getCrossMultiplication } from '~/kemuEquation/Special-CrossMultiplication'
 import { areExpressionEqual } from '~/newServices/expressionEqualsAndNormalization'
@@ -11,6 +12,7 @@ import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import { filterUniqueValues } from '~/util/arrayUtils'
 import { cleanString } from '~/util/cleanString'
+import { RGIntOrDecimal } from '~/util/regex'
 
 const { SIMPLIFY_ARITHMETIC__ADD, SIMPLIFY_ARITHMETIC__SUBTRACT } = ChangeTypes
 
@@ -99,10 +101,13 @@ interface NeededForEquationChecks {
  * @description Finds all possible next steps for a given user step. This includes steps from the simplifyExpression engine, as well as additional steps that are not caught/placed yet in the simplifyExpression engine. This is an internal procedure and should not be used directly.
  * @param userStep_ The user's step as a string
  * @param neededForEquations Additional information needed for equation checks
- * @param options
+ * @param options Additional options
+ * @param options.getMistakes If true, simplifyExpression will also get the mistake possibilities for some steps.
+ * @param options.isDebugMode If true, will print some debug information
+ * TODO - Get constants out.
  */
-export function findAllNextStepOptions(userStep_: string, neededForEquations?: NeededForEquationChecks | undefined | null, { getMistakes = true, isDebugMode = false } = {}): ProcessedStep[] {
-  const userStep = myNodeToString(parseText(userStep_))
+export function findAllNextStepOptions(userStep_: string | MathNode, neededForEquations?: NeededForEquationChecks | undefined | null, { getMistakes = true, isDebugMode = false } = {}): ProcessedStep[] {
+  const userStep = typeof userStep_ === 'string' ? myNodeToString(parseText(userStep_)) : myNodeToString(userStep_)
   const potentialSteps: RawStep[] = []
   mathsteps.simplifyExpression({
     expressionAsText: userStep,
@@ -121,6 +126,8 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
 
 
   // Equation checks
+  // TODO - Right now we are handling expressions checks one and then the other. This is not ideal. We should likely refactor everything into a generator function then handle both checks more at the same time.
+  // We are only checking cross multiplication and multiply both sides by -1 on the first possible non implicit/skipped step right now.
 
 
   // Check for add and remove terms
@@ -143,30 +150,48 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
       }
     }
 
-    // TODO check for multiplying both sides by a negative 1 (only if all terms are negative)
-    // This is a quicker fix for now. This only applies in cases where its a -var = -number for now
-    const isAVarRegex = /x|y|z|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w/gmi
-    const negativeRegex = /-/gmi
-    const numberRegex = /\d+/gmi
-    const leftIsXAndNegative = userStep.match(negativeRegex)?.length === 1 && userStep.match(isAVarRegex)?.length === 1
-    const leftIsANumberAndNegative = userStep.match(negativeRegex)?.length === 1 && userStep.match(numberRegex)?.length === 1
-    const rightIsXAndNegative = neededForEquations.otherSide.match(negativeRegex)?.length === 1 && neededForEquations.otherSide.match(isAVarRegex)?.length === 1
-    const rightIsANumberAndNegative = neededForEquations.otherSide.match(negativeRegex)?.length === 1 && neededForEquations.otherSide.match(numberRegex)?.length === 1
-    if (leftIsXAndNegative && rightIsANumberAndNegative) {
-      processedSteps.push({ from: userStep, to: `(${userStep}) * -1`, changeType: 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE', isMistake: false, availableChangeTypes: ['EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE' as const] })
+    // Simple check for needing EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE occurring on the first or second step
+    if (neededForEquations.history.length <= 2
+      && removedDepth === 0
+      && addedDepth === 0) {
+      // Helper functions
+      const hasSingleNegative = (str: string) => (str.match(/-/gmi)?.length || 0) === 1
+      const hasVariable = (str: string) => (str.match(/[a-z]/gmi)?.length || 0) === 1
+      const hasNumber = (str: string) => (str.match(RGIntOrDecimal)?.length || 0) === 1
+
+      // Determine conditions
+      const thisSideIsVariableAndNegative = hasSingleNegative(userStep) && hasVariable(userStep)
+      const thisSideIsNumberAndNegative = hasSingleNegative(userStep) && hasNumber(userStep)
+      const otherSideIsVariableAndNegative = hasSingleNegative(neededForEquations.otherSide) && hasVariable(neededForEquations.otherSide)
+      const otherSideIsNumberAndNegative = hasSingleNegative(neededForEquations.otherSide) && hasNumber(neededForEquations.otherSide)
+
+      // Process steps
+      if (
+        (thisSideIsVariableAndNegative && otherSideIsNumberAndNegative)
+        || (otherSideIsVariableAndNegative && thisSideIsNumberAndNegative)
+      ) {
+        processedSteps.push({
+          from: userStep,
+          to: `(${userStep}) * -1`,
+          changeType: 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE',
+          isMistake: false,
+          availableChangeTypes: ['EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE'],
+        })
+      }
     }
-    else if (leftIsANumberAndNegative && rightIsXAndNegative) {
-      processedSteps.push({ from: userStep, to: `(${userStep}) * -1`, changeType: 'EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE', isMistake: false, availableChangeTypes: ['EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE' as const] })
-    }
+
 
     // Handle adding and removing terms
     // Adding and removing terms functions are kind of a mess.
     // findAllOperationsThatCanBeRemoved is now used for both adding and removing terms. (Like I should have done from the start)
     // There is some weirdness here with the addedNumOp and removeNumberOp types, and converting between them for the added terms.
+    // Find Operations that can be removed
     if (removedDepth < 2 && addedDepth < 1) {
       // get removed term possibilities
       processedSteps.push(...findAllOperationsThatCanBeRemoved(userStep, neededForEquations.history))
     }
+    // Find Operations that can be added
+    // Uses findAllOperationsThatCanBeRemoved but reverses it.
     if (removedDepth < 1 && addedDepth < 2) {
       // get added term possibilities
       function makeAddedFn(expression0: string, otherSide: string, history: ProcessedStep[]) {
@@ -196,6 +221,7 @@ export function findAllNextStepOptions(userStep_: string, neededForEquations?: N
   // disabled for equations for now.
   if (!neededForEquations?.otherSide) {
     const manualMistakes = mistakeSearches(userStep)
+
     processedSteps.push(...manualMistakes)
   }
   // ... Add additional steps from other simplification/error engines here if needed
