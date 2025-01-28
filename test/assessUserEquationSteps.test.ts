@@ -288,10 +288,10 @@ describe('assessUserEquationStep', () => {
           ],
         },
         // Step 5: Flip sides
-        /*        {
+        {
           left: [{ from: '16/3', to: 'x', isValid: true, attemptedToGetTo: 'x', attemptedChangeType: 'EQ_SWAP_SIDES', equationActionType: 'EQ_SWAP_SIDES' }],
           right: [{ from: 'x', to: '16/3', isValid: true, attemptedToGetTo: '16/3', attemptedChangeType: 'EQ_SWAP_SIDES', equationActionType: 'EQ_SWAP_SIDES' }],
-        }, */
+        },
       ],
     },
     { // Test 6
@@ -624,7 +624,38 @@ describe('assessUserEquationStep', () => {
         },
       ],
     },
-    /*    {
+    {
+      description: '21. x/4 + 2 -(x/4)= 4-(x/4)',
+      steps: ['x/4+2 -(x/4)= 4-(x/4)', '2 = 4-(x/4)'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true },
+          left: [
+            generateStep('x/4+2-(x/4)', '2', 'CANCEL_TERMS_FOR_ADDITION'),
+          ],
+          right: [
+            generateStep('4-(x/4)', '4-(x/4)', 'NO_CHANGE'),
+          ],
+        },
+      ],
+    },
+
+    {
+      description: '22. 0x + 2 = 5 - x/4',
+      steps: ['0x + 2 = 5 - x/4', '2 = 5 - x/4'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true },
+          left: [
+            generateStep('0x + 2', '2', 'REMOVE_ADDING_ZERO'),
+          ],
+          right: [
+            generateStep('5 - x/4', '5 - x/4', 'NO_CHANGE'),
+          ],
+        },
+      ],
+    },
+  /*  {
       description: 'TBD',
       steps: ['-8+x=0', '-8 + x + 8 = 0 + 8'],
       expectedAnalysis: [
@@ -638,7 +669,7 @@ describe('assessUserEquationStep', () => {
           ],
         },
       ],
-    } */
+    }, */
   ]
 
   testCases.forEach((test, index) => testStepEvaluation(test, index))
