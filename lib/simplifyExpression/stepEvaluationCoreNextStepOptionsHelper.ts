@@ -107,7 +107,9 @@ interface NeededForEquationChecks {
  * TODO - Get constants out.
  */
 export function findAllNextStepOptions(userStep_: string | MathNode, neededForEquations?: NeededForEquationChecks | undefined | null, { getMistakes = true, isDebugMode = false } = {}): ProcessedStep[] {
-  const userStep = typeof userStep_ === 'string' ? myNodeToString(parseText(userStep_)) : myNodeToString(userStep_)
+  let userStep = typeof userStep_ === 'string' ? myNodeToString(parseText(userStep_)) : myNodeToString(userStep_)
+  // QUICKFIX: replace 0x with 0. Not sure why its not seeing 0x to try to remove it? May be a larger bug, and am investigating.
+  userStep = userStep.replaceAll(/\b0[a-z]\b/gmi, '0').replaceAll(/\b0\*[a-z]\b/gmi, '0')
   const potentialSteps: RawStep[] = []
   mathsteps.simplifyExpression({
     expressionAsText: userStep,
