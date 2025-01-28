@@ -182,13 +182,13 @@ function processEquationInfo(
     const leftHistory = equation.lhs.history.map(step => processStep(step, leftFrom, startingStepAnswer, equation.lhs.history.length))
     const rightHistory = equation.rhs.history.map(step => processStep(step, rightFrom, startingStepAnswer, equation.rhs.history.length))
     // make changeType EQ_SWAP_SIDES
-    // leftHistory[0].attemptedChangeType = equation.equationChangeType
-    // leftHistory[0].equationActionType = equation.equationChangeType
-    // rightHistory[0].attemptedChangeType = equation.equationChangeType
-    // rightHistory[0].equationActionType = equation.equationChangeType
+    leftHistory[0].attemptedChangeType = equation.equationChangeType
+    leftHistory[0].equationActionType = equation.equationChangeType
+    rightHistory[0].attemptedChangeType = equation.equationChangeType
+    rightHistory[0].equationActionType = equation.equationChangeType
     // make isValid true
-    // leftHistory[0].isValid = true
-    // rightHistory[0].isValid = true
+    leftHistory[0].isValid = true
+    rightHistory[0].isValid = true
     return { left: leftHistory, right: rightHistory, attemptedEquationChangeType: equation.equationChangeType, reachesOriginalAnswer }
   }
   const rightRes = (equation.rhs.history.length === 0 || equation.equationChangeType === 'EQ_NO_CHANGE' || equation.equationChangeType === 'EQ_SIMPLIFY_LHS')
