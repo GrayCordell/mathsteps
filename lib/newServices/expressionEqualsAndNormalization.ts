@@ -60,7 +60,7 @@ export function normalizeStringExpressionForEquality(stringExpression: string): 
   stringExpression = stringExpression.replaceAll(/\b1([a-z])\b/gi, '$1')
 
   // make  number times var into  numberVar
-  stringExpression = stringExpression.replace(/(\d)\*([a-z])/gi, '$1$2')
+  stringExpression = stringExpression.replace(/(\d+)\*([a-z])/gi, '$1$2')
 
   //  make number - (number/number) into number + (-number/number)
   const numberRG = '\\b\\d+(?:\\.\\d+)?[a-z]?\\b' //
