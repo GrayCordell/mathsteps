@@ -65,6 +65,7 @@ export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> 
     'REMOVE_MULTIPLYING_BY_ONE',
     'DISTRIBUTE_NEGATIVE_ONE',
     'CANCEL_TERMS_FOR_ADDITION',
+    'REMOVE_MULTIPLYING_BY_NEGATIVE_ONE',
   ],
   Combining_Like_Terms_Fractions: [
     'CANCEL_TERMS_FOR_FRACTION',
@@ -75,8 +76,13 @@ export const MATH_RULE_TO_CHANGE_TYPE_MAPPING: Record<AMathRule, AChangeType[]> 
     'KEMU_REMOVE_FRACTION_WITH_UNIT_NUMERATOR', /*  { l: 'n1 * 1/n2', r: 'n1/n2', id: ChangeTypes.KEMU_REMOVE_FRACTION_WITH_UNIT_NUMERATOR }, { l: '1/v2 * n1', r: 'n1/v2', id: ChangeTypes.KEMU_REMOVE_FRACTION_WITH_UNIT_NUMERATOR }, */
     'KEMU_REMOVE_DOUBLE_FRACTION',
     'REDUCE_ZERO_NUMERATOR',
+    'DIVISION_BY_NEGATIVE_ONE',
+    'DIVISION_BY_ONE',
   ],
-  Simplify_Signs: ['SIMPLIFY_SIGNS'],
+  Simplify_Signs: [
+    'SIMPLIFY_SIGNS',
+    'RESOLVE_DOUBLE_MINUS',
+  ],
   Cross_Multiply: ['EQ_CROSS_MULTIPLY'],
 } as const
 
