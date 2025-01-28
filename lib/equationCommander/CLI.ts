@@ -5,7 +5,7 @@ import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { sloppilyGetRuleBasedOnUserString } from '~/types/changeType/MathRuleTypes'
 import { cleanEquationForShow } from '~/util/cleanEquationForShow'
 
-const STARTING_EQUATION = '2x/2 + 4x/2 = 100'
+const STARTING_EQUATION = 'x/4+2+-(x/4) = 5-x/4'
 
 // eslint-disable-next-line node/prefer-global/process
 const _process = process
@@ -52,6 +52,9 @@ export async function RUN_DEV_MATH_RULE_CLI(startingEquation = STARTING_EQUATION
     else if (lower.includes('solve')) {
       const message = equationCommander.isSolved() ? 'Correct!' : 'Incorrect'
       console.log(message)
+    }
+    else if (lower.includes('everything')) {
+      console.log('matches', equationCommander.getCurrentMatches())
     }
     else if (isAnEquationCommanderAlterCommand(lower)) {
       const lower = command.trim().toLowerCase()
