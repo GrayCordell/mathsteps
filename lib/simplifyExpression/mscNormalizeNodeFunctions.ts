@@ -145,9 +145,9 @@ export function convertAll1xToX(node: MathNode): MathNode {
 
 export function makePlusMinusMinus(node: MathNode | string): MathNode {
   const nodeStr = typeof node === 'string' ? cleanString(node) : myNodeToString(node)
-  const replacePlusMinus = nodeStr.replace(/\+-/g, '-').replace(/-\+/g, '-')
-  return parseText(replacePlusMinus)
+  return parseText(makePlusMinusMinusAndReturnString(nodeStr))
 }
+
 export function makePlusMinusMinusAndReturnString(node: MathNode | string): string {
   const nodeStr = typeof node === 'string' ? cleanString(node) : myNodeToString(node)
 
