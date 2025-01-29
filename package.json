@@ -1,7 +1,7 @@
 {
   "name": "mathsteps-experimental-fork",
   "description": "Step by step math solutions. Experimental Fork",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "type": "module",
   "private": false,
   "engines": {
