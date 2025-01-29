@@ -11,6 +11,8 @@ export default defineConfig({
   build: {
     minify: false, // Disable minification
     target: 'esnext',
+    outDir: 'dist',
+    emptyOutDir: true, // Ensures the dist folder is removed before building
     lib: {
       entry: resolve(__dirname, 'lib/index.ts'),
       formats: ['es'],
