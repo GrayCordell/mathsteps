@@ -655,6 +655,21 @@ describe('assessUserEquationStep', () => {
         },
       ],
     },
+    {
+      description: '23. Simplify Both Sides',
+      steps: ['2x + 5 + 6 = 5x - 2 + 3', '2x + 11 = 5x + 1'],
+      expectedAnalysis: [
+        {
+          overallStepEval: { reachesOriginalAnswer: true, attemptedEquationChangeType: 'EQ_SIMPLIFY_BOTH' },
+          left: [
+            generateStep('2x + 5 + 6', '2x + 11', 'SIMPLIFY_ARITHMETIC__ADD'),
+          ],
+          right: [
+            generateStep('5x - 2 + 3', '5x + 1', 'SIMPLIFY_ARITHMETIC__SUBTRACT'),
+          ],
+        },
+      ],
+    },
   /*  {
       description: 'TBD',
       steps: ['-8+x=0', '-8 + x + 8 = 0 + 8'],
