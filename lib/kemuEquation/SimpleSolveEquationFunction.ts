@@ -1,16 +1,11 @@
-import mathsteps from '~/index'
+import mathsteps, { assessUserEquationSteps } from '~/index'
+
 
 /**
  * @param equation - The equation to solve either as a string or as an object with left and right properties.
  * @param variable - If null, the first letter found in the equation will be used.
  */
-export function getNodeStepsToSolveEquation(equation: string | { left: string, right: string }, variable: string | null = null): {
-  equation: {
-    left: { type: string, node: any }
-    right: { type: string, node: any }
-  }
-  equationString: string
-}[] {
+export function getNodeStepsToSolveEquation(equation: string | { left: string, right: string }, variable: string | null = null) {
   if (typeof equation === 'object')
     equation = `${equation.left}=${equation.right}`
 
@@ -28,6 +23,14 @@ export function getNodeStepsToSolveEquation(equation: string | { left: string, r
   return equationSteps
 }
 
+export const getAssessSolvedProblemSteps = (problem: string) => {
+  const steps = getNodeStepsToSolveEquation(problem)
+  const stepsAsText = steps.map(step => step.equationString)
+  return {
+    steps,
+    assessedSteps: assessUserEquationSteps(stepsAsText),
+  }
+}
 
 export function getFinalAnswerFromEquation(equation: string | { left: string, right: string }, variable: string | null = null): string {
   const steps = getNodeStepsToSolveEquation(equation, variable)

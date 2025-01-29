@@ -2,20 +2,28 @@
 
 import type { EqLRStepWithNewTo } from '~/equationCommander/Types'
 import { findMatchingAddRemoveTerms, findNonAddRemoveRuleMatches, makeEquationProcessSteps, makeStartingLeftAndRightEqSteps } from '~/equationCommander/utils'
-import { getFinalAnswerFromEquation } from '~/kemuEquation/SimpleSolveEquationFunction'
+import { getAssessSolvedProblemSteps } from '~/kemuEquation/SimpleSolveEquationFunction'
 import { areEquationsEqual } from '~/newServices/expressionEqualsAndNormalization'
+import type { ProcessedEquation } from '~/simplifyExpression/equationEvaluation'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import type { AMathRule } from '~/types/changeType/MathRuleTypes'
 import { getChangesTypesForRule } from '~/types/changeType/MathRuleTypes'
 import { UndoableString } from '~/util/UndoableString'
 
-
+// TODO remove redudant code. Make more efficient, repeated calls of assessedSteps and find all options.
 export class EquationCommander {
   private equationHistory: UndoableString
   private readonly finalCorrectAnswer: string
+  private readonly correctAnswerSteps: { equationString: string }[]
+  private readonly assessedSteps: ProcessedEquation[]
+
+
   constructor(initialValue = '') {
     this.equationHistory = new UndoableString(initialValue)
-    this.finalCorrectAnswer = getFinalAnswerFromEquation(initialValue)
+    const { steps, assessedSteps } = getAssessSolvedProblemSteps(initialValue)
+    this.correctAnswerSteps = steps
+    this.assessedSteps = assessedSteps
+    this.finalCorrectAnswer = steps[steps.length - 1].equationString
   }
 
   redo = (): void => this.equationHistory.redo()
@@ -30,6 +38,11 @@ export class EquationCommander {
     const [left, right] = currentEquation.split('=')
     this.setValue(`${right}=${left}`)
   }
+
+  getAssessedSteps = (): ProcessedEquation[] => this.assessedSteps
+  getCorrectAnswerSteps = (): { equationString: string }[] => this.correctAnswerSteps
+  getFastestAmountOfStepsToSolve = (): number => this.assessedSteps.length
+  getCurrentNumberOfSteps = (): number => this.assessedSteps.length
 
   getCurrentMatches(): EqLRStepWithNewTo[] {
     const currentEquation = this.getValue()
