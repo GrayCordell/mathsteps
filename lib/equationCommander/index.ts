@@ -5,20 +5,44 @@ import { findMatchingAddRemoveTerms, findNonAddRemoveRuleMatches, makeEquationPr
 import { getAssessSolvedProblemSteps } from '~/kemuEquation/SimpleSolveEquationFunction'
 import { areEquationsEqual } from '~/newServices/expressionEqualsAndNormalization'
 import type { ProcessedEquation } from '~/simplifyExpression/equationEvaluation'
-import type { StepInfo } from '~/simplifyExpression/stepEvaluationCore'
+import type { ProcessedStep, StepInfo } from '~/simplifyExpression/stepEvaluationCore'
 import { isAddTermChangeType, isRemoveTermChangeType } from '~/types/changeType/changeAndMistakeUtils'
 import { ChangeTypes } from '~/types/changeType/ChangeTypes'
 import type { AMathRule } from '~/types/changeType/MathRuleTypes'
 import { getChangesTypesForRule } from '~/types/changeType/MathRuleTypes'
 import { UndoableString } from '~/util/UndoableString'
 
+
+function getEquationMatches(currentEquation: string): { left: ProcessedStep, right: ProcessedStep, newTo: string }[] {
+  // Build up the possible matches
+  const startingLeftRight = makeStartingLeftAndRightEqSteps(currentEquation)
+  const eqProcessedSteps = makeEquationProcessSteps(currentEquation)
+
+  const addRemoveCombo = findMatchingAddRemoveTerms(eqProcessedSteps)
+  const nonAddRemoveRuleMatches = findNonAddRemoveRuleMatches(
+    eqProcessedSteps,
+    startingLeftRight,
+  )
+  const allRuleMatches = addRemoveCombo
+    .concat(nonAddRemoveRuleMatches)
+    .map(option => ({
+      left: option.left,
+      right: option.right,
+      newTo: `${option.left.to}=${option.right.to}`, // full equation after applying that step
+    }))
+  return allRuleMatches
+}
+
+
 export const getFastestAmountOfStepsToSolveEquation = (assessedSteps: ProcessedEquation[]): number => {
   // 1. Filter out all NO_CHANGE steps
   // 2. Remove all removeTerms and addterms from right. (We will use all from left)
   // 3. remove all EQ_SWAP_SIDES on the right. (We only need 1)
   // 4. remove all EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE on the right. (We only need 1)
+  // 5. Remove all REMOVE_ADDING_ZERO steps ( //TODO: possible issue if the starting step contains a 0+ or 0-., then we would be 1 step behind the users steps?)
 
-  const removeNoChangeTypeStepsFn = (side: StepInfo[]) => side.filter(s => s.attemptedChangeType !== ChangeTypes.NO_CHANGE)
+
+  const removeNoChangeTypeStepsFn = (side: StepInfo[]) => side.filter(s => s.attemptedChangeType !== ChangeTypes.NO_CHANGE) // 1.
   const removeStuffFromRightFn = (side: StepInfo[]) => {
     return side
       .filter(s => !isRemoveTermChangeType(s.attemptedChangeType)) // 2.
@@ -26,10 +50,12 @@ export const getFastestAmountOfStepsToSolveEquation = (assessedSteps: ProcessedE
       .filter(s => s.attemptedChangeType !== ChangeTypes.EQ_SWAP_SIDES) // 3.
       .filter(s => s.attemptedChangeType !== ChangeTypes.EQ_MULTIPLY_BOTH_SIDES_BY_NEGATIVE_ONE) // 4.
   }
+  const removeRemoveAddingZeroFn = (side: StepInfo[]) => side.filter(s => s.attemptedChangeType !== ChangeTypes.REMOVE_ADDING_ZERO) // 5.
+
 
   assessedSteps = assessedSteps.map((step) => {
-    const left = removeNoChangeTypeStepsFn(step.left)
-    const right = removeNoChangeTypeStepsFn(removeStuffFromRightFn(step.right))
+    const left = removeRemoveAddingZeroFn(removeNoChangeTypeStepsFn(step.left))
+    const right = removeRemoveAddingZeroFn(removeNoChangeTypeStepsFn(removeStuffFromRightFn(step.right)))
     return { ...step, left, right }
   })
 
@@ -42,7 +68,7 @@ export const getFastestAmountOfStepsToSolveEquation = (assessedSteps: ProcessedE
   return count
 }
 
-// TODO remove redudant code. Make more efficient, repeated calls of assessedSteps and find all options.
+// TODO remove redundant code. Make more efficient, repeated calls of assessedSteps and find all options.
 export class EquationCommander {
   private equationHistory: UndoableString
   private readonly finalCorrectAnswer: string
@@ -76,24 +102,21 @@ export class EquationCommander {
   getFastestAmountOfStepsToSolve = (): number => getFastestAmountOfStepsToSolveEquation(this.assessedSteps)
   getCurrentNumberOfSteps = (): number => this.assessedSteps.length
   getCurrentMatches(): EqLRStepWithNewTo[] {
-    const currentEquation = this.getValue()
-    // Build up the possible matches
-    const startingLeftRight = makeStartingLeftAndRightEqSteps(currentEquation)
-    const eqProcessedSteps = makeEquationProcessSteps(currentEquation)
+    const allRuleMatches = getEquationMatches(this.getValue())
 
-    const addRemoveCombo = findMatchingAddRemoveTerms(eqProcessedSteps)
-    const nonAddRemoveRuleMatches = findNonAddRemoveRuleMatches(
-      eqProcessedSteps,
-      startingLeftRight,
-    )
-    const allRuleMatches = addRemoveCombo
-      .concat(nonAddRemoveRuleMatches)
-      .map(option => ({
-        left: option.left,
-        right: option.right,
-        newTo: `${option.left.to}=${option.right.to}`, // full equation after applying that step
-      }))
-    return allRuleMatches
+    // if any match starts with 0 + or 0 - then remove it
+    const skippedZeroPlusMatches = allRuleMatches.map((match) => {
+      const cleanStartingZeroToFn = (to: string) => to.replace(/^0[a-z]*[\+\-]/gmi, '')// remove 0+ or 0- or 0x+ or 0x-
+      const left = cleanStartingZeroToFn(match.left.to)
+      const right = cleanStartingZeroToFn(match.right.to)
+      match.left.to = left
+      match.right.to = right
+      match.newTo = `${left}=${right}`
+      return match
+    })
+
+
+    return skippedZeroPlusMatches
   }
 
   getMatchesForRule(rule: AMathRule | 'all'): EqLRStepWithNewTo[] {
