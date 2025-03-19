@@ -944,6 +944,36 @@ describe('random issues i\'ve had in the past', () => {
         }],
       ],
     },
+    // Test 11
+    {
+      description: '11. ',
+      steps: ['(7 + 5) * 2 - 6', '(14 + 7) - 6'],
+      expectedAnalysis: [
+        [{
+          attemptedChangeType: 'KEMU_DISTRIBUTE_MUL_OVER_ADD',
+          attemptedToGetTo: '7 * 2 + 5 * 2 +- 6',
+          from: '(7 + 5) * 2 - 6',
+          to: '7 * 2 + 5 * 2 +- 6',
+          isValid: true,
+          reachesOriginalAnswer: true,
+        }, {
+          attemptedChangeType: 'SIMPLIFY_ARITHMETIC__MULTIPLY',
+          attemptedToGetTo: '14 + 5 * 2 +-6 ',
+          from: '7 * 2 + 5 * 2 +- 6',
+          to: '14 + 5 * 2 +- 6',
+          isValid: true,
+          reachesOriginalAnswer: true,
+        }, {
+          attemptedChangeType: 'SIMPLIFY_ARITHMETIC__MULTIPLY',
+          attemptedToGetTo: '14 + 10 +- 6',
+          from: '14 + 5 * 2 +- 6',
+          to: '14 + 7 - 6',
+          isValid: false,
+          reachesOriginalAnswer: false,
+          mistakenChangeType: 'ADDED_INSTEAD_OF_MULTIPLIED',
+        }],
+      ],
+    },
   ]
   randomIssues.forEach((test, index) => testStepEvaluation(test, index))
 })

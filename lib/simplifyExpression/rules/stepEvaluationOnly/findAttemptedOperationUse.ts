@@ -6,6 +6,7 @@ import { combineMakeMinusNegativeTerms, combineNumberVarTimesTerms, flattenAndIn
 import { parseText } from '~/newServices/nodeServices/parseText'
 
 
+import { removeUnnecessaryParentheses } from '~/newServices/nodeServices/removeUnnessaryParenthesis'
 import type { ProcessedStep } from '~/simplifyExpression/stepEvaluationCore'
 import { getAnswerFromStep } from '~/simplifyExpression/stepEvaluationHelpers'
 import type { AOperator } from '~/types/changeType/changeAndMistakeUtils'
@@ -119,6 +120,16 @@ export function findAttemptedOperationUseCore(
   const fromTerms = _parseExpression(fromStr)
   const toTerms = _parseExpression(toStr)
 
+
+  // special check if any parenthesis are added or removed return
+  const fromStrRemovedUnnecessaryParen = myNodeToString(removeUnnecessaryParentheses(fromStr))
+  const toStrRemovedUnnecessaryParen = myNodeToString(removeUnnecessaryParentheses(toStr))
+  const fromParenthesisCount = fromStrRemovedUnnecessaryParen.match(/\(/g)?.length || 0
+  const toParenthesisCount = toStrRemovedUnnecessaryParen.match(/\(/g)?.length || 0
+
+  if (fromParenthesisCount !== toParenthesisCount)
+    return null
+
   if (!earlyIsValidOperation(fromTerms, toTerms))
     return null
 
@@ -171,8 +182,15 @@ export function findAttemptedOperationUse({ from, to, expressionEquals }: findAt
   if (!findWhatOpRes)
     return null
 
+
+  // fullAttemptedOpResult is the "correct" result of the operation that was attempted.
+  // (It may not actually be correct. Just what they tried to do. ex. 3 + 5 * 2 --> 7 + 5 means they did 2 * 3 AND got it wrong putting 7 when they should have 6 BUT that still is wrong because they did the order of operations wrong.
+  // Right now attemptedToGetTo, though does not include these strange cases. I am unsure if it should make attemptedToGetTo also include these wrong cases or stick with only possible correct cases.
   const { changeType, fullAttemptedOpResult } = findWhatOpRes
   const isMistake = !expressionEquals(fullAttemptedOpResult, toStr)
+
+
+  const fromReachesSameAsAttempted = expressionEquals(getAnswerFromStep(fromStr), getAnswerFromStep(fullAttemptedOpResult))
 
   // TODO should mistakeType be unknown?
   return {
@@ -180,7 +198,7 @@ export function findAttemptedOperationUse({ from, to, expressionEquals }: findAt
     from: fromStr,
     to: toStr,
     changeType,
-    attemptedToGetTo: fullAttemptedOpResult,
+    attemptedToGetTo: fromReachesSameAsAttempted ? fullAttemptedOpResult : undefined,
     /* mistakenChangeType: 'UNKNOWN', */
     isMistake,
     // mTo: [],
