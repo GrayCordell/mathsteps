@@ -5,7 +5,7 @@ import type { AChangeType } from '~/types/changeType/ChangeTypes'
 import { sloppilyGetRuleBasedOnUserString } from '~/types/changeType/MathRuleTypes'
 import { cleanEquationForShow } from '~/util/cleanEquationForShow'
 
-const STARTING_EQUATION = 'x/4+2+-(x/4) = 5-x/4'
+const STARTING_EQUATION = '2x - 2x + 3 + 1x = 3 + 2 - 2'
 
 // eslint-disable-next-line node/prefer-global/process
 const _process = process
@@ -36,6 +36,7 @@ const isAnEquationCommanderAlterCommand = (command: 'back' | 'undo' | 'forward' 
  */
 export async function RUN_DEV_MATH_RULE_CLI(startingEquation = STARTING_EQUATION) {
   const equationCommander = new EquationCommander(STARTING_EQUATION)
+  console.log(`This Equation is solved in ${equationCommander.getFastestAmountOfStepsToSolve()} steps`)
   async function core() {
     const updatedEquation = equationCommander.getValue()
 
